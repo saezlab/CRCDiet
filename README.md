@@ -1,2 +1,2 @@
 # CRCDiet
-Analysis of Affect of Diet on CRC - Collaboration with Villablanca Lab
+Analysis of Effect of Diet on CRC - Collaboration with Villablanca Lab
