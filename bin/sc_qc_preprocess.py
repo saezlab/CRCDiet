@@ -35,6 +35,19 @@ sc.settings.figdir = PLOT_PATH
 
 meta = utils.get_meta_data("sc")
 
+def get_threshold_dict():
+    """This functions keeps the threshold used to filter the data"""
+
+    df_threshold = {"mt_thr": 10, # mitochondrial gene threshold
+                "rp_thr": 5, # ribosomal gene threshold
+                "doublet_thr": 0.2, #doublet threshold
+                "gene_thr": 200,
+                "cell_thr": 3,
+                "gene_qnt": 0.99}
+
+    return df_threshold
+
+
 
 def filter_cells_genes(adata, sample_id):
     """Perform basic filtering on cells and genes
@@ -51,17 +64,12 @@ def filter_cells_genes(adata, sample_id):
     """
 
     row = meta[meta["sample_id"]==sample_id]
-
     condition = str(row["condition"].values[0])
 
-    # adata = utils.read_raw_sample(condition)
-    
-    pre_filter_shape = np.shape(adata.X)
+    # get threshold used to filter data
+    df_threshold = get_threshold_dict()
 
-    doublet_thr = 0.2
-    mt_thr = 10 # mitochondrial gene threshold
-    rp_thr = 5 # ribosomal gene threshold
-    gene_qnt = 0.99
+    pre_filter_shape = np.shape(adata.X)
 
     print("Calculating QC metrics...")
     # calculate qc metrics
@@ -71,41 +79,36 @@ def filter_cells_genes(adata, sample_id):
 
     # calculate doublet scores
     sce.pp.scrublet(adata, verbose=False)
-    gene_thr = np.quantile(adata.obs.n_genes_by_counts, gene_qnt)
+    # calculate threshold to remove extreme outliers
+    gene_quant_thr = np.quantile(adata.obs.n_genes_by_counts, df_threshold["gene_qnt"])
     
     #  “total_counts”. Sum of counts for a gene.
     #  “n_genes_by_counts”. The number of genes with at least 1 count in a cell. Calculated for all cells.
     plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
-    
-    # sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', show=False, ax=axs[0][1])
-    plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=mt_thr)
-    plotting.plot_ngenes_vs_counts(adata, axs[0][2], gene_thr=gene_thr)
+    plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=df_threshold["mt_thr"])
+    plotting.plot_ngenes_vs_counts(adata, axs[0][2], gene_thr=gene_quant_thr)
+    plotting.plot_doublet_scores(adata, axs[0][3], doublet_thr=df_threshold["doublet_thr"], fontsize=11)
 
-    # sc.pl.scatter(adata, x='total_counts', y='n_genes_by_counts', legend_fontsize="xx-large", show=False, ax=axs[0][2])
-    
-    plotting.plot_doublet_scores(adata, axs[0][3], doublet_thr=doublet_thr, fontsize=11)
     sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[1][0])
     sns.histplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1][1])
     sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[1][2])
     sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[1][3])
+    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{sample_id}.png"), dpi=300);
     plt.show();
-    # plt.show()
-    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{condition}.png"), dpi=300)
-    plt.clf()
+    plt.clf();
     
-    
-    # adata.obs.doublet_score < doublet_thr
+
     # number og genes at each change it to 200 
-    sc.pp.filter_cells(adata, min_genes=200)
-    sc.pp.filter_genes(adata, min_cells=3)
-    # filter based on total counts
-    gene_thr = np.quantile(adata.obs.n_genes_by_counts, gene_qnt)
-    adata = adata[adata.obs.pct_counts_mt < mt_thr, :]
-    adata = adata[adata.obs.pct_counts_rp > rp_thr, :]
-    adata = adata[adata.obs.doublet_score < doublet_thr, : ]
-    adata = adata[adata.obs.n_genes_by_counts < gene_thr, : ]
+    sc.pp.filter_cells(adata, min_genes = df_threshold["gene_thr"])
+    sc.pp.filter_genes(adata, min_cells=df_threshold["cell_thr"])
+
+    # filter based on total counts    
+    adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
+    adata = adata[adata.obs.pct_counts_rp > df_threshold["rp_thr"], :]
+    adata = adata[adata.obs.doublet_score < df_threshold["doublet_thr"], : ]
+    adata = adata[adata.obs.n_genes_by_counts < gene_quant_thr, : ]
     post_filter_shape = np.shape(adata.X)
     
     
@@ -123,28 +126,22 @@ def filter_cells_genes(adata, sample_id):
     plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
-    
-    # sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', show=False, ax=axs[0][1])
-    plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=mt_thr)
-    plotting.plot_ngenes_vs_counts(adata, axs[0][2], gene_thr=gene_thr)
+    plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=df_threshold["mt_thr"])
+    plotting.plot_ngenes_vs_counts(adata, axs[0][2], gene_thr=gene_quant_thr)
+    plotting.plot_doublet_scores(adata, axs[0][3], doublet_thr=df_threshold["doublet_thr"], fontsize=11)
 
-    # sc.pl.scatter(adata, x='total_counts', y='n_genes_by_counts', legend_fontsize="xx-large", show=False, ax=axs[0][2])
-    
-    plotting.plot_doublet_scores(adata, axs[0][3], doublet_thr=doublet_thr, fontsize=11)
     sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[1][0])
     sns.histplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1][1])
     sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[1][2])
     sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[1][3])
+    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_after_filtering_{sample_id}.png"), dpi=300);
     plt.show();
-    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_after_filtering_{sample_id}.png"), dpi=300)
     plt.clf();
     
-
-    """del adata.obs["predicted_doublet"]
-    adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_{condition}_filtered.h5ad"))
-    # print(os.path.join(out_data_path, f"{sample_id}_{condition}_filtered.h5ad"))"""
+    del adata.obs["predicted_doublet"]
+    print("Saving filtered AnnData file...")
+    adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
     
-
     return adata
 
 def create_filtered_adata_files():
@@ -154,7 +151,7 @@ def create_filtered_adata_files():
         sample_id = row["sample_id"]
         condition = row["condition"]
         adata = utils.read_raw_sc_sample(sample_id)
-        printmd(f"<h4 style='color:grey' align='center'>=============== Processing {sample_id} ===============")
+        printmd(f"<h4 style='color:grey' align='center'>=============== Processing {condition} ===============")
         print(f"")
         
         filter_cells_genes(adata, sample_id)

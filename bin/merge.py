@@ -7,16 +7,24 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from pathlib import Path
-
+import utils
 import os
 import argparse
 
 '''
 Open all samples QC processed files, merge them
 '''
-plot_path="../plots/merge"
-Path(plot_path).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = plot_path
+
+S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
+DATA_PATH = os.path.join(S_PATH, "../data")
+OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "merge")
+
+Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
+Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
+sc.settings.figdir = PLOT_PATH
+
+meta = utils.get_meta_data("sc")
 
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
