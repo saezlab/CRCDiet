@@ -153,7 +153,7 @@ def create_filtered_adata_files():
         sample_id = row["sample_id"]
         condition = row["condition"]
         adata = utils.read_raw_sc_sample(sample_id)
-        printmd(f"<h1 style='color:grey'>=============== Processing {sample_id} ===============</span>")
+        printmd(f"<h3 style='color:grey'>=============== Processing {sample_id} ===============</h1>")
         print(f"")
         
         filter_cells_genes(adata, sample_id)
