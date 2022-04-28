@@ -76,7 +76,7 @@ def filter_cells_genes(adata, sample_id):
     #  “total_counts”. Sum of counts for a gene.
     #  “n_genes_by_counts”. The number of genes with at least 1 count in a cell. Calculated for all cells.
     plt.figure();
-    fig, axs = plt.subplots(2, 4, figsize=(30, 10))# , figsize=(100, 20))
+    fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
     
     # sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', show=False, ax=axs[0][1])
@@ -92,8 +92,8 @@ def filter_cells_genes(adata, sample_id):
     sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[1][3])
     plt.show();
     # plt.show()
-    # fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{condition}.png"), dpi=300)
-    # plt.clf()
+    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{condition}.png"), dpi=300)
+    plt.clf()
     
     
     # adata.obs.doublet_score < doublet_thr
@@ -121,7 +121,7 @@ def filter_cells_genes(adata, sample_id):
     print("Recalculating QC metrics...")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     plt.figure();
-    fig, axs = plt.subplots(2, 4, figsize=(30, 10))# , figsize=(100, 20))
+    fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
     
     # sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', show=False, ax=axs[0][1])
@@ -135,9 +135,10 @@ def filter_cells_genes(adata, sample_id):
     sns.histplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1][1])
     sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[1][2])
     sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[1][3])
-    plt.show()
+    plt.show();
+    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_after_filtering_{sample_id}.png"), dpi=300)
     plt.clf();
-    # fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_after_filtering_{sample_id}.png"), dpi=300)
+    
 
     """del adata.obs["predicted_doublet"]
     adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_{condition}_filtered.h5ad"))
@@ -153,7 +154,7 @@ def create_filtered_adata_files():
         sample_id = row["sample_id"]
         condition = row["condition"]
         adata = utils.read_raw_sc_sample(sample_id)
-        printmd(f"<h3 style='color:grey'>=============== Processing {sample_id} ===============</h1>")
+        printmd(f"<h4 style='color:grey'>=============== Processing {sample_id} ===============")
         print(f"")
         
         filter_cells_genes(adata, sample_id)
