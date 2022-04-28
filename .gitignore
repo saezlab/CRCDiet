@@ -134,3 +134,4 @@ bin/cache
 bin/__pycache__
 .gitignore
 plots/.DS_Store
+.DS_Store

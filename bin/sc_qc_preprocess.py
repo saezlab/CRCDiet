@@ -52,7 +52,8 @@ def get_threshold_dict():
 def filter_cells_genes(adata, sample_id):
     """Perform basic filtering on cells and genes
 
-    This function takes sample id as input and performs cell/gene filtering and remove mitochondrial genes and saves the AnnData for each sample <sample_id>_<condition>_filtered.h5ad
+    This function takes sample id as input and performs cell/gene filtering and remove mitochondrial genes\
+         and saves the AnnData for each sample <sample_id>_<condition>_filtered.h5ad
 
     Args:
         sample_id (str): the name of the folder where the sample files stored
@@ -117,7 +118,9 @@ def filter_cells_genes(adata, sample_id):
     adata.obs["condition"] = condition
     
     
-    print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]], [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]], headers=["Sample ID", 'Stage', "# of cells", "# of genes"], tablefmt='fancy_grid'))
+    print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]],\
+                    [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]],\
+                    headers=["Sample ID", 'Stage', "# of cells", "# of genes"], tablefmt='fancy_grid'))
     # print( {pre_filter_shape}")
     # print(f"AnnData shape after filtering {post_filter_shape}")
 
