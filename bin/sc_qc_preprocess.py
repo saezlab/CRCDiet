@@ -19,7 +19,6 @@ from utils import printmd
 sc.settings.verbosity = 0
 
 
-sc.settings.verbosity = 1
 
 warnings.simplefilter(action='ignore')
 
@@ -32,6 +31,8 @@ PLOT_PATH =  os.path.join(S_PATH, "../plots", "qc_preprocess")
 Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
+
+sc.set_figure_params(scanpy=True, dpi=150, dpi_save=300) 
 
 meta = utils.get_meta_data("sc")
 

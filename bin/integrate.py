@@ -13,17 +13,23 @@ import os
 parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Harmony')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
-parser.add_argument('-st', '--sample_type', help='Human, mouse or tumor', required=True)
 args = vars(parser.parse_args())
 
+sample_type ="sc"
 input_path = args['input_path']
 output_path = args['output_dir']
-sample_type = args["sample_type"]
 ###############################
 
-plot_path="../plots/integrate"
-Path(plot_path).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = plot_path
+S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
+DATA_PATH = os.path.join(S_PATH, "../data")
+OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "integrate")
+
+Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
+Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
+sc.settings.figdir = PLOT_PATH
+
+sc.set_figure_params(scanpy=True, dpi=150, dpi_save=300)
 
 
 # Read merged object

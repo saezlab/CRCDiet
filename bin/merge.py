@@ -10,6 +10,10 @@ from pathlib import Path
 import utils
 import os
 import argparse
+import warnings
+
+warnings.simplefilter(action='ignore')
+sc.settings.verbosity = 0
 
 '''
 Open all samples QC processed files, merge them
@@ -24,6 +28,7 @@ Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
+sc.set_figure_params(scanpy=True, dpi=150, dpi_save=300)
 
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
@@ -69,7 +74,7 @@ sc.pp.log1p(adata)
 
 # Compute HVG
 sc.pp.highly_variable_genes(adata, batch_key='batch')
-sc.pl.highly_variable_genes(adata)#, save=f'{sample_type}_merged_hvg.pdf')
+sc.pl.highly_variable_genes(adata, save=f'{sample_type}_merged_hvg.pdf')
 plt.show()
 
 
@@ -110,8 +115,8 @@ sc.pl.pca_variance_ratio(adata, n_pcs = 50,  show=False, save=f'{sample_type}_va
 # Run UMAP to see the difference after integration
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
-sc.pl.umap(adata, color=["condition"], palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf')
-plt.show()
+sc.pl.umap(adata, color=["condition"], palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
+plt.show();
 plt.clf()
 
 # Write to file

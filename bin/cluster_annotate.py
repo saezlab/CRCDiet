@@ -3,43 +3,52 @@ from operator import index
 import matplotlib.pyplot as plt
 from pathlib import Path
 import seaborn as sns 
-import decoupler as dc  
+# import decoupler as dc  
 import scanpy as sc
 import pandas as pd
 import numpy as np
 import argparse
 import os
+from sklearn.metrics import silhouette_score, pairwise_distances
 
 
 # Read integrated object
 # Read command line and set args
-parser = argparse.ArgumentParser(prog='qc', description='Run Clustering and annotation')
+parser = argparse.ArgumentParser(prog='cluster', description='Run Clustering and annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
-parser.add_argument('-st', '--sample_type', help='Human, mouse or tumor', required=True)
-parser.add_argument('-res', '--resolution',  help='Resolution param for leiden', type=float, default=1.0)
 args = vars(parser.parse_args())
 
 input_path = args['input_path']
 output_path = args['output_dir']
-sample_type = args['sample_type']
 
 ###############################
 
-plot_path="../plots/cluster_annotate"
-Path(plot_path).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = plot_path
+S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
+DATA_PATH = os.path.join(S_PATH, "../data")
+OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "cluster")
+
+Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
+Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
+sc.settings.figdir = PLOT_PATH
 
 adata = sc.read_h5ad(input_path)
 
 leiden_res_params = [0.1, 0.2, 0.5, 0.7, 1.0]
-
-
+print("Calculating distance matrix... ")
+dist_mat = pairwise_distances(adata.obsm["X_pca"], metric='euclidean')
+print("Computing neighbourhood graph... ")
 sc.pp.neighbors(adata)
 
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
 for l_param in leiden_res_params:
+    print(f"Creating cluster with Leiden {l_param}")
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param}") # default resolution in 1.0
+    silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param}"]), metric='precomputed')
+    print(l_param, silh_scr)
+    sc.pl.umap(adata, color=["leiden"], palette=sc.pl.palettes.default_20, show=False, save=f'{l_param}_clusters')
+    """
     print(type(adata.obs[f"leiden_{l_param}"]))
     print(list(adata.obs[f"leiden_{l_param}"].cat.categories))
     
@@ -51,6 +60,7 @@ for l_param in leiden_res_params:
     wc = sc.get.rank_genes_groups_df(adata, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
     print(l_param)
     print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))
+    """
 
 
 
@@ -73,11 +83,11 @@ sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key="wilcoxon_0.4", show=False
 # sc.pl.rank_genes_groups_stacked_violin(adata, n_genes=5, key="wilcoxon", show=False, groupby="leiden", save=f'{sample_type}_ranked_genes_stackedviolin')
 
 
-sc.pl.umap(adata, color=[f"leiden_{l_param}" for l_param in leiden_res_params], legend_loc="on data", legend_fontsize="xx-small", palette=sc.pl.palettes.default_20, show=False, save=f'{sample_type}_clusters_diff_res')
+# sc.pl.umap(adata, color=[f"leiden_{l_param}" for l_param in leiden_res_params], legend_loc="on data", legend_fontsize="xx-small", palette=sc.pl.palettes.default_20, show=False, save=f'{sample_type}_clusters_diff_res')
 """sc.pl.umap(
     adata, color=["leiden"], palette=sc.pl.palettes.default_20, show=False, save=f'{sample_type}_clusters'
 )"""
-
+"""
 sc.pl.umap(
     adata, color=["sample_id"], palette=sc.pl.palettes.default_20, show=False, save=f'{sample_type}_samples'
 )
@@ -130,7 +140,7 @@ print("============= ora_estimate ============= ")
 print(adata.obsm["ora_estimate"])
 
 dict_mean_enr = dict()
-
+"""
 for l_param in leiden_res_params:
 
     mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
