@@ -5,7 +5,7 @@ import scanpy.external as sce
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import matplotlib as mpl
 import argparse
 import os
 
@@ -36,12 +36,11 @@ sc.set_figure_params(scanpy=True, dpi=150, dpi_save=300)
 # Read merged object
 adata = sc.read_h5ad(input_path)
 print(adata)
-plt.legend(loc='upper left')
 
 rows = 2
 columns = 2
-grid = plt.GridSpec(rows, columns, wspace = .4, hspace = .4)
-# plt.figure(figsize=(10, 10))
+grid = plt.GridSpec( rows, columns, wspace = .4, hspace = .4)
+# plt.figure(figsize=(100, 100))
 # plt.subplot(grid[0, 0:-1])
 
 for i in range(rows * columns):
@@ -55,8 +54,14 @@ for i in range(rows * columns):
     # plt.ylabel('randy')
     # legnd = c_ax.get_legend()
     # legnd.title_fontsize = 1.0
+    mpl.rcParams['figure.dpi']= 300
+    mpl.rcParams["figure.figsize"] = (50,50)
+    mpl.rcParams["legend.fontsize"]  = 'xx-small'
+    mpl.rcParams["legend.loc"]  = "upper right"
+    
     sc.pl.umap(adata, ax=c_ax, color=["condition"], palette=sc.pl.palettes.default_20, frameon=False, show=True)
-    c_ax.legend(loc="upper center")
+    
+    # c_ax.legend(loc="upper center")
     #plt.annotate('grid '+ str(i), xy = (.5, .5), ha = 'center', 
     #             va = 'center')
 # fig, axs = plt.subplots(2, 2, constrained_layout=True)
