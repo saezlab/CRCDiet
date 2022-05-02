@@ -45,11 +45,11 @@ grid = plt.GridSpec( rows, columns, wspace = .4, hspace = .4)
 
 plot_list = ["condition", "doublet_score", "n_genes_by_counts", "pct_counts_mt"]
 for i in range(rows * columns):
-    mpl.rcParams['figure.dpi']= 300
-    mpl.rcParams["figure.figsize"] = (20,20)
+    mpl.rcParams['figure.dpi']= 150
+    mpl.rcParams["figure.figsize"] = (10,10)
     mpl.rcParams["legend.fontsize"]  = 'xx-small'
     mpl.rcParams["legend.loc"]  = "upper right"
-    
+
     plt.subplot(grid[i])
     # plt.legend(title="deneme", loc="upper left")   
     # plt.annotate('grid '+ str(i), xy = (.5, .5), ha = 'center', 
