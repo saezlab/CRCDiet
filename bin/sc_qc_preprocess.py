@@ -115,7 +115,6 @@ def filter_cells_genes(adata, sample_id):
     
     
     # Assume they are coming from the same batch
-    adata.obs["batch"] = 0
     adata.obs["condition"] = condition
     
     
@@ -127,7 +126,7 @@ def filter_cells_genes(adata, sample_id):
 
     print("Recalculating QC metrics...")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
-    plt.figure();
+    """plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
     plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=df_threshold["mt_thr"])
@@ -140,7 +139,7 @@ def filter_cells_genes(adata, sample_id):
     sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[1][3])
     fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_after_filtering_{sample_id}.png"), dpi=300);
     plt.show();
-    plt.clf();
+    plt.clf();"""
     
     del adata.obs["predicted_doublet"]
     print("Saving filtered AnnData file...")

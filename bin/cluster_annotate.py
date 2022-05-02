@@ -35,19 +35,22 @@ sc.settings.figdir = PLOT_PATH
 
 adata = sc.read_h5ad(input_path)
 
-leiden_res_params = [0.1, 0.2, 0.5, 0.7, 1.0]
+step = 0.05
+# leiden_res_params = [0.1, 0.2, 0.5, 0.7, 1.0]
 print("Calculating distance matrix... ")
 dist_mat = pairwise_distances(adata.obsm["X_pca"], metric='euclidean')
 print("Computing neighbourhood graph... ")
 sc.pp.neighbors(adata)
 
+sil_param_scores = []
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-for l_param in leiden_res_params:
+for l_param in np.arange(0.1, 1.0, 0.05):
     print(f"Creating cluster with Leiden {l_param}")
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param}") # default resolution in 1.0
     silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param}"]), metric='precomputed')
     print(l_param, silh_scr)
-    sc.pl.umap(adata, color=["leiden"], palette=sc.pl.palettes.default_20, show=False, save=f'{l_param}_clusters')
+    sil_param_scores.append((l_param, silh_scr))
+    sc.pl.umap(adata, color=[f"leiden_{l_param}"], palette=sc.pl.palettes.default_20, show=True, save=f'{l_param}_clusters')
     """
     print(type(adata.obs[f"leiden_{l_param}"]))
     print(list(adata.obs[f"leiden_{l_param}"].cat.categories))
@@ -141,20 +144,20 @@ print(adata.obsm["ora_estimate"])
 
 dict_mean_enr = dict()
 """
-for l_param in leiden_res_params:
+"""for l_param in leiden_res_params:
 
     mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
     
     sns.clustermap(mean_enr, xticklabels=mean_enr.columns)
     plt.savefig(f"{plot_path}/{sample_type}_clustermap_res_{l_param}.pdf" if own_markers else f"{plot_path}/{sample_type}_clustermap_{marker_db}_res_{l_param}.pdf") 
-    """sns.clustermap(mean_enr06, xticklabels=mean_enr06.columns)
+    #sns.clustermap(mean_enr06, xticklabels=mean_enr06.columns)
     plt.savefig(f"{plot_path}/{sample_type}_clustermap_res06.pdf" if own_markers else f"{plot_path}/{sample_type}_clustermap_{marker_db}_res06.pdf") 
     sns.clustermap(mean_enr04, xticklabels=mean_enr04.columns)
-    plt.savefig(f"{plot_path}/{sample_type}_clustermap_res04.pdf" if own_markers else f"{plot_path}/{sample_type}_clustermap_{marker_db}_res04.pdf")"""
+    plt.savefig(f"{plot_path}/{sample_type}_clustermap_res04.pdf" if own_markers else f"{plot_path}/{sample_type}_clustermap_{marker_db}_res04.pdf")
 
     annotation_dict = dc.assign_groups(mean_enr)
-    """annotation_dict06 = dc.assign_groups(mean_enr06)
-    annotation_dict04 = dc.assign_groups(mean_enr04)"""
+    # annotation_dict06 = dc.assign_groups(mean_enr06)
+    # annotation_dict04 = dc.assign_groups(mean_enr04)
 
     if own_markers:
         # Add cell type column based on annotation
@@ -169,14 +172,14 @@ if own_markers:
     sc.pl.umap(adata, color=[f'cell_type_{l_param}' for l_param in leiden_res_params], show=False, legend_loc="on data", legend_fontsize="xx-small", save=f'{sample_type}_cell_type_res.pdf' if own_markers else f'{sample_type}_cell_type_PanglaoDB_res.pdf')
 else:
     sc.pl.umap(adata, color=[f'cell_type_{l_param}_panglao'for l_param in leiden_res_params], show=False, legend_loc="on data", legend_fontsize="xx-small", save=f'{sample_type}_cell_type_res.pdf' if own_markers else f'{sample_type}_cell_type_PanglaoDB_res.pdf')
-
+"""
 
 
 
 # sc.pl.umap(tmp, color=list(tmp.var.index)+['leiden']+['sample_id'],  show=False, save=f"{sample_type}_cell_type")
 
 # Write to file
-adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
+# adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
 
 
 # python cluster_annotate.py -i ../data/out_data/mouse_integrated.h5ad -o ../data/out_data -st mouse
