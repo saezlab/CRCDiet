@@ -43,29 +43,32 @@ grid = plt.GridSpec( rows, columns, wspace = .4, hspace = .4)
 # plt.figure(figsize=(100, 100))
 # plt.subplot(grid[0, 0:-1])
 
+plot_list = ["condition", "doublet_score", "n_genes_by_counts", "pct_counts_mt"]
 for i in range(rows * columns):
+    mpl.rcParams['figure.dpi']= 300
+    mpl.rcParams["figure.figsize"] = (20,20)
+    mpl.rcParams["legend.fontsize"]  = 'xx-small'
+    mpl.rcParams["legend.loc"]  = "upper right"
+    
     plt.subplot(grid[i])
     # plt.legend(title="deneme", loc="upper left")   
     # plt.annotate('grid '+ str(i), xy = (.5, .5), ha = 'center', 
     #              va = 'center')
+    
     c_ax = plt.gca()
     # legend = c_ax.legend(titşeloc='upper center', shadow=True, fontsize='x-small')
     # plt.xlabel('randx')
     # plt.ylabel('randy')
     # legnd = c_ax.get_legend()
     # legnd.title_fontsize = 1.0
-    mpl.rcParams['figure.dpi']= 300
-    mpl.rcParams["figure.figsize"] = (50,50)
-    mpl.rcParams["legend.fontsize"]  = 'xx-small'
-    mpl.rcParams["legend.loc"]  = "upper right"
-    
-    sc.pl.umap(adata, ax=c_ax, color=["condition"], palette=sc.pl.palettes.default_20, frameon=False, show=True)
+    sc.pl.umap(adata, ax=c_ax, color=[plot_list[i]], color_map =plt.cm.afmhot, frameon=False, show=True)
     
     # c_ax.legend(loc="upper center")
     #plt.annotate('grid '+ str(i), xy = (.5, .5), ha = 'center', 
     #             va = 'center')
 # fig, axs = plt.subplots(2, 2, constrained_layout=True)
 # for ax in axs.flat:
+
 
     
 
