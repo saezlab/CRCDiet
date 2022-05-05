@@ -32,7 +32,7 @@ Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True, dpi=150, dpi_save=300) 
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=150, dpi_save=300)
 
 meta = utils.get_meta_data("sc")
 
@@ -126,9 +126,13 @@ def filter_cells_genes(adata, sample_id):
 
     print("Recalculating QC metrics...")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
+    print("Plotting highest expressed genes after QC and filtering...")
+    sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.png")
+    sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt','pct_counts_rp'],
+             jitter=0.4, rotation= 45, show=True, save=f"basic_stats_after_filtering_{sample_id}_violin.png")
     """plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
-    sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
+    
     plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=df_threshold["mt_thr"])
     plotting.plot_ngenes_vs_counts(adata, axs[0][2], gene_thr=gene_quant_thr)
     plotting.plot_doublet_scores(adata, axs[0][3], doublet_thr=df_threshold["doublet_thr"], fontsize=11)

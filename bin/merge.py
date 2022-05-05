@@ -1,4 +1,7 @@
 # import imp
+from string import whitespace
+from tkinter import font
+from turtle import width
 import scanpy as sc
 import scanpy.external as sce
 from utils import get_meta_data
@@ -28,17 +31,20 @@ Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True, dpi=150, dpi_save=300)
+sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=150, dpi_save=300)
+plt.rcParams['figure.constrained_layout.use'] = True
 
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
 parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
+parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
 
 args = vars(parser.parse_args())
 
 input_path = args['input_dir']
 output_path = args['output_dir']
+normalization = args['normalization']
 ###############################
 
 sample_type = "sc"
@@ -67,15 +73,30 @@ for sample in samples:
 # Merge objects and delete list
 adata = adata[0].concatenate(adata[1:], join='outer')
 
+sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt','pct_counts_rp'],
+            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.png")
 
-# Log-normalize expression
-sc.pp.normalize_total(adata, target_sum=1e6)
-sc.pp.log1p(adata)
+
+# TODO: Try other normalization techniques
+if normalization == "log1p":
+
+    # Log-normalize expression
+    sc.pp.normalize_total(adata, target_sum=1e6)
+    sc.pp.log1p(adata)
+elif normalization == "pearson":
+    sc.experimental.pp.highly_variable_genes(
+        adata, batch_key='batch', flavor="pearson_residuals", n_top_genes=3000
+    )
+else:
+    # TODO: throw an error
+    pass
+    # throw NotImplementedError 
+
 
 # Compute HVG
 sc.pp.highly_variable_genes(adata, batch_key='batch')
-sc.pl.highly_variable_genes(adata, save=f'{sample_type}_merged_hvg.pdf')
-plt.show()
+# sc.pl.highly_variable_genes(adata, save=f'{sample_type}_merged_hvg.pdf')
+# plt.show()
 
 
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
@@ -123,5 +144,4 @@ plt.clf()
 adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 
-# python merge.py -i ../data/out_data -o ../data/out_data  -st mouse
-# python merge.py -i ../data/out_data -o ../data/out_data  -st human
+# python merge.py -i ../data/out_data -o ../data/out_data
