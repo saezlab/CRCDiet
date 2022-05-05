@@ -89,14 +89,14 @@ def filter_cells_genes(adata, sample_id):
     plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
-    plotting.plot_mt_vs_counts(adata, axs[0][1], mt_thr=df_threshold["mt_thr"])
-    plotting.plot_ngenes_vs_counts(adata, axs[0][2], gene_thr=gene_quant_thr)
-    plotting.plot_doublet_scores(adata, axs[0][3], doublet_thr=df_threshold["doublet_thr"], fontsize=11)
+    sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[0][1])
+    sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[0][2])
+    sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[0][3])
 
-    sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[1][0])
-    sns.histplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1][1])
-    sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[1][2])
-    sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[1][3])
+    plotting.plot_mt_vs_counts(adata, axs[1][0], mt_thr=df_threshold["mt_thr"])
+    plotting.plot_rp_vs_counts(adata, axs[1][1], rp_thr=df_threshold["rp_thr"])
+    plotting.plot_doublet_scores(adata, axs[1][2], doublet_thr=df_threshold["doublet_thr"], fontsize=11)
+    plotting.plot_ngenes_vs_counts(adata, axs[1][3], gene_thr=gene_quant_thr)
     fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{sample_id}.png"), dpi=300);
     plt.show();
     plt.clf();
@@ -128,8 +128,8 @@ def filter_cells_genes(adata, sample_id):
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     print("Plotting highest expressed genes after QC and filtering...")
     sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.png")
-    sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt','pct_counts_rp'],
-             jitter=0.4, rotation= 45, show=True, save=f"basic_stats_after_filtering_{sample_id}_violin.png")
+    #sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt','pct_counts_rp'],
+    #         jitter=0.4, rotation= 45, show=True, save=f"basic_stats_after_filtering_{sample_id}_violin.png")
     """plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     
