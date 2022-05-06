@@ -50,7 +50,7 @@ sample_type = "sc"
 # print(l_param)
 # print(adata)
 
-sc.tl.rank_genes_groups(adata, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
+"""sc.tl.rank_genes_groups(adata, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
 
 sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
 sc.pl.rank_genes_groups(adata, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')
@@ -63,19 +63,19 @@ print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_para
 
 sc.pl.rank_genes_groups_heatmap(adata, n_genes=5, key="wilcoxon", show=False, groupby="leiden", show_gene_labels=True, save=f'{sample_type}_deg_clusters_heatmap')
 
-sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
-"""
+sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')"""
+
 marker_genes = None
-own_markers = False
+own_markers = True
 marker_db="PanglaoDB"
 
 if own_markers:
     # adata = adata.raw.to_adata()
     # TODO: make this parametric
-    df_markers = pd.read_csv("..", sep=";")
-    marker_genes = []
+    marker_genes = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
+    
 
-    # adata_filtered_mouse.var.index = pd.Index(gen.split("mm10___")[1] for gen in adata_filtered_mouse.var.index.values)
+    """# adata_filtered_mouse.var.index = pd.Index(gen.split("mm10___")[1] for gen in adata_filtered_mouse.var.index.values)
     # print([gen.split("mm10___")[1] for gen in adata_filtered_mouse.var.gene_ids.values])
 
     for ind, row in df_markers.iterrows():
@@ -84,36 +84,44 @@ if own_markers:
             if [row[cell_type], cell_type] not in marker_genes:
                 marker_genes.append([row[cell_type], cell_type])
 
-    marker_genes = pd.DataFrame(marker_genes, columns=['genesymbol', 'cell_type']) 
+    marker_genes = pd.DataFrame(marker_genes, columns=['genesymbol', 'cell_type']) """
+    marker_genes["genesymbol"] = marker_genes["genesymbol"].str.upper()
     marker_genes['weight'] = 1
+    marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
+    print(marker_genes)
 else:
     
     # print(marker_genes)
-    marker_genes = dc.get_resource('PanglaoDB')
-    marker_db="PanglaoDB"
-    # Filter by canonical_marker and human
+    # marker_genes = dc.get_resource('PanglaoDB')
+    # marker_db="PanglaoDB"
+    marker_genes = pd.read_csv(os.path.join(DATA_PATH,"PanglaoDB_markers_27_Mar_2020.tsv"), sep="\t")
     print(marker_genes)
-    marker_genes = marker_genes[(marker_genes["mouse"]=='True')&(marker_genes['canonical_marker']=='True')]
-
+    # Filter by canonical_marker and human
+    
+    marker_genes = marker_genes[marker_genes["species_official"].str.contains("mouse") & marker_genes["canonical_marker"]==1.0]
+    
+    print(marker_genes["genesymbol"])
     # Remove duplicated entries
     marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
 
 print(marker_genes)
-
+adata.var.index = pd.Index(gen.upper() for gen in adata.var.index.values)
 #marker_genes['genesymbol'] = marker_genes['genesymbol'].str.upper()
+print(len(set(adata.var.index) & set(marker_genes["genesymbol"])))
 
-dc.run_ora(mat=adata, net=marker_genes, source='cell_type', target='genesymbol', min_n=3)
+print("==============")
+dc.run_ora(mat=adata, net=marker_genes, source='cell_type', target='genesymbol', min_n=0, verbose=True)
 
 # print(adata)
 # dc.run_ora(mat=adata, net=markers, source='cell_type', target='genesymbol', min_n=3, verbose=True)
 acts = dc.get_acts(adata, obsm_key='ora_estimate')
-"""
-"""print(adata.obsm)
+
+print(adata.obsm)
 print("============= ORA p-Vals ============= ")
 print(adata.obsm["ora_pvals"])
 print("============= ora_estimate ============= ")
-print(adata.obsm["ora_estimate"])"""
-"""
+print(adata.obsm["ora_estimate"])
+
 dict_mean_enr = dict()
 
 
@@ -142,7 +150,7 @@ if own_markers:
 else:
     sc.pl.umap(adata, color=f'cell_type_{l_param}_panglao', show=True, legend_loc="on data", legend_fontsize="xx-small", save=f'{sample_type}_cell_type_res.pdf' if own_markers else f'{sample_type}_cell_type_PanglaoDB_res.pdf')
 
-"""
+
 
 
 # python cluster_annotate.py -i ../data/out_data/mouse_integrated.h5ad -o ../data/out_data -st mouse

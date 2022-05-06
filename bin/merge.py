@@ -73,8 +73,12 @@ for sample in samples:
 # Merge objects and delete list
 adata = adata[0].concatenate(adata[1:], join='outer')
 
-sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt','pct_counts_rp'],
+sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
             wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.png")
+
+
+# keep raw counts in layers
+adata.layers['counts'] = adata.X
 
 
 # TODO: Try other normalization techniques
@@ -83,6 +87,7 @@ if normalization == "log1p":
     # Log-normalize expression
     sc.pp.normalize_total(adata, target_sum=1e6)
     sc.pp.log1p(adata)
+    adata.layers['normalized'] = adata.X
 elif normalization == "pearson":
     sc.experimental.pp.highly_variable_genes(
         adata, batch_key='batch', flavor="pearson_residuals", n_top_genes=3000
@@ -133,12 +138,12 @@ sc.pl.pca_loadings(adata, components=[1,2,3,4,5,6,7,8],  show=False, save=f'{sam
 
 sc.pl.pca_variance_ratio(adata, n_pcs = 50,  show=False, save=f'{sample_type}_variance_ratio.pdf')"""
 
-# Run UMAP to see the difference after integration
+"""# Run UMAP to see the difference after integration
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 sc.pl.umap(adata, color=["condition"], palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
-plt.show();
-plt.clf()
+plt.show();"""
+# plt.clf()
 
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))

@@ -86,7 +86,7 @@ def filter_cells_genes(adata, sample_id):
     
     #  “total_counts”. Sum of counts for a gene.
     #  “n_genes_by_counts”. The number of genes with at least 1 count in a cell. Calculated for all cells.
-    plt.figure();
+    # plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
     sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[0][1])
@@ -99,31 +99,39 @@ def filter_cells_genes(adata, sample_id):
     plotting.plot_ngenes_vs_counts(adata, axs[1][3], gene_thr=gene_quant_thr)
     fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{sample_id}.png"), dpi=300);
     plt.show();
-    plt.clf();
+    # plt.clf();
     
 
     # number og genes at each change it to 200 
     sc.pp.filter_cells(adata, min_genes = df_threshold["gene_thr"])
     sc.pp.filter_genes(adata, min_cells=df_threshold["cell_thr"])
 
+    # Filter MALAT1 and Gm42418
+    adata = adata[:, ~adata.var_names.str.startswith('Malat1')]
+    adata = adata[:, ~adata.var_names.str.startswith('Gm42418')]
+
     # filter based on total counts    
     adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
     adata = adata[adata.obs.pct_counts_rp > df_threshold["rp_thr"], :]
     adata = adata[adata.obs.doublet_score < df_threshold["doublet_thr"], : ]
     adata = adata[adata.obs.n_genes_by_counts < gene_quant_thr, : ]
+
+    # remove mitochondrial genes
+    adata = adata[:,~adata.var["mt"]]
+    
+    # remove ribosomal genes
+    adata = adata[:,~adata.var["rp"]]
+
     post_filter_shape = np.shape(adata.X)
-    
-    
-    # Assume they are coming from the same batch
-    adata.obs["condition"] = condition
-    
+
+    adata.obs["condition"] = condition    
     
     print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]],\
                     [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]],\
                     headers=["Sample ID", 'Stage', "# of cells", "# of genes"], tablefmt='fancy_grid'))
     # print( {pre_filter_shape}")
     # print(f"AnnData shape after filtering {post_filter_shape}")
-
+    sc.set_figure_params(figsize=(8, 8)) 
     print("Recalculating QC metrics...")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     print("Plotting highest expressed genes after QC and filtering...")
@@ -158,7 +166,7 @@ def create_filtered_adata_files():
         sample_id = row["sample_id"]
         condition = row["condition"]
         adata = utils.read_raw_sc_sample(sample_id)
-        printmd(f"<h4 style='color:grey' align='center'>=============== Processing {condition} ===============")
+        printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
         print(f"")
         
         filter_cells_genes(adata, sample_id)

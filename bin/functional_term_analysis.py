@@ -15,12 +15,10 @@ import seaborn as sns
 parser = argparse.ArgumentParser(prog='qc', description='Run Downstream Analysis')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
-parser.add_argument('-st', '--sample_type', help='Human, mouse or tumor', required=True)
 args = vars(parser.parse_args())
 
 input_path = args['input_path']
 output_path = args['output_dir']
-sample_type = args['sample_type']
 
 plot_path="../plots/"
 sc.settings.figdir = plot_path

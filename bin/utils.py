@@ -10,6 +10,7 @@ sc.settings.verbosity = 0
 S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
 DATA_PATH = os.path.join(S_PATH, "../data")
 SC_RAW_DATA_PATH = os.path.join(S_PATH, "../data", "sc_outputs")
+VIS_RAW_DATA_PATH = os.path.join(S_PATH, "../data", "visium_outputs")
 OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
 PLOT_PATH =  os.path.join(S_PATH, "plots")
 
@@ -64,15 +65,21 @@ def get_meta_data(sc_or_vis):
 
 
 def read_raw_sc_sample(sample_name):
+    '''Read raw single-cell data'''
+
     adata = sc.read_10x_mtx(os.path.join(SC_RAW_DATA_PATH, sample_name, "outs", 'filtered_feature_bc_matrix'), cache=True)
     adata.var_names_make_unique()
     return adata
 
 def read_raw_visium_sample(sample_name):
-    adata = sc.read_10x_mtx(os.path.join(DATA_PATH, sample_name, 'filtered_feature_bc_matrix'), cache=True)
+    '''Read raw visium data'''
+    
+    adata = sc.read_visium(os.path.join(VIS_RAW_DATA_PATH,sample_name), count_file="filtered_feature_bc_matrix.h5", cache=True)
     adata.var_names_make_unique()
     return adata
 
 
 def printmd(string):
     display(Markdown(string))
+
+
