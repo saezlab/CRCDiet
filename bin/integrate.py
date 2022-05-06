@@ -30,7 +30,7 @@ Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=150, dpi_save=300)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=150, dpi_save=150)
 
 print("Reading merged object...")
 # Read merged object
