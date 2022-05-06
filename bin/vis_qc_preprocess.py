@@ -1,15 +1,29 @@
+from genericpath import sameopenfile
 import os
 import utils
 import numpy as np
 import scanpy as sc
 import pandas as pd
 import seaborn as sns
+from pathlib import Path
 import matplotlib.pyplot as plt
-# from pysctransform import SCTransform
+import scanpy.external as sce
 from anndata._core.anndata import AnnData
-from utils import out_data_path, plot_path, data_path
+from utils import OUT_DATA_PATH, PLOT_PATH, DATA_PATH, read_raw_sc_sample
+import os
+import argparse
+import plotting
+from tabulate import tabulate
+import warnings
+from utils import printmd
+sc.settings.verbosity = 0
 
-meta = utils.get_meta_data()
+
+
+warnings.simplefilter(action='ignore')
+
+
+meta = utils.get_meta_data("visium")
 
 
 def get_threshold_dict():
@@ -51,6 +65,18 @@ def filter_cells_genes(adata, sample_id):
     adata.var["rp"] = adata.var_names.str.contains("^Rp[sl]")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
 
+    sc.pl.spatial(adata, img_key="hires", title=condition, color="total_counts", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
+    sc.pl.spatial(adata, img_key="hires", title=condition, color="n_genes_by_counts", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
+    sc.pl.spatial(adata, img_key="hires", title=condition, color="pct_counts_rp", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
+    sc.pl.spatial(adata, img_key="hires", title=condition, color="pct_counts_mt", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
+
+    # , title=condition, color=adata.obs.pct_counts_mt, color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
+    """
+    adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
+    adata = adata[adata.obs.pct_counts_rp > df_threshold["rp_thr"], :]
+    adata = adata[adata.obs.doublet_score < df_threshold["doublet_thr"], : ]
+    adata = adata[adata.obs.n_genes_by_counts < gene_quant_thr, : ]
+    """
     # TODO: Visualize features
     # ST.FeaturePlot(se, features = c("nFeature_RNA", "nCount_RNA", "percent.mito", "percent.ribo"), ncol = 2, grid.ncol = 1, cols = c("darkblue", "cyan", "yellow", "red", "darkred"), show.sb = F)
 
@@ -92,50 +118,6 @@ def filter_cells_genes(adata, sample_id):
     return adata
 
 
-def get_filtered_sample_dict(ignored_samples):
-    """Get the filtered samples as a dictionary
-
-    This function creates a pickle from a dictionary where the keys are sample ids and the values are filtered anndata object.
-
-    Args:
-        ignored_samples (str): sample ids to be ignored seperated by comma
-    
-    """
-    processed_sample_dict = dict()
-
-    for _, row in meta.iterrows():
-        sample_id = row["sample_id"]
-        condition = row["condition"]
-        
-        if sample_id not in ignored_samples.split(","):
-            row = meta[meta["sample_id"]==sample_id]
-            condition = str(row["condition"].values[0])
-            print(f"Analysis of sample {sample_id} \t Condition: {condition}")
-            processed_sample_dict[sample_id] = filter_cells_genes(sample_id)
-
-    utils.write_pickle(os.path.join(out_data_path, "filtered_sample_dict.pckl"), processed_sample_dict)
-
-
-
-def get_processed_sample_from_adata_file(sample_id):
-    """Given samples id get filtered adata object
-
-    This function takes sample id as input and returns the filtered AnnData object
-
-    Args:
-        sample_id (str): the name of the folder where the sample files stored
-    
-    Returns:
-        Filtered AnnData object of the sample
-
-    """
-    row = meta[meta["sample_id"]==sample_id]
-    condition = str(row["condition"].values[0])
-    adata = sc.read(os.path.join(out_data_path, f"{sample_id}_{condition}_filtered.h5ad"))
-
-    return adata
-
-
 
 def create_filtered_adata_files():
 
@@ -143,7 +125,7 @@ def create_filtered_adata_files():
     
         sample_id = row["sample_id"]
         condition = row["condition"]
-        adata = utils.read_raw_sc_sample(sample_id)
+        adata = utils.read_raw_visium_sample(sample_id)
         printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
         print(f"")
         
@@ -151,21 +133,4 @@ def create_filtered_adata_files():
         # break
 
 
-
-def get_processed_sample_from_adata_file(sample_id):
-    """Given samples id get filtered adata object
-
-    This function takes sample id as input and returns the filtered AnnData object
-
-    Args:
-        sample_id (str): the name of the folder where the sample files stored
-    
-    Returns:
-        Filtered AnnData object of the sample
-
-    """
-    # row = meta[meta["sample_id"]==sample_id]
-    adata = sc.read(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
-
-    return adata
-
+create_filtered_adata_files()

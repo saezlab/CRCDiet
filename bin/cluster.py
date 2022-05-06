@@ -68,13 +68,14 @@ sc.pp.neighbors(adata)
 
 silh_param_scores = []
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-for l_param in np.arange(0.1, 1.0, 0.05):
+for l_param in np.arange(0.3, 1.0, 0.05):
     print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
     silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
     print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
     silh_param_scores.append((l_param, silh_scr))
     sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], palette=sc.pl.palettes.default_20, show=True, save=f'res-{l_param:.2f}_silh-{silh_scr:.3f}_clusters')
+    break
     
 
 

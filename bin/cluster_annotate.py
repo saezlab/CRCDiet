@@ -11,7 +11,14 @@ import argparse
 import os
 import sys
 from sklearn.metrics import silhouette_score, pairwise_distances
+import sys
+import warnings
+from utils import printmd
+sc.settings.verbosity = 0
 
+
+
+warnings.simplefilter(action='ignore')
 
 # Read integrated object
 # Read command line and set args
@@ -44,16 +51,16 @@ adata = sc.read_h5ad(input_path)
 adata.uns['log1p']["base"] = None
 
 l_param, _ = adata.uns["leiden_best_silh_param"]
-
+l_param = f"{l_param:.2f}"
 sample_type = "sc"
 
 # print(l_param)
 # print(adata)
 
-"""sc.tl.rank_genes_groups(adata, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
+sc.tl.rank_genes_groups(adata, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
 
-sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
-sc.pl.rank_genes_groups(adata, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')
+sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+sc.pl.rank_genes_groups(adata, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')
 
 wc = sc.get.rank_genes_groups_df(adata, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
 print(l_param)
@@ -61,10 +68,14 @@ print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_para
 
 
 
-sc.pl.rank_genes_groups_heatmap(adata, n_genes=5, key="wilcoxon", show=False, groupby="leiden", show_gene_labels=True, save=f'{sample_type}_deg_clusters_heatmap')
+sc.pl.rank_genes_groups_heatmap(adata, n_genes=5, key=f"wilcoxon_{l_param}", groupby=f"leiden_{l_param}", show_gene_labels=True, show=True, save=f'{sample_type}_deg_clusters_heatmap')
 
-sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')"""
+sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", groupby=f"leiden_{l_param}", show=True, save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
 
+
+sys.exit(0)
+
+# TODO: Incorporate the marker genes sent from the lab
 marker_genes = None
 own_markers = True
 marker_db="PanglaoDB"
@@ -153,5 +164,4 @@ else:
 
 
 
-# python cluster_annotate.py -i ../data/out_data/mouse_integrated.h5ad -o ../data/out_data -st mouse
-# python cluster_annotate.py -i ../data/out_data/human_integrated.h5ad -o ../data/out_data -st human
+# python cluster_annotate.py -i ../data/out_data/sc_integrated.h5ad -o ../data/out_data
