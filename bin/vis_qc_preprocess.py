@@ -7,20 +7,33 @@ import pandas as pd
 import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
-import scanpy.external as sce
-from anndata._core.anndata import AnnData
-from utils import OUT_DATA_PATH, PLOT_PATH, DATA_PATH, read_raw_sc_sample
+from utils import OUT_DATA_PATH, PLOT_PATH, DATA_PATH
 import os
-import argparse
 import plotting
 from tabulate import tabulate
 import warnings
 from utils import printmd
+from matplotlib import rcParams
+import matplotlib as mpl
+
+
 sc.settings.verbosity = 0
 
 
-
+sc.set_figure_params(scanpy=True, facecolor="white")
 warnings.simplefilter(action='ignore')
+
+S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
+DATA_PATH = os.path.join(S_PATH, "../data")
+OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "vis_qc_preprocess")
+
+Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
+Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
+sc.settings.figdir = PLOT_PATH
+
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=150, dpi_save=300)
+
 
 
 meta = utils.get_meta_data("visium")
@@ -30,10 +43,9 @@ def get_threshold_dict():
     """This functions keeps the threshold used to filter the data"""
 
     df_threshold = {"mt_thr": 10, # mitochondrial gene threshold
-                "rp_thr": 5, # ribosomal gene threshold
+                # "rp_thr": 3, # ribosomal gene threshold
                 "gene_thr": 200,
-                "cell_thr": 3,
-                "gene_qnt": 0.99}
+                "cell_thr": 5}
 
     return df_threshold
 
@@ -63,36 +75,21 @@ def filter_cells_genes(adata, sample_id):
     # calculate qc metrics
     adata.var["mt"] = adata.var_names.str.contains("^mt-")
     adata.var["rp"] = adata.var_names.str.contains("^Rp[sl]")
+
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
+    mpl.rcParams["image.cmap"]= plt.cm.Spectral
+    sc.pl.spatial(adata, img_key="hires", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 0.3, show=True, save=f"vis_{sample_id}.png")
+    plt.show();
 
-    sc.pl.spatial(adata, img_key="hires", title=condition, color="total_counts", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
-    sc.pl.spatial(adata, img_key="hires", title=condition, color="n_genes_by_counts", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
-    sc.pl.spatial(adata, img_key="hires", title=condition, color="pct_counts_rp", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
-    sc.pl.spatial(adata, img_key="hires", title=condition, color="pct_counts_mt", color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
+    fig, axs = plt.subplots(1, 5, figsize=(30, 10));
+    sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0])
+    sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[1])
+    sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[2])
+    plotting.plot_mt_vs_counts(adata, axs[3], mt_thr=df_threshold["mt_thr"])
+    plotting.plot_rp_vs_counts(adata, axs[4]) # , rp_thr=df_threshold["rp_thr"])
+    fig.savefig(os.path.join(PLOT_PATH, f"vis_basic_stats_before_filtering_{sample_id}.png"), dpi=300);
+    plt.show();
 
-    # , title=condition, color=adata.obs.pct_counts_mt, color_map="bwr", size=1.0, alpha_img=0.5, wspace = 0.1, hspace = 1.0, show=True)
-    """
-    adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
-    adata = adata[adata.obs.pct_counts_rp > df_threshold["rp_thr"], :]
-    adata = adata[adata.obs.doublet_score < df_threshold["doublet_thr"], : ]
-    adata = adata[adata.obs.n_genes_by_counts < gene_quant_thr, : ]
-    """
-    # TODO: Visualize features
-    # ST.FeaturePlot(se, features = c("nFeature_RNA", "nCount_RNA", "percent.mito", "percent.ribo"), ncol = 2, grid.ncol = 1, cols = c("darkblue", "cyan", "yellow", "red", "darkred"), show.sb = F)
-
-    # Plot before the preprocessing
-    fig, axs = plt.subplots(1, 4, figsize=(15, 4))
-    sns.distplot(adata.obs["total_counts"], kde=False, ax=axs[0])
-    sns.distplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1])
-    sns.distplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[2])
-    sns.distplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[3])
-    fig.savefig(os.path.join(plot_path, "preprocess", f"basic_stats_before_filtering_{sample_id}.png") , dpi=300)
-
-    # remove mitochondrial genes
-    adata = adata[:,~adata.var["mt"]]
-    
-    # remove ribosomal genes
-    adata = adata[:,~adata.var["rp"]]
 
     # number og genes at each change it to 300
     # each spot has at least 500 
@@ -100,20 +97,40 @@ def filter_cells_genes(adata, sample_id):
     sc.pp.filter_cells(adata, min_counts=500)
     sc.pp.filter_genes(adata, min_cells=5)
 
-    # Plot after the preprocessing
-    sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True)
-    fig, axs = plt.subplots(1, 4, figsize=(15, 4))
-    sns.distplot(adata.obs["total_counts"], kde=False, ax=axs[0])
-    sns.distplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1])
-    sns.distplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[2])
-    sns.distplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[3])
-    fig.savefig(os.path.join(plot_path, "preprocess", f"basic_stats_after_filtering_{sample_id}.png") , dpi=300)
+    adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
+    print("After mit filter ", np.shape(adata.X))
+    # adata = adata[adata.obs.pct_counts_rp > df_threshold["rp_thr"], :]
+    # print("After ribosomal filter ", np.shape(adata.X))
+
+    # Filter MALAT1 and Gm42418
+    adata = adata[:, ~adata.var_names.str.startswith('Malat1')]
+    adata = adata[:, ~adata.var_names.str.startswith('Gm42418')]
+    # remove mitochondrial genes
+    adata = adata[:,~adata.var["mt"]]
+    # remove ribosomal genes
+    adata = adata[:,~adata.var["rp"]]
 
     post_filter_shape = np.shape(adata.X)
-    adata.obs["batch"] = sample_id
-    print(f"{sample_id}:\nAnnData shape before filtering {pre_filter_shape}")
-    print(f"AnnData shape before filtering {post_filter_shape}")
-    adata.write(os.path.join(out_data_path, f"{sample_id}_{condition}_filtered.h5ad"))
+
+    adata.obs["condition"] = condition    
+    
+    print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]],\
+                    [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]],\
+                    headers=["Sample ID", 'Stage', "# of cells", "# of genes"], tablefmt='fancy_grid'))
+    
+    sc.set_figure_params(figsize=(8, 8)) 
+    print("Recalculating QC metrics...")
+    sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
+    print("Plotting highest expressed genes after QC and filtering...")
+    sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.png")
+    
+    adata.layers["raw"] = adata.X.copy()
+    adata.layers["sqrt_norm"] = np.sqrt(
+    sc.pp.normalize_total(adata, inplace=False)["X"]
+)
+
+    print("Saving filtered AnnData file...")
+    adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
 
     return adata
 
@@ -127,10 +144,6 @@ def create_filtered_adata_files():
         condition = row["condition"]
         adata = utils.read_raw_visium_sample(sample_id)
         printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
-        print(f"")
-        
         filter_cells_genes(adata, sample_id)
         # break
 
-
-create_filtered_adata_files()

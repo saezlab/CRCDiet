@@ -106,16 +106,16 @@ def filter_cells_genes(adata, sample_id):
     sc.pp.filter_cells(adata, min_genes = df_threshold["gene_thr"])
     sc.pp.filter_genes(adata, min_cells=df_threshold["cell_thr"])
 
-    # Filter MALAT1 and Gm42418
-    adata = adata[:, ~adata.var_names.str.startswith('Malat1')]
-    adata = adata[:, ~adata.var_names.str.startswith('Gm42418')]
-
     # filter based on total counts    
     adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
     adata = adata[adata.obs.pct_counts_rp > df_threshold["rp_thr"], :]
     adata = adata[adata.obs.doublet_score < df_threshold["doublet_thr"], : ]
     adata = adata[adata.obs.n_genes_by_counts < gene_quant_thr, : ]
 
+    # Filter MALAT1 and Gm42418
+    adata = adata[:, ~adata.var_names.str.startswith('Malat1')]
+    adata = adata[:, ~adata.var_names.str.startswith('Gm42418')]
+    
     # remove mitochondrial genes
     adata = adata[:,~adata.var["mt"]]
     

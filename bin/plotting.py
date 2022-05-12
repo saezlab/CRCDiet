@@ -35,10 +35,11 @@ def plot_mt_vs_counts(data, ax, mt_thr=20, fontsize=11):
     ax.set_ylabel("Fraction MT counts", fontsize=fontsize)
 
 
-def plot_rp_vs_counts(data, ax, rp_thr=5, fontsize=11):    
+def plot_rp_vs_counts(data, ax, rp_thr=None, fontsize=11):    
     # Plot scatter
     ax.scatter(x=data.obs.total_counts, y=data.obs.pct_counts_rp, s=1, c='gray')
-    ax.axhline(y=rp_thr, linestyle='--', color="black")
+    if rp_thr:
+        ax.axhline(y=rp_thr, linestyle='--', color="black")
     ax.set_xlabel("Total counts", fontsize=fontsize)
     ax.set_ylabel("Fraction RP counts", fontsize=fontsize)
 

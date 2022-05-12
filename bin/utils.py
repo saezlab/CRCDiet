@@ -73,7 +73,6 @@ def read_raw_sc_sample(sample_name):
 
 def read_raw_visium_sample(sample_name):
     '''Read raw visium data'''
-    print(os.path.join(VIS_RAW_DATA_PATH,sample_name))
     adata = sc.read_visium(os.path.join(VIS_RAW_DATA_PATH,sample_name , "outs"), count_file="filtered_feature_bc_matrix.h5")
     adata.var_names_make_unique()
     return adata
