@@ -136,3 +136,5 @@ bin/__pycache__
 plots/.DS_Store
 .DS_Store
 docs/
+data/
+bin/*.ipynb
