@@ -38,7 +38,7 @@ meta = utils.get_meta_data("visium")
 S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
 DATA_PATH = os.path.join(S_PATH, "../data")
 OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "cluster")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_cluster")
 
 Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
@@ -48,8 +48,6 @@ adata = sc.read_h5ad(input_path)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
-
-best_l_param, best_s_scr = -1, -1
 
 step = 0.05
 dist_mat = None
@@ -77,6 +75,7 @@ print("Computing neighbourhood graph... ")
 sc.pp.neighbors(adata)
 
 
+best_l_param, best_s_scr = -1, -1
 
 silh_param_scores = []
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
@@ -85,11 +84,11 @@ for l_param in np.arange(0.1, 1.01, 0.05):
     print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
     silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
-    # print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
+    print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
     silh_param_scores.append((l_param, silh_scr))
-    # sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True, save=f'{sample_type}_res-{l_param:.2f}_silh-{silh_scr:.3f}_clusters')
-
-    """l_param = f"{l_param:.2f}"
+    """sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True, save=f'{sample_type}_res-{l_param:.2f}_silh-{silh_scr:.3f}_clusters')
+    
+    l_param = f"{l_param:.2f}"
     rows, cols = (1, 6)
     fig, ax = plt.subplots(rows, cols, figsize=(20,20))
 
@@ -118,7 +117,7 @@ l_param, _ = adata.uns["leiden_best_silh_param"]
 
 l_param = f"{l_param:.2f}"
 
-sc.pl.umap(adata, color=[f"leiden_{l_param}"], title=" Clusters - Integrated Samples", palette=sc.pl.palettes.default_20, show=True, save=f'{sample_type}_res-{l_param}_clusters')
+"""sc.pl.umap(adata, color=[f"leiden_{l_param}"], title=" Clusters - Integrated Samples", palette=sc.pl.palettes.default_20, show=True, save=f'{sample_type}_res-{l_param}_clusters')
 
 rows, cols = (1, 6)
 fig, ax = plt.subplots(rows, cols, figsize=(20,20))
@@ -144,7 +143,7 @@ for ind, row in meta.iterrows():
     #mpl.rcParams["image.cmap"]= plt.cm.magma_r
     #sc.pl.spatial(adata_raw, img_key="hires", color =list(set(adata.var.index) & set(markers)),  size=1.0, alpha_img=0.5, wspace = 0.3)
 plt.tight_layout()
-plt.show();
+plt.show();"""
 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file

@@ -13,9 +13,11 @@ import sys
 from sklearn.metrics import silhouette_score, pairwise_distances
 import sys
 import warnings
+import utils
 from utils import printmd
-sc.settings.verbosity = 0
+import matplotlib as mpl
 
+sc.settings.verbosity = 0
 
 
 warnings.simplefilter(action='ignore')
@@ -37,14 +39,16 @@ sample_type = "sc"
 S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
 DATA_PATH = os.path.join(S_PATH, "../data")
 OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "annotate")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_annotate")
 
 Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80)
 
 adata = sc.read_h5ad(input_path)
 
+adata_concat = utils.get_filtered_concat_data(sample_type)
 # https://github.com/scverse/scanpy/issues/2239
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
@@ -54,114 +58,25 @@ l_param, _ = adata.uns["leiden_best_silh_param"]
 l_param = f"{l_param:.2f}"
 sample_type = "sc"
 
-# print(l_param)
-# print(adata)
-
-sc.tl.rank_genes_groups(adata, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
-
-sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
-sc.pl.rank_genes_groups(adata, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')
-
-wc = sc.get.rank_genes_groups_df(adata, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
-print(l_param)
-print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))
-
-
-
-sc.pl.rank_genes_groups_heatmap(adata, n_genes=5, key=f"wilcoxon_{l_param}", groupby=f"leiden_{l_param}", show_gene_labels=True, show=True, save=f'{sample_type}_deg_clusters_heatmap')
-
-sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", groupby=f"leiden_{l_param}", show=True, save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
-
-
-sys.exit(0)
-
-# TODO: Incorporate the marker genes sent from the lab
-marker_genes = None
-own_markers = True
-marker_db="PanglaoDB"
-
-if own_markers:
-    # adata = adata.raw.to_adata()
-    # TODO: make this parametric
-    marker_genes = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
+l_param_list = [0.20]
+for l_param in l_param_list:
+    l_param = f"{l_param:.2f}"
+    printmd(f"## Clusters with resolution param: {l_param} <a class='anchor' id='seventh-bullet-1'></a>")
     
+    adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
+    adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
+    mpl.rcParams["figure.figsize"] = (10,10)
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 , show=True);
+    # plt.show();
+    # change below anndata objects to "anndata" to run on only HVGs
+    mpl.rcParams["figure.figsize"] = (5,5)
+    sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
+    mpl.rcParams['axes.titlesize'] = 20
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')#
+    # mpl.rcParams['axes.titlesize'] = 60
+    # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
 
-    """# adata_filtered_mouse.var.index = pd.Index(gen.split("mm10___")[1] for gen in adata_filtered_mouse.var.index.values)
-    # print([gen.split("mm10___")[1] for gen in adata_filtered_mouse.var.gene_ids.values])
-
-    for ind, row in df_markers.iterrows():
-
-        for cell_type in df_markers.columns:
-            if [row[cell_type], cell_type] not in marker_genes:
-                marker_genes.append([row[cell_type], cell_type])
-
-    marker_genes = pd.DataFrame(marker_genes, columns=['genesymbol', 'cell_type']) """
-    marker_genes["genesymbol"] = marker_genes["genesymbol"].str.upper()
-    marker_genes['weight'] = 1
-    marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
-    print(marker_genes)
-else:
+    wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
+    # print(l_param)
+    # print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))
     
-    # print(marker_genes)
-    # marker_genes = dc.get_resource('PanglaoDB')
-    # marker_db="PanglaoDB"
-    marker_genes = pd.read_csv(os.path.join(DATA_PATH,"PanglaoDB_markers_27_Mar_2020.tsv"), sep="\t")
-    print(marker_genes)
-    # Filter by canonical_marker and human
-    
-    marker_genes = marker_genes[marker_genes["species_official"].str.contains("mouse") & marker_genes["canonical_marker"]==1.0]
-    
-    print(marker_genes["genesymbol"])
-    # Remove duplicated entries
-    marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
-
-print(marker_genes)
-adata.var.index = pd.Index(gen.upper() for gen in adata.var.index.values)
-#marker_genes['genesymbol'] = marker_genes['genesymbol'].str.upper()
-print(len(set(adata.var.index) & set(marker_genes["genesymbol"])))
-
-print("==============")
-dc.run_ora(mat=adata, net=marker_genes, source='cell_type', target='genesymbol', min_n=0, verbose=True)
-
-# print(adata)
-# dc.run_ora(mat=adata, net=markers, source='cell_type', target='genesymbol', min_n=3, verbose=True)
-acts = dc.get_acts(adata, obsm_key='ora_estimate')
-
-print(adata.obsm)
-print("============= ORA p-Vals ============= ")
-print(adata.obsm["ora_pvals"])
-print("============= ora_estimate ============= ")
-print(adata.obsm["ora_estimate"])
-
-dict_mean_enr = dict()
-
-
-
-mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
-
-sns.clustermap(mean_enr, xticklabels=mean_enr.columns)
-plt.savefig(f"{PLOT_PATH}/{sample_type}_clustermap_res_{l_param}.pdf" if own_markers else f"{PLOT_PATH}/{sample_type}_clustermap_{marker_db}_res_{l_param}.pdf") 
-
-
-annotation_dict = dc.assign_groups(mean_enr)
-# annotation_dict06 = dc.assign_groups(mean_enr06)
-# annotation_dict04 = dc.assign_groups(mean_enr04)
-
-if own_markers:
-    # Add cell type column based on annotation
-    adata.obs[f'cell_type_{l_param}'] = [annotation_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
-else:
-    # Add cell type column based on annotation
-    adata.obs[f'cell_type_{l_param}_panglao'] = [annotation_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
-        
-
-if own_markers:
-    # Visualize
-    sc.pl.umap(adata, color=f'cell_type_{l_param}', show=True, legend_loc="on data", legend_fontsize="xx-small", save=f'{sample_type}_cell_type_res.pdf' if own_markers else f'{sample_type}_cell_type_PanglaoDB_res.pdf')
-else:
-    sc.pl.umap(adata, color=f'cell_type_{l_param}_panglao', show=True, legend_loc="on data", legend_fontsize="xx-small", save=f'{sample_type}_cell_type_res.pdf' if own_markers else f'{sample_type}_cell_type_PanglaoDB_res.pdf')
-
-
-
-
-# python cluster_annotate.py -i ../data/out_data/sc_integrated.h5ad -o ../data/out_data

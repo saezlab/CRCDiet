@@ -25,13 +25,13 @@ Open all samples QC processed files, merge them
 S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
 DATA_PATH = os.path.join(S_PATH, "../data")
 OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "merge")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_merge")
 
 Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=150, dpi_save=300)
+sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=80, dpi_save=150)
 plt.rcParams['figure.constrained_layout.use'] = True
 
 # Read command line and set args
@@ -51,6 +51,9 @@ sample_type = "sc"
 # Load meta data
 meta = utils.get_meta_data("sc")
 samples = np.unique(meta['sample_id'])
+
+markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
+markers = list(set(markers_df["genesymbol"].str.capitalize()))
 
 # put the samples in a list
 adata = []
@@ -72,15 +75,21 @@ for sample in samples:
     
 # Merge objects and delete list
 adata = adata[0].concatenate(adata[1:], join='outer')
+sc.pp.calculate_qc_metrics(adata, inplace=True)
 
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
             wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.png")
 
 
-# keep raw counts in layers
-adata.layers['counts'] = adata.X
+# keep raw counts in layers
+adata.layers['counts'] = adata.X.copy()
+adata.layers["sqrt_norm"] = np.sqrt(
+    sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
 
+adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
+sc.pp.log1p(adata, layer="log1p_transformed")
 
+"""
 # TODO: Try other normalization techniques
 if normalization == "log1p":
 
@@ -96,28 +105,72 @@ else:
     # TODO: throw an error
     pass
     # throw NotImplementedError 
+"""
 
+sc.experimental.pp.highly_variable_genes(
+        adata, batch_key='batch', flavor="pearson_residuals", n_top_genes=3000
+    )
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+hvgs = adata.var["highly_variable"]
+
+ax.scatter(
+    adata.var["mean_counts"], adata.var["residual_variances"], s=3, edgecolor="none"
+)
+ax.scatter(
+    adata.var["mean_counts"][hvgs],
+    adata.var["residual_variances"][hvgs],
+    c="tab:red",
+    label="selected genes",
+    s=3,
+    edgecolor="none",
+)
+ax.scatter(
+    adata.var["mean_counts"][np.isin(adata.var_names, markers)],
+    adata.var["residual_variances"][np.isin(adata.var_names, markers)],
+    c="k",
+    label="known marker genes",
+    s=10,
+    edgecolor="none",
+)
+ax.set_xscale("log")
+ax.set_xlabel("mean expression")
+ax.set_yscale("log")
+ax.set_ylabel("residual variance")
+# ax.set_title(adata.obs["condition"][0])
+
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.yaxis.set_ticks_position("left")
+ax.xaxis.set_ticks_position("bottom")
+plt.legend()
+
+txt="In the figure below, red dots show the selected genes (i.e. highly variable genes) and the black ones represent the marker genes."
+plt.figtext(0.5, 1.0, txt, wrap=True, horizontalalignment='left', fontsize=12)
+plt.show();
 
 # Compute HVG
-sc.pp.highly_variable_genes(adata, batch_key='batch')
+# sc.pp.highly_variable_genes(adata, batch_key='batch')
 # sc.pl.highly_variable_genes(adata, save=f'{sample_type}_merged_hvg.pdf')
 # plt.show()
 
 
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
-adata.raw = adata
-
 
 # Filter by HVG
-num_hvg_genes = 3000
+num_hvg_genes = 4000
 batch_msk = np.array(adata.var.highly_variable_nbatches > 1)
 hvg = adata.var[batch_msk].sort_values('highly_variable_nbatches').tail(num_hvg_genes).index
 adata.var['highly_variable'] = [g in hvg for g in adata.var.index]
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
 adata = adata[:,hvg]
 
+
+print("Performing analytic Pearson residual normalization...")
+sc.experimental.pp.normalize_pearson_residuals(adata)
+
 # Run PCA
-sc.pp.scale(adata)
+# sc.pp.scale(adata)
 
 sc.tl.pca(adata, svd_solver='arpack', random_state=0)
 
@@ -138,15 +191,19 @@ sc.pl.pca_loadings(adata, components=[1,2,3,4,5,6,7,8],  show=False, save=f'{sam
 
 sc.pl.pca_variance_ratio(adata, n_pcs = 50,  show=False, save=f'{sample_type}_variance_ratio.pdf')"""
 
-"""# Run UMAP to see the difference after integration
+# Run UMAP to see the difference after integration
+
+print("Computing neighbors...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
+print("\nUMAP of merged objects before integration")
 sc.pl.umap(adata, color=["condition"], palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
-plt.show();"""
-# plt.clf()
+plt.show();
 
+# plt.clf()
+print("Saving the merged object...")
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 
-# python merge.py -i ../data/out_data -o ../data/out_data
+# python sc_merge.py -i ../data/out_data -o ../data/out_data

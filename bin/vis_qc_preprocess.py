@@ -26,13 +26,13 @@ warnings.simplefilter(action='ignore')
 S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
 DATA_PATH = os.path.join(S_PATH, "../data")
 OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "vis_qc_preprocess")
+PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_qc_preprocess")
 
 Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=150, dpi_save=300)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
 
 
 

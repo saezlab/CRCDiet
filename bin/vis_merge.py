@@ -32,7 +32,7 @@ Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=150, dpi_save=300)
+sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=80, dpi_save=150)
 plt.rcParams['figure.constrained_layout.use'] = True
 
 # Read command line and set args
@@ -81,6 +81,7 @@ for sample in samples:
 # Merge objects and delete list
 adata = adata[0].concatenate(adata[1:], join='outer')
 sc.pp.calculate_qc_metrics(adata, inplace=True)
+
 
 """
 fig, axes = plt.subplots(1, 6, figsize=(12, 6))
@@ -170,9 +171,13 @@ sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
 # adata_pbmc3k = adata[~adata.obs['outlier_total'], :]
 
 # keep raw counts in layers
-adata.layers['counts'] = adata.X
+adata.layers['counts'] = adata.X.copy()
 adata.layers["sqrt_norm"] = np.sqrt(
-    sc.pp.normalize_total(adata, inplace=False)["X"])
+    sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
+
+adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
+sc.pp.log1p(adata, layer="log1p_transformed")
+
 
 
 """
@@ -243,10 +248,7 @@ plt.show();
 # sc.pl.highly_variable_genes(adata, save=f'{sample_type}_merged_hvg.pdf')
 # plt.show()
 
-
-
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
-
 
 # Filter by HVG
 num_hvg_genes = 5000
@@ -258,6 +260,8 @@ adata = adata[:,hvg]
 
 print("Performing analytic Pearson residual normalization...")
 sc.experimental.pp.normalize_pearson_residuals(adata)
+
+# print(adata.X)
 
 # Run PCA
 # sc.pp.scale(adata)
@@ -283,8 +287,8 @@ sc.pl.pca_variance_ratio(adata, n_pcs = 50,  show=False, save=f'{sample_type}_va
 
 print("Computing neighbors...")
 # Run UMAP to see the difference after integration
-print("\nUMAP of merged objects before integration")
 sc.pp.neighbors(adata)
+print("\nUMAP of merged objects before integration")
 sc.tl.umap(adata)
 sc.pl.umap(adata, color=["condition"], palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
 plt.show();
@@ -295,4 +299,4 @@ print("Saving the merged object...")
 adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 
-# python merge.py -i ../data/out_data -o ../data/out_data
+# python vis_merge.py -i ../data/out_data -o ../data/out_data

@@ -81,4 +81,28 @@ def read_raw_visium_sample(sample_name):
 def printmd(string):
     display(Markdown(string))
 
-
+def get_filtered_concat_data(sample_type):
+    meta = get_meta_data(sample_type)
+    # TODO: Use whole transcriptome instead of HVGs
+    # Comment out the section below for running DEGs on HVGs
+    # TODO: Refactor this script, it is ugly and inefficient
+    adata_concat = []
+    for ind, row in meta.iterrows():
+        
+    
+        sample_id = row["sample_id"]
+        condition = row["condition"]
+        # print(sample_id)
+        tmp = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
+        # Fetch sample metadata
+        m = meta[meta['sample_id'] == sample_id]
+        # Add metadata to adata
+        for col in m.columns:
+            tmp.obs[col] = m[col].values[0]
+        # Append
+        adata_concat.append(tmp)
+        del tmp
+    
+    # Merge objects and delete list
+    adata_concat = adata_concat[0].concatenate(adata_concat[1:], join='outer')
+    return adata_concat

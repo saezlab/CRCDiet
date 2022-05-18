@@ -34,10 +34,34 @@ Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
 Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
 sc.settings.figdir = PLOT_PATH
 
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80) # , dpi_save=150)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80) # , dpi_save=150
+
+adata_integ_clust = sc.read_h5ad(input_path)
+
 
 meta = utils.get_meta_data("visium")
-adata = sc.read_h5ad(input_path)
+# adata = sc.read_h5ad(input_path)
+
+adata = []
+for ind, row in meta.iterrows():
+    sample_id = row["sample_id"]
+    condition = row["condition"]
+    # print(sample_id)
+    tmp = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
+    # Fetch sample metadata
+    m = meta[meta['sample_id'] == sample_id]
+    # Add metadata to adata
+    for col in m.columns:
+        tmp.obs[col] = m[col].values[0]
+    # Append
+    adata.append(tmp)
+    del tmp
+
+# Merge objects and delete list
+adata = adata[0].concatenate(adata[1:], join='outer')
+
+
+adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
@@ -45,15 +69,13 @@ markers = list(set(markers_df["genesymbol"].str.capitalize()))
 print("Plotting the activities of marker genes on the slides...\n")
 
 marker_intersect = list(set(adata.var.index) & set(markers))
-l_param, _ = adata.uns["leiden_best_silh_param"]
-
-l_param = f"{l_param:.2f}"
+print(f"Number of intersected marker genes: {len(marker_intersect)}")
 
 for ind, marker in enumerate(marker_intersect):
     rows, cols = (len(marker_intersect), 6)
     fig, ax = plt.subplots(1, 6, figsize=(20,2))
     # fig.tight_layout()
-    
+    print(f"Plotting marker: {marker}")
     for ind2, row in meta.iterrows():
     
         # fig_row, fig_col = int(ind/cols), ind%cols
@@ -64,13 +86,11 @@ for ind, marker in enumerate(marker_intersect):
         adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
         adata_raw = adata_raw[adata_temp.obs.index,:]
         adata_raw = adata_raw[:, list(adata.var_names)]
-        adata_raw.obs[f"leiden_{l_param}"] = adata_temp.obs[f"leiden_{l_param}"]
-        # sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}",  size=1.5, alpha_img=0.5, ax = ax[fig_row][fig_col], show=False)
-        # print(condition, adata_raw.obs[f"leiden_{l_param}"])
+
         mpl.rcParams["image.cmap"]= plt.cm.magma_r
         mpl.rcParams['axes.titlesize'] = 12
         # colorbar_loc=None,
-        sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker}:{condition}", size=1.25, alpha_img=0.5, ax = ax[ind2], show=False)
+        sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, ax = ax[ind2], show=False)
         cbar = ax[ind2].collections[0].colorbar
         cbar.set_ticks([])
         #plt.tight_layout(h_pad=1)
@@ -78,5 +98,6 @@ for ind, marker in enumerate(marker_intersect):
         # sc.pl.violin(adata, list(set(adata.var.index) & set(markers)), show=True, groupby=f"leiden_{l_param}")
     plt.show();
 
+    sc.pl.umap(adata, color=marker)
 
 #  python vis_visualize_cluster.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data
