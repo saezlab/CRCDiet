@@ -51,11 +51,21 @@ adata_integ_clust = sc.read_h5ad(input_path)
 l_param, _ = adata_integ_clust.uns["leiden_best_silh_param"]
 l_param = f"{l_param:.2f}"
 
+
+
 adata = utils.get_filtered_concat_data(sample_type)
+
+
+for ind in range(6):
+
+    adata.var[f'mt-{ind}'] = adata.var[f'mt-{ind}'].astype(str)
+    adata.var[f'rp-{ind}'] = adata.var[f'mt-{ind}'].astype(str)
+
 adata.obs[f"leiden_{l_param}"] = adata_integ_clust.obs[f"leiden_{l_param}"]
 
 marker_genes = None
 own_markers = True
+both = True
 marker_db="PanglaoDB"
 
 if own_markers:
@@ -63,26 +73,58 @@ if own_markers:
     # TODO: make this parametric
     marker_genes = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
     marker_genes["genesymbol"] = marker_genes["genesymbol"].str.capitalize()
+    
+    if both:
+        marker_genes_pk = dc.get_resource('PanglaoDB')
+        # marker_db="PanglaoDB"
+        # marker_genes = pd.read_csv(os.path.join(DATA_PATH,"PanglaoDB_markers_27_Mar_2020.tsv"), sep="\t")
+        # print(marker_genes)
+        # Filter by canonical_marker and human
+        # Filter by canonical_marker and human
+        marker_genes_pk = marker_genes_pk[(marker_genes_pk['mouse']=='True')&(marker_genes_pk['canonical_marker']=='True')]
+
+        # Remove duplicated entries
+        # marker_genes = marker_genes[marker_genes["species_official"].str.contains("mouse") & marker_genes["canonical_marker"]==1.0]
+        marker_genes_pk = marker_genes_pk[['cell_type', 'genesymbol']]
+        print(marker_genes_pk)
+        marker_genes_pk = marker_genes_pk[marker_genes_pk.cell_type != "Müller cells"]
+        print(marker_genes_pk)
+        # Remove duplicated entries
+        marker_genes_pk = marker_genes_pk[~marker_genes_pk.duplicated(['cell_type', 'genesymbol'])]
+        marker_genes = pd.concat([marker_genes, marker_genes_pk])
+        print(marker_genes)
+    
+    
     marker_genes['weight'] = 1
     marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
+
 
 else:
     
     # print(marker_genes)
-    # marker_genes = dc.get_resource('PanglaoDB')
+    marker_genes = dc.get_resource('PanglaoDB')
     # marker_db="PanglaoDB"
-    marker_genes = pd.read_csv(os.path.join(DATA_PATH,"PanglaoDB_markers_27_Mar_2020.tsv"), sep="\t")
-    print(marker_genes)
+    # marker_genes = pd.read_csv(os.path.join(DATA_PATH,"PanglaoDB_markers_27_Mar_2020.tsv"), sep="\t")
+    # print(marker_genes)
     # Filter by canonical_marker and human
-    
-    marker_genes = marker_genes[marker_genes["species_official"].str.contains("mouse") & marker_genes["canonical_marker"]==1.0]
+    # Filter by canonical_marker and human
+    marker_genes = marker_genes[(marker_genes['mouse']=='True')&(marker_genes['canonical_marker']=='True')]
+
+    # Remove duplicated entries
+    # marker_genes = marker_genes[marker_genes["species_official"].str.contains("mouse") & marker_genes["canonical_marker"]==1.0]
     
     print(marker_genes["genesymbol"])
     # Remove duplicated entries
     marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
 
+
+marker_genes["genesymbol"] = marker_genes["genesymbol"].str.capitalize()
+marker_genes["cell_type"] = marker_genes["cell_type"].str.capitalize()
+marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
+
 dc.run_ora(mat=adata, net=marker_genes, use_raw=False, source='cell_type', target='genesymbol', min_n=3, verbose=True)
 acts = dc.get_acts(adata, obsm_key='ora_estimate')
+print(acts)
 
 # print("============= ORA p-Vals ============= ")
 # print(adata.obsm["ora_pvals"])
@@ -98,15 +140,42 @@ mpl.rcParams['axes.titlesize'] = 20
 cell_types = list(set(marker_genes["cell_type"]))
 sc.pl.umap(adata, color=list(adata.obsm["ora_pvals"].columns))
 
+"""for ind, row in meta.iterrows():
+        sample_id = row["sample_id"]
+        condition = row["condition"]
+        
+        adata_tmp = adata[adata.obs["condition"]==condition,:]
+        #adata = sc.read_h5ad(os.path.join(input_path,f"{sample_id}_filtered.h5ad"))
+        #adata_samp_cc = adata_cc_merged[adata_cc_merged.obs["condition"]==condition,:]
+        sc.pl.umap(adata_tmp, color="regeneration", title=f"{condition} - regeneration")"""
+
+
+
 dict_mean_enr = dict()
 
 mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
+print(mean_enr)
 
 annotation_dict = dc.assign_groups(mean_enr)
 
+print(annotation_dict)
+
 adata.obs[f'cell_type_{l_param}'] = [annotation_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
 
-# sc.pl.umap(adata, color=f'cell_type_{l_param}', show=True, legend_loc="on data", legend_fontsize="xx-small")
 
+mpl.rcParams['figure.dpi']= 150
+mpl.rcParams["figure.figsize"] = (10,10)
+mpl.rcParams["legend.fontsize"]  = 'xx-small'
+mpl.rcParams["legend.loc"]  = "upper right"
+mpl.rcParams['axes.facecolor'] = "white"
+
+
+
+# the number of genes expressed in the count matrix
+
+
+sc.pl.umap(adata, color=f'cell_type_{l_param}', title= ["Cell type annotation"], show=True, s=10, legend_loc="on data", legend_fontsize="xx-small")
+adata_integ_clust.obs[f'cell_type_{l_param}'] = adata.obs[f'cell_type_{l_param}']
+adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
 # python sc_cell_type_annot.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data
 

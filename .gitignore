@@ -138,3 +138,4 @@ plots/.DS_Store
 docs/
 data/
 bin/*.ipynb
+bin/.pybiomart.sqlite

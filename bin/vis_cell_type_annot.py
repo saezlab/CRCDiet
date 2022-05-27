@@ -72,7 +72,7 @@ adata = adata[0].concatenate(adata[1:], join='outer')
 
 
 marker_genes = None
-own_markers = True
+own_markers = False
 marker_db="PanglaoDB"
 
 if own_markers:
