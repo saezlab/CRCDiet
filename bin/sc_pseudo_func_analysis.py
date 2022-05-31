@@ -19,34 +19,25 @@ import utils
 import matplotlib as mpl
 from copy import deepcopy
 
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 sc.settings.verbosity = 0
-
 warnings.simplefilter(action='ignore')
-
-# Read integrated object
-# Read command line and set args
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80)
+# Parse arguments
 parser = argparse.ArgumentParser(prog='cluster', description='Cell type annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 args = vars(parser.parse_args())
-
 input_path = args['input_path']
 output_path = args['output_dir']
-
-###############################
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_pse_func_analys")
+############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type = "sc"
-meta = utils.get_meta_data("sc")
-
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_pse_func_analys")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80)
+meta = utils.get_meta_data(sample_type)
 
 adata_integ_clust = sc.read_h5ad(input_path)
 l_param, _ = adata_integ_clust.uns["leiden_best_silh_param"]
@@ -78,14 +69,11 @@ adata.obs[f"leiden_{l_param}"] = adata_integ_clust.obs[f"leiden_{l_param}"]
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 adata.obs[f"cell_type_{l_param}"] = adata_integ_clust.obs[f"cell_type_{l_param}"]
 
-print(adata.obs[f"leiden_{l_param}"])
 adata.obs['selection'] = pd.Categorical(adata.obs[f"leiden_{l_param}"]=="1")
 
-# print(adata.obs['selection'])
 
 adata.obs['selection'] = adata.obs['selection'].astype(str)
 
-# "HFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Immune
 # "{'CD-AOM-DSS-Epi_plus_DN', 'CD-AOM-DSS-Immune', 'HFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Epi_plus_DN', 'HFD-AOM-DSS-Epi_plus_DN'}"
 
 padata = dc.get_pseudobulk(adata, sample_col='condition', groups_col=f"cell_type_{l_param}", layer='counts', min_prop=0.2, min_smpls=3)
@@ -93,31 +81,41 @@ padata = dc.get_pseudobulk(adata, sample_col='condition', groups_col=f"cell_type
 logFCs, pvals = dc.get_contrast(adata,
                                 group_col=f"cell_type_{l_param}",
                                 condition_col='condition',
+                                # condition='HFD-AOM-DSS-Epi_plus_DN',
+                                # reference='LFD-AOM-DSS-Epi_plus_DN',
                                 condition='HFD-AOM-DSS-Immune',
                                 reference='LFD-AOM-DSS-Immune',
                                 method='t-test'
                                )
 
-#logFCs.columns.name = 'name'
-
-# logFCs.values = logFCs.astype(np.float32)
-# logFCs.values = logFCs.values.astype(np.float32)
-
 deg = dc.format_contrast_results(logFCs, pvals)
 # print(deg)
-
-
+"""
+How the activities changes in "condition" with respect to "reference"
+"""
 
 # Infer pathway activities with mlm
 pathway_acts, pathway_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=progeny, source='source', target='target', weight='weight')
 
-pathway_acts
-
 sns.clustermap(pathway_acts, center=0, cmap='coolwarm')
 plt.show()
-print("logFCs", logFCs)
-dc.plot_volcano(deepcopy(logFCs).astype('float64'), deepcopy(pvals).astype('float64'), 'TGFb', "Fibroblasts", progeny, top=5, source='source', target='target', weight='weight', sign_thr=0.05, lFCs_thr=0.5)
-plt.show()
+
+"""
+It looks like JAK-STAT is active across cell types in COVID-19 compared to healthy. 
+To further explore how the target genes behave, we can plot them in a volcano plot:
+"""
+
+"""mpl.rcParams["font.size"] = 7
+logFCs = logFCs[(logFCs>-10) & (logFCs<10)]
+for c_t in logFCs.index:
+
+    dc.plot_volcano(deepcopy(logFCs).astype('float64'), deepcopy(pvals).astype('float64'), 'TGFb', c_t, progeny, top=10, source='source', target='target', weight='weight', sign_thr=0.05, lFCs_thr=0.5)
+    plt.show()"""
+
+
+"""sc.pl.umap(adata[adata[: , 'Gata3'].X > 7.5, :], size=2.0 )
+sc.pl.umap(adata[adata[: , 'Foxp3'].X > 4.0, :], size=2.0 )
+sc.pl.umap(adata, size=1.5 )"""
 
 ## Dorothea Part
 

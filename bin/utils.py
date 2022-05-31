@@ -2,6 +2,7 @@ import os
 import pickle
 import pandas as pd
 import scanpy as sc
+from pathlib import Path
 from IPython.display import Markdown, display
 
 sc.settings.verbosity = 0
@@ -106,3 +107,19 @@ def get_filtered_concat_data(sample_type):
     # Merge objects and delete list
     adata_concat = adata_concat[0].concatenate(adata_concat[1:], join='outer')
     return adata_concat
+
+
+def set_n_return_paths(name):
+    """
+    This function sets the paths
+    """
+    S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
+    DATA_PATH = os.path.join(S_PATH, "../data")
+    OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data2")
+    PLOT_PATH =  os.path.join(S_PATH, "../plots", name)
+
+    Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
+    Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
+    sc.settings.figdir = PLOT_PATH
+
+    return S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH

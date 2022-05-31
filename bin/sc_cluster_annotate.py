@@ -1,5 +1,6 @@
 from genericpath import sameopenfile
 from operator import index
+from imageio import save
 import matplotlib.pyplot as plt
 from pathlib import Path
 import seaborn as sns 
@@ -17,35 +18,24 @@ import utils
 from utils import printmd
 import matplotlib as mpl
 
-sc.settings.verbosity = 0
-
-
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
-
-# Read integrated object
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 args = vars(parser.parse_args())
-
 input_path = args['input_path']
 output_path = args['output_dir']
-
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_cluster_annotate")
 ###############################
 
 sample_type = "sc"
-
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_annotate")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80)
-
 adata = sc.read_h5ad(input_path)
 
 adata_concat = utils.get_filtered_concat_data(sample_type)
@@ -56,7 +46,6 @@ adata.uns['log1p']["base"] = None
 
 l_param, _ = adata.uns["leiden_best_silh_param"]
 l_param = f"{l_param:.2f}"
-sample_type = "sc"
 
 l_param_list = [0.20]
 for l_param in l_param_list:
@@ -65,10 +54,17 @@ for l_param in l_param_list:
     
     adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
     adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
+    mpl.rcParams['figure.dpi']= 150
     mpl.rcParams["figure.figsize"] = (10,10)
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 , show=True);
+    mpl.rcParams["legend.fontsize"]  = 'xx-small'
+    mpl.rcParams["legend.loc"]  = "upper right"
+    mpl.rcParams['axes.facecolor'] = "white"
+
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 ,legend_loc='on data', show=True, save=f'{sample_type}_leiden_{l_param}_ondata');
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 , show=False, save=f'{sample_type}_leiden_{l_param}_umap');
     # plt.show();
     # change below anndata objects to "anndata" to run on only HVGs
+    mpl.rcParams['figure.dpi']= 80
     mpl.rcParams["figure.figsize"] = (5,5)
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
     mpl.rcParams['axes.titlesize'] = 20

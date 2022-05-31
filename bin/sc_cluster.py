@@ -15,39 +15,30 @@ import pickle
 import warnings
 import utils
 
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
-
-
-# Read integrated object
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=50, dpi_save=50)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run Clustering and annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 args = vars(parser.parse_args())
-
 input_path = args['input_path']
 output_path = args['output_dir']
-
-###############################
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_cluster")
+############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type = "sc"
-meta = utils.get_meta_data("visium")
 
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_cluster")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=50, dpi_save=50)
-
+meta = utils.get_meta_data(sample_type)
 adata = sc.read_h5ad(input_path)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
-
 
 dist_mat = None
 
@@ -72,7 +63,7 @@ step = 0.10
 
 silh_param_scores = []
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-for l_param in [0.2, 0.4]:
+for l_param in [0.20]:
     # np.arange(0.1, 1.01, step):
 
     print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
@@ -85,12 +76,9 @@ for l_param, s_scr in silh_param_scores:
     if s_scr > best_s_scr:
         best_l_param, best_s_scr = l_param, s_scr
 
-
-
 adata.uns["leiden_best_silh_param"] = [best_l_param, best_s_scr]
 
 l_param, _ = adata.uns["leiden_best_silh_param"]
-
 l_param = f"{l_param:.2f}"
 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")

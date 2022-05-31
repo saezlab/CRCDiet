@@ -1,51 +1,35 @@
-# import imp
-from string import whitespace
-from tkinter import font
-from turtle import width
-import scanpy as sc
-import scanpy.external as sce
-from utils import get_meta_data
-import numpy as np
-import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
-from pathlib import Path
-import utils
-import os
+import scanpy as sc
+import pandas as pd
+import numpy as np
 import argparse
 import warnings
+import utils
+import os
 
+'''
+Open all samples QC processed files, merge, perform HVGs selection and save the AnnData object
+'''
+
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
-
-'''
-Open all samples QC processed files, merge them
-'''
-
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_merge")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
-sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=80, dpi_save=150)
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", fontsize=8, dpi=80, dpi_save=150)
 plt.rcParams['figure.constrained_layout.use'] = True
-
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
 parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
 parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
-
 args = vars(parser.parse_args())
-
 input_path = args['input_dir']
 output_path = args['output_dir']
 normalization = args['normalization']
-###############################
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_merge")
+############################### BOOOORIING STUFF ABOVE ###############################
 
 sample_type = "sc"
 # Load meta data
@@ -55,31 +39,11 @@ samples = np.unique(meta['sample_id'])
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
 
-# put the samples in a list
-adata = []
-# for sample in os.listdir(input_path):
-for sample in samples:
+adata = utils.get_filtered_concat_data(sample_type)
 
-    tmp = sc.read_h5ad(os.path.join(input_path,f"{sample}_filtered.h5ad"))
-
-    # Fetch sample metadata
-    m = meta[meta['sample_id'] == sample]
-    
-    # Add metadata to adata
-    for col in m.columns:
-        tmp.obs[col] = m[col].values[0]
-
-    # Append
-    adata.append(tmp)
-    del tmp
-    
-# Merge objects and delete list
-adata = adata[0].concatenate(adata[1:], join='outer')
 sc.pp.calculate_qc_metrics(adata, inplace=True)
-
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
             wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.png")
-
 
 # keep raw counts in layers
 adata.layers['counts'] = adata.X.copy()
@@ -149,12 +113,6 @@ txt="In the figure below, red dots show the selected genes (i.e. highly variable
 plt.figtext(0.5, 1.0, txt, wrap=True, horizontalalignment='left', fontsize=12)
 plt.show();
 
-# Compute HVG
-# sc.pp.highly_variable_genes(adata, batch_key='batch')
-# sc.pl.highly_variable_genes(adata, save=f'{sample_type}_merged_hvg.pdf')
-# plt.show()
-
-
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
 
 # Filter by HVG
@@ -164,7 +122,6 @@ hvg = adata.var[batch_msk].sort_values('highly_variable_nbatches').tail(num_hvg_
 adata.var['highly_variable'] = [g in hvg for g in adata.var.index]
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
 adata = adata[:,hvg]
-
 
 print("Performing analytic Pearson residual normalization...")
 sc.experimental.pp.normalize_pearson_residuals(adata)
@@ -178,21 +135,8 @@ sc.tl.pca(adata, svd_solver='arpack', random_state=0)
 df_loadings = pd.DataFrame(adata.varm['PCs'], index=adata.var_names)
 # get rank of each loading for each PC
 df_rankings = pd.DataFrame((-1 * df_loadings.values).argsort(0).argsort(0), index=df_loadings.index, columns=df_loadings.columns)
-# c.f. with df_loadings.apply(scipy.stats.rankdata, axis=0)
-# evaluate 
-# print("Top loadings for PC1...")
-# print(df_loadings[0].sort_values().tail())
-# print("Rank of IKZF1 for first 5 PCs...")
-# print(df_rankings.loc["IKZF1"].head())
-
-"""sc.pl.pca_overview(adata, color='sample_id', show=False, save=f'{sample_type}_pca_overview.pdf')
-
-sc.pl.pca_loadings(adata, components=[1,2,3,4,5,6,7,8],  show=False, save=f'{sample_type}_pca_loadings.pdf')
-
-sc.pl.pca_variance_ratio(adata, n_pcs = 50,  show=False, save=f'{sample_type}_variance_ratio.pdf')"""
 
 # Run UMAP to see the difference after integration
-
 print("Computing neighbors...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)

@@ -16,37 +16,38 @@ import plotting
 from tabulate import tabulate
 import warnings
 from utils import printmd
-sc.settings.verbosity = 0
 
+'''
+Run QC and filtering per sample
+'''
 
-
+############################### BOOOORIING STUFF BELOW ###############################
+# Warning settings
 warnings.simplefilter(action='ignore')
-
-
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "sc_qc_preprocess")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
+sc.settings.verbosity = 0
+# Set figure params
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_qc_preprocess")
+############################### BOOOORIING STUFF ABOVE ###############################
 
 meta = utils.get_meta_data("sc")
 
 def get_threshold_dict():
-    """This functions keeps the threshold used to filter the data"""
+    """This functions keeps the threshold used to filter the data
+    
+    Returns:
+        dict: return the dictionary of used thresholds
+    """
 
-    df_threshold = {"mt_thr": 20, # mitochondrial gene threshold
+    threshold_dict = {"mt_thr": 20, # mitochondrial gene threshold
                 "rp_thr": 5, # ribosomal gene threshold
                 "doublet_thr": 0.2, #doublet threshold
                 "gene_thr": 200,
                 "cell_thr": 3,
                 "gene_qnt": 0.99}
 
-    return df_threshold
+    return threshold_dict
 
 
 
@@ -159,8 +160,6 @@ def create_filtered_adata_files():
         
         filter_cells_genes(adata, sample_id)
         # break
-
-
 
 def get_processed_sample_from_adata_file(sample_id):
     """Given samples id get filtered adata object
