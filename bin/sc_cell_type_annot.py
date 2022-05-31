@@ -130,14 +130,14 @@ cell_types = list(set(marker_genes["cell_type"]))
 # sc.pl.umap(adata, color=set(adata.obsm["ora_estimate"].columns))#&set(own_cell_type_list))
 sc.pl.umap(adata, color=set(adata.obsm["ora_estimate"].columns) &set(own_cell_type_list))
 
-print("Stroma plots per sample...")
+print("Regeneration plots per sample...")
 for ind, row in meta.iterrows():
     sample_id = row["sample_id"]
     condition = row["condition"]
     adata_tmp = adata[adata.obs["condition"]==condition,:]
     #adata = sc.read_h5ad(os.path.join(input_path,f"{sample_id}_filtered.h5ad"))
     #adata_samp_cc = adata_cc_merged[adata_cc_merged.obs["condition"]==condition,:]
-    sc.pl.umap(adata_tmp, color="Stroma", title=f"{condition} - Stroma")
+    sc.pl.umap(adata_tmp, color="Regeneration", title=f"{condition} - Regeneration")
 
 
 
@@ -154,12 +154,12 @@ annotation_dict['4'] = "Myeloid cells"
 annotation_dict['20'] = "Enteroendocrine"
 annotation_dict['10'] = "ILC2"
 annotation_dict['12'] = "Goblet cells"
-annotation_dict['1'] = "Regeneration"
-annotation_dict['5'] = "Regeneration"
-annotation_dict['8'] = "Regeneration"
+annotation_dict['1'] = "Stroma"
+annotation_dict['5'] = "Stroma"
+annotation_dict['8'] = "Stroma"
 # annotation_dict['9'] = "Regeneration"
 annotation_dict['9'] = "Myofibroblasts"
-annotation_dict['15'] = "Regeneration"
+annotation_dict['15'] = "Stroma"
 annotation_dict['17'] = "Keratynocytes"
 annotation_dict['23'] = "Prolif."
 annotation_dict['3'] = "Prolif. + Mature enterocytes"
@@ -180,7 +180,7 @@ mpl.rcParams["figure.figsize"] = (10,10)
 mpl.rcParams['axes.facecolor'] = "white"
 
 # the number of genes expressed in the count matrix
-sc.pl.umap(adata, color=f'cell_type_{l_param}', title= ["Cell type annotation"], show=True, s=10, legend_loc="on data", legend_fontsize="xx-small",  save=f'{sample_type}_cell_type_annot_{l_param}'))
+sc.pl.umap(adata, color=f'cell_type_{l_param}', title= ["Cell type annotation"], show=True, s=10, legend_loc="on data", legend_fontsize="xx-small",  save=f'{sample_type}_cell_type_annot_{l_param}')
 adata_integ_clust.obs[f'cell_type_{l_param}'] = adata.obs[f'cell_type_{l_param}']
 adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
 # python sc_cell_type_annot.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data
