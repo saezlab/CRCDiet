@@ -19,7 +19,7 @@ Integrate the merged samples using Harmony and save the AnnData object
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Harmony')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
@@ -45,7 +45,7 @@ print("Computing neighbours ...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 
-mpl.rcParams['figure.dpi']= 150
+mpl.rcParams['figure.dpi']= 300
 mpl.rcParams["figure.figsize"] = (10,10)
 mpl.rcParams["legend.fontsize"]  = 'xx-small'
 mpl.rcParams["legend.loc"]  = "upper right"

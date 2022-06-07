@@ -26,7 +26,7 @@ Run QC and filtering per sample
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_qc_preprocess")
 ############################### BOOOORIING STUFF ABOVE ###############################
@@ -98,7 +98,7 @@ def filter_cells_genes(adata, sample_id):
     plotting.plot_rp_vs_counts(adata, axs[1][1], rp_thr=df_threshold["rp_thr"])
     plotting.plot_doublet_scores(adata, axs[1][2], doublet_thr=df_threshold["doublet_thr"], fontsize=11)
     plotting.plot_ngenes_vs_counts(adata, axs[1][3], gene_thr=gene_quant_thr)
-    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{sample_id}.png"));
+    fig.savefig(os.path.join(PLOT_PATH, f"basic_stats_before_filtering_{sample_id}.pdf"));
     plt.show();
     # plt.clf();
     
@@ -136,7 +136,7 @@ def filter_cells_genes(adata, sample_id):
     print("Recalculating QC metrics...")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     print("Plotting highest expressed genes after QC and filtering...")
-    sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.png")
+    sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.pdf")
 
     adata.layers["raw"] = adata.X.copy()
     adata.layers["sqrt_norm"] = np.sqrt(

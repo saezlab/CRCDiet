@@ -16,16 +16,19 @@ import utils
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run marker visualization')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name'] # "sc_visualize_markers"
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_visualize_markers")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
 
 sample_type ="sc"
@@ -37,6 +40,9 @@ meta = utils.get_meta_data(sample_type)
 adata = utils.get_filtered_concat_data(sample_type)
 sc.pp.normalize_total(adata, target_sum=1e6)
 sc.pp.log1p(adata)
+
+# filter out the cells missing in adata_integ_clust
+adata = adata[adata_integ_clust.obs_names,:]
 
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 

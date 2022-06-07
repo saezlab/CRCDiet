@@ -20,21 +20,31 @@ import utils
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=50, dpi_save=50)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=50, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run Clustering and annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-of', '--output_file', help='Output file name', required=False)
+
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name'] # sc_cluster
+output_file = args['output_file']
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_cluster")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type = "sc"
-
 meta = utils.get_meta_data(sample_type)
+
+if output_file:
+    sample_type = f"{sample_type}_{output_file}"
+print(sample_type)
+
+
 adata = sc.read_h5ad(input_path)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
@@ -63,8 +73,8 @@ step = 0.10
 
 silh_param_scores = []
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-for l_param in [0.20]:
-    # np.arange(0.1, 1.01, step):
+#for l_param in np.arange(0.1, 1.01, step):
+for l_param in [0.30]:
 
     print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0

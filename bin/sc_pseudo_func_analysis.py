@@ -24,23 +24,36 @@ from copy import deepcopy
 sc.settings.verbosity = 0
 warnings.simplefilter(action='ignore')
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Parse arguments
 parser = argparse.ArgumentParser(prog='cluster', description='Cell type annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+# parser.add_argument('-sc', '--sample_column', help='Sample column', required=True)
+parser.add_argument('-con', '--condition', help='Condition sample', required=True)
+parser.add_argument('-gc', '--group_column', help='Group column', required=True)
+parser.add_argument('-ref', '--reference', help='Reference sample', required=True)
+parser.add_argument('-lp', '--leiden_param', type=float, help='Final Leiden parameter', required=True)
+
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name'] # "sc_pse_func_analys"
+condition = args['condition']
+group_col = args['group_column']
+reference = args['reference']
+l_param = args['leiden_param']
+
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_pse_func_analys")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type = "sc"
 meta = utils.get_meta_data(sample_type)
 
 adata_integ_clust = sc.read_h5ad(input_path)
-l_param, _ = adata_integ_clust.uns["leiden_best_silh_param"]
+# l_param, _ = adata_integ_clust.uns["leiden_best_silh_param"]
 l_param = f"{l_param:.2f}"
 
 # Retrieve PROGENy model weights
@@ -65,26 +78,24 @@ for ind in range(6):
     adata.var[f'mt-{ind}'] = adata.var[f'mt-{ind}'].astype(str)
     adata.var[f'rp-{ind}'] = adata.var[f'mt-{ind}'].astype(str)
 
-adata.obs[f"leiden_{l_param}"] = adata_integ_clust.obs[f"leiden_{l_param}"]
+# adata.obs[f"leiden_{l_param}"] = adata_integ_clust.obs[f"leiden_{l_param}"]
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
-adata.obs[f"cell_type_{l_param}"] = adata_integ_clust.obs[f"cell_type_{l_param}"]
+adata.obs[group_col] = adata_integ_clust.obs[group_col] # f"cell_type_{l_param}"
 
-adata.obs['selection'] = pd.Categorical(adata.obs[f"leiden_{l_param}"]=="1")
-
-
-adata.obs['selection'] = adata.obs['selection'].astype(str)
+# adata.obs['selection'] = pd.Categorical(adata.obs[f"leiden_{l_param}"]=="1")
+# adata.obs['selection'] = adata.obs['selection'].astype(str)
 
 # "{'CD-AOM-DSS-Epi_plus_DN', 'CD-AOM-DSS-Immune', 'HFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Epi_plus_DN', 'HFD-AOM-DSS-Epi_plus_DN'}"
 
-padata = dc.get_pseudobulk(adata, sample_col='condition', groups_col=f"cell_type_{l_param}", layer='counts', min_prop=0.2, min_smpls=3)
+padata = dc.get_pseudobulk(adata, sample_col='condition', groups_col=group_col, layer='counts', min_prop=0.2, min_smpls=3)
 
 logFCs, pvals = dc.get_contrast(adata,
-                                group_col=f"cell_type_{l_param}",
+                                group_col=group_col, # f"cell_type_{l_param}"
                                 condition_col='condition',
                                 # condition='HFD-AOM-DSS-Epi_plus_DN',
                                 # reference='LFD-AOM-DSS-Epi_plus_DN',
-                                condition='HFD-AOM-DSS-Immune',
-                                reference='LFD-AOM-DSS-Immune',
+                                condition= condition, # 'HFD-AOM-DSS-Immune',
+                                reference= reference,  #'LFD-AOM-DSS-Immune',
                                 method='t-test'
                                )
 

@@ -16,7 +16,7 @@ Open all samples QC processed files, merge, perform HVGs selection and save the 
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", fontsize=8, dpi=80, dpi_save=150)
+sc.set_figure_params(scanpy=True, facecolor="white", fontsize=8, dpi=80, dpi_save=300)
 plt.rcParams['figure.constrained_layout.use'] = True
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
@@ -43,7 +43,7 @@ adata = utils.get_filtered_concat_data(sample_type)
 
 sc.pp.calculate_qc_metrics(adata, inplace=True)
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
-            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.png")
+            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
 
 # keep raw counts in layers
 adata.layers['counts'] = adata.X.copy()

@@ -115,7 +115,7 @@ def set_n_return_paths(name):
     """
     S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
     DATA_PATH = os.path.join(S_PATH, "../data")
-    OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data2")
+    OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
     PLOT_PATH =  os.path.join(S_PATH, "../plots", name)
 
     Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
