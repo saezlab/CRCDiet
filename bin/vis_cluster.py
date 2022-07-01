@@ -18,32 +18,31 @@ import math
 import warnings
 
 
-warnings.simplefilter(action='ignore')
 
-# Read integrated object
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
+warnings.simplefilter(action='ignore')
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=50, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run Clustering and annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
-args = vars(parser.parse_args())
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 
+args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
-
-###############################
+analysis_name = args['analysis_name'] # sc_cluster
+output_file = args['output_file']
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
+############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type = "visium"
-meta = utils.get_meta_data("visium")
 
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_cluster")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=50, dpi_save=50)
 adata = sc.read_h5ad(input_path)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
@@ -52,13 +51,7 @@ markers = list(set(markers_df["genesymbol"].str.capitalize()))
 step = 0.05
 dist_mat = None
 
-print("Calculating distance matrix... ")
-dist_mat = pairwise_distances(adata.obsm["X_pca"], metric='euclidean') #  , n_jobs=-1)
-
-with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'wb') as handle:
-        pickle.dump(dist_mat, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-"""if not os.path.exists(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle'):
+if not os.path.exists(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle'):
     print("Calculating distance matrix... ")
     dist_mat = pairwise_distances(adata.obsm["X_pca"], metric='euclidean') #  , n_jobs=-1)
 
@@ -68,8 +61,7 @@ with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'wb') as handle:
 else:
     print("Loading precomputed distance matrix... ")
     with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'rb') as handle:
-        dist_mat = pickle.load(handle) """
-
+        dist_mat = pickle.load(handle)
 
 print("Computing neighbourhood graph... ")
 sc.pp.neighbors(adata)

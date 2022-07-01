@@ -34,7 +34,7 @@ parser.add_argument('-an', '--analysis_name', help='Analysis name', required=Tru
 parser.add_argument('-con', '--condition', help='Condition sample', required=True)
 parser.add_argument('-gc', '--group_column', help='Group column', required=True)
 parser.add_argument('-ref', '--reference', help='Reference sample', required=True)
-parser.add_argument('-lp', '--leiden_param', type=float, help='Final Leiden parameter', required=True)
+parser.add_argument('-lp', '--leiden_param', type=float, help='Final Leiden parameter', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
@@ -54,10 +54,11 @@ meta = utils.get_meta_data(sample_type)
 
 adata_integ_clust = sc.read_h5ad(input_path)
 # l_param, _ = adata_integ_clust.uns["leiden_best_silh_param"]
-l_param = f"{l_param:.2f}"
+if l_param:
+    l_param = f"{l_param:.2f}"
 
 # Retrieve PROGENy model weights
-progeny = dc.get_progeny(top=300)
+progeny = dc.get_progeny(organism='mouse', top=500)
 
 progeny["target"] = progeny["target"].str.capitalize()
 # print(progeny)
@@ -109,8 +110,10 @@ How the activities changes in "condition" with respect to "reference"
 pathway_acts, pathway_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=progeny, source='source', target='target', weight='weight')
 
 sns.clustermap(pathway_acts, center=0, cmap='coolwarm')
-plt.show()
+plt.savefig(f"{PLOT_PATH}/comparative_pathway_act_est_{condition}_wrt_{reference}_{group_col}.pdf")
+plt.show();
 
+# dorothea = dc.get_dorothea()
 """
 It looks like JAK-STAT is active across cell types in COVID-19 compared to healthy. 
 To further explore how the target genes behave, we can plot them in a volcano plot:
@@ -155,8 +158,26 @@ plt.show()
 """
 
 
+# Comparative Pseudobulk Pathway Analysis - Major Cell Types <a class="anchor" id="seventh-bullet"></a>
+
+## Immune cells
+### <i>HFD-AOM-DSS-Immune </i> compared <i>LFD-AOM-DSS-Immune </i><a class="anchor" id="seventh-bullet"></a>
+# %run sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an 'pseudobulk_functional_annot' -gc 'major_cell_types' -con 'HFD-AOM-DSS-Immune' -ref 'LFD-AOM-DSS-Immune'
+### <i>HFD-AOM-DSS-Immune </i> compared <i>CD-AOM-DSS-Immune </i><a class="anchor" id="seventh-bullet"></a>
+# %run sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an 'pseudobulk_functional_annot' -gc 'major_cell_types' -con 'HFD-AOM-DSS-Immune' -ref 'CD-AOM-DSS-Immune'
+### <i>LFD-AOM-DSS-Immune </i> compared <i>CD-AOM-DSS-Immune </i><a class="anchor" id="seventh-bullet"></a>
+# %run sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an 'pseudobulk_functional_annot' -gc 'major_cell_types' -con 'LFD-AOM-DSS-Immune' -ref 'CD-AOM-DSS-Immune'
+
+## Epithelial cells
+### <i>HFD-AOM-DSS-Epi_plus_DN </i> compared <i>LFD-AOM-DSS-Epi_plus_DN </i><a class="anchor" id="seventh-bullet"></a>
+# %run sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an 'pseudobulk_functional_annot' -gc 'major_cell_types' -con 'HFD-AOM-DSS-Epi_plus_DN' -ref 'LFD-AOM-DSS-Epi_plus_DN'
+### <i>HFD-AOM-DSS-Epi_plus_DN </i> compared <i>CD-AOM-DSS-Epi_plus_DN </i><a class="anchor" id="seventh-bullet"></a>
+# %run sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an 'pseudobulk_functional_annot' -gc 'major_cell_types' -con 'HFD-AOM-DSS-Epi_plus_DN' -ref 'CD-AOM-DSS-Epi_plus_DN'
+### <i>LFD-AOM-DSS-Epi_plus_DN </i> compared <i>CD-AOM-DSS-Epi_plus_DN </i><a class="anchor" id="seventh-bullet"></a>
+# %run sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an 'pseudobulk_functional_annot' -gc 'major_cell_types' -con 'LFD-AOM-DSS-Epi_plus_DN' -ref 'CD-AOM-DSS-Epi_plus_DN'
 
 
 
 # python sc_pseudo_func_analysis.py -i ../data/out_data/_integrated_cluster_scannot.h5ad -o ../data/out_data
 
+# jupyter nbconvert sc_00_pipeline.ipynb --to html_embed --template toc2 --output ../docs/crcdiet_pipelines/crcdiet_sc_pipeline.html 

@@ -17,25 +17,17 @@ from matplotlib import rcParams
 import matplotlib as mpl
 
 
-sc.settings.verbosity = 0
-
-
-sc.set_figure_params(scanpy=True, facecolor="white")
+############################### BOOOORIING STUFF BELOW ###############################
+# Warning settings
 warnings.simplefilter(action='ignore')
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_qc_preprocess")
+############################### BOOOORIING STUFF ABOVE ###############################
 
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_qc_preprocess")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=150)
-
-
-
+sample_type = "visium"
 meta = utils.get_meta_data("visium")
 
 
@@ -78,7 +70,7 @@ def filter_cells_genes(adata, sample_id):
 
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     mpl.rcParams["image.cmap"]= plt.cm.Spectral
-    sc.pl.spatial(adata, img_key="hires", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 0.3, show=True, save=f"vis_{sample_id}.png")
+    sc.pl.spatial(adata, img_key="hires", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 0.3, show=True, save=f"vis_{sample_id}.pdf")
     plt.show();
 
     fig, axs = plt.subplots(1, 5, figsize=(30, 10));
@@ -87,7 +79,7 @@ def filter_cells_genes(adata, sample_id):
     sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[2])
     plotting.plot_mt_vs_counts(adata, axs[3], mt_thr=df_threshold["mt_thr"])
     plotting.plot_rp_vs_counts(adata, axs[4]) # , rp_thr=df_threshold["rp_thr"])
-    fig.savefig(os.path.join(PLOT_PATH, f"vis_basic_stats_before_filtering_{sample_id}.png"), dpi=300);
+    fig.savefig(os.path.join(PLOT_PATH, f"vis_basic_stats_before_filtering_{sample_id}.pdf"), dpi=300);
     plt.show();
 
 
@@ -122,7 +114,7 @@ def filter_cells_genes(adata, sample_id):
     print("Recalculating QC metrics...")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     print("Plotting highest expressed genes after QC and filtering...")
-    sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.png")
+    sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.pdf")
     
     adata.layers["raw"] = adata.X.copy()
     adata.layers["sqrt_norm"] = np.sqrt(

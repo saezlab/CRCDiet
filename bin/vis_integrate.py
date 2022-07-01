@@ -9,32 +9,29 @@ import matplotlib as mpl
 import argparse
 import os
 import warnings
+import utils
 
+'''
+Integrate the merged samples using Harmony and save the AnnData object
+'''
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
-
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Harmony')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 args = vars(parser.parse_args())
-
-sample_type ="visium"
 input_path = args['input_path']
 output_path = args['output_dir']
-###############################
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_integrate")
+############################### BOOOORIING STUFF ABOVE ############################### 
 
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_integrate")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80) # , dpi_save=150)
-
+sample_type = "visium"
 print("Reading merged object...")
 # Read merged object
 adata = sc.read_h5ad(input_path)
@@ -59,7 +56,7 @@ mpl.rcParams['axes.facecolor'] = "white"
 # the number of genes expressed in the count matrix
 sc.pl.umap(
     adata, color=["condition"], color_map =plt.cm.afmhot, 
-    title="UMAP plot after integration by Harmony", s=10, frameon=False, show=True, save=f"{sample_type}_all_condition_harmony"
+    title="UMAP plot after integration by Harmony", s=10, frameon=False, show=True, save=f"{sample_type}_all_condition_harmony.pdf"
 )
 
 """rows = 2

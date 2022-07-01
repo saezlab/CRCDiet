@@ -179,11 +179,11 @@ for ind in range(25):
 
 adata.obs[f'major_cell_types'] = [main_ct_annot_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
 
-"""{'0': 'B cells', '1': 'Fibroblasts', '10': 'T cells', '11': 'Dendritic cells', '12': 'Goblet cells', 
-'13': 'Neutrophils', '14': 'Endothelial cells', '15': 'Fibroblasts', '16': 'Endothelial cells', '17': 'Fibroblasts', 
-'18': 'Mast cells', '19': 'Plasma cells', '2': 'T cells', '20': 'Fibroblasts', '21': 'Tuft cells', 
-'22': 'Plasma cells', '23': 'Fibroblasts', '24': 'T cells', '3': 'Goblet cells', 
-'4': 'Macrophages', '5': 'Fibroblasts', '6': 'Plasma cells', '7': 'T cells', '8': 'Fibroblasts', '9': 'Fibroblasts'}"""
+# {'0': 'B cells', '1': 'Fibroblasts', '10': 'T cells', '11': 'Dendritic cells', '12': 'Goblet cells', 
+# '13': 'Neutrophils', '14': 'Endothelial cells', '15': 'Fibroblasts', '16': 'Endothelial cells', '17': 'Fibroblasts', 
+# '18': 'Mast cells', '19': 'Plasma cells', '2': 'T cells', '20': 'Fibroblasts', '21': 'Tuft cells', 
+# '22': 'Plasma cells', '23': 'Fibroblasts', '24': 'T cells', '3': 'Goblet cells', 
+# '4': 'Macrophages', '5': 'Fibroblasts', '6': 'Plasma cells', '7': 'T cells', '8': 'Fibroblasts', '9': 'Fibroblasts'}
 adata.obs[f'cell_type_{l_param}'] = [annotation_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
 
 
@@ -196,6 +196,11 @@ sc.pl.umap(adata, color=f'cell_type_{l_param}', title= ["Cell type annotation"],
 sc.pl.umap(adata, color='major_cell_types', title= ["Major cell types"], show=True, s=10, legend_loc="on data", legend_fontsize="xx-small",  save=f'{sample_type}_major_cell_types')
 adata_integ_clust.obs[f'cell_type_{l_param}'] = adata.obs[f'cell_type_{l_param}']
 adata_integ_clust.obs['major_cell_types'] = adata.obs['major_cell_types']
-adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
+
+markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]
+sc.pl.dotplot(adata_integ_clust, markers_dot_plot, groupby=f'cell_type_{l_param}', swap_axes=True, dendrogram=True,  show=True, save=f'{sample_type}_clusters_marker_{l_param}_dotplot_dendogram')
+sc.pl.dotplot(adata_integ_clust, markers_dot_plot, groupby=f'cell_type_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_marker_{l_param}_dotplot')
+
+# adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
 # python sc_cell_type_annot.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data
 

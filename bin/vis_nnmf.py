@@ -15,34 +15,25 @@ import math
 import matplotlib.pyplot as plt
 from utils import printmd
 
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
-
-'''
-Open all samples QC processed files, merge them
-'''
-
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_NNMF")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
-sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=80, dpi_save=150)
-plt.rcParams['figure.constrained_layout.use'] = True
-
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
-parser = argparse.ArgumentParser(prog='qc', description='Run NNMF')
-parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
-parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
+parser = argparse.ArgumentParser(prog='qc', description='Run marker visualization')
+parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
+parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 
 args = vars(parser.parse_args())
-
-input_path = args['input_dir']
+input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name']
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
+############################### BOOOORIING STUFF ABOVE ###############################
 
 sample_type = "visium"
 # Load meta data
@@ -196,6 +187,7 @@ def analyse_nmf_results(random_state):
         plt.xticks(fontsize=30)
         plt.yticks(fontsize=30)
         axsRight.barh(genes, loadings, color='grey')
+        plt.savefig(f'{PLOT_PATH}/{sample_type}_factor_{factor_ind}.pdf');
         plt.show();
         print()
         

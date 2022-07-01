@@ -23,30 +23,25 @@ sc.settings.verbosity = 0
 Open all samples QC processed files, merge them
 '''
 
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_merge")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
-sc.set_figure_params(scanpy=True,facecolor="white", fontsize=8, dpi=80, dpi_save=150)
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
+warnings.simplefilter(action='ignore')
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", fontsize=8, dpi=80, dpi_save=300)
 plt.rcParams['figure.constrained_layout.use'] = True
-
 # Read command line and set args
-parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
+parser = argparse.ArgumentParser(prog='merge', description='Run Merging')
 parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
 parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
-
 args = vars(parser.parse_args())
-
 input_path = args['input_dir']
 output_path = args['output_dir']
 normalization = args['normalization']
-###############################
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_merge")
+############################### BOOOORIING STUFF ABOVE ###############################
 
 sample_type = "visium"
 # Load meta data
@@ -164,7 +159,7 @@ for adata in adatas:
 
 
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
-            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.png")
+            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
 
 # adata.obs['outlier_total'] = adata.obs.total_counts > 30000
 # print('%u cells with large total counts' % (sum(adata.obs['outlier_total'])))

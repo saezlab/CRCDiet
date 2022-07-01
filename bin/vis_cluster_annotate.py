@@ -18,35 +18,30 @@ import anndata
 import utils
 import matplotlib as mpl
 
-sc.settings.verbosity = 0
-
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
-
-# Read integrated object
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
-args = vars(parser.parse_args())
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 
+args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name'] # "sc_cluster_annotate"
 
+
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ###############################
 
 sample_type = "visium"
-meta = utils.get_meta_data("visium")
-
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_annotate")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80)
-
+meta = utils.get_meta_data(sample_type)
 adata = sc.read_h5ad(input_path)
 
 adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var)
@@ -63,6 +58,7 @@ adata.uns['log1p']["base"] = None
 l_param, _ = adata.uns["leiden_best_silh_param"]
 
 l_param_list = [0.10, 0.40, 0.60]
+l_param_list = [0.40]
 for l_param in l_param_list:
     l_param = f"{l_param:.2f}"
     printmd(f"## Clusters with resolution param: {l_param} <a class='anchor' id='seventh-bullet-1'></a>")
@@ -84,8 +80,9 @@ for l_param in l_param_list:
         mpl.rcParams['axes.titlesize'] = 12
         sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}",  title=condition, size=1.25, alpha_img=0.3, ax = ax[ind], show=False)
     fig.tight_layout()
+    plt.savefig(f"{PLOT_PATH}/spatial_cluster.pdf")
     plt.show();
-
+    
     
 
     # TODO: Use whole transcriptome instead of HVGs
@@ -119,7 +116,7 @@ for l_param in l_param_list:
     # change below anndata objects to "anndata" to run on only HVGs
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
     mpl.rcParams['axes.titlesize'] = 20
-    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')#
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}.pdf')#
     # mpl.rcParams['axes.titlesize'] = 60
     # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
 

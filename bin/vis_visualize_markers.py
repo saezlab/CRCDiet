@@ -1,5 +1,6 @@
 from reprlib import aRepr
 from pathlib import Path
+from imageio import save
 import scanpy as sc
 import scanpy.external as sce
 import numpy as np
@@ -11,31 +12,27 @@ import os
 import warnings
 import utils
 
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
-
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run marker visualization')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
-args = vars(parser.parse_args())
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 
-sample_type ="visium"
+args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
-###############################
+analysis_name = args['analysis_name'] # "visium_visualize_markers"
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
+############################### BOOOORIING STUFF ABOVE ###############################
 
-S_PATH = "/".join(os.path.realpath(__file__).split(os.sep)[:-1])
-DATA_PATH = os.path.join(S_PATH, "../data")
-OUT_DATA_PATH = os.path.join(DATA_PATH, "out_data")
-PLOT_PATH =  os.path.join(S_PATH, "../plots", "visium_visualize_markers")
-
-Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
-sc.settings.figdir = PLOT_PATH
-
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80) # , dpi_save=150
-
+sample_type ="visium"
 adata_integ_clust = sc.read_h5ad(input_path)
 
 
@@ -96,8 +93,8 @@ for ind, marker in enumerate(marker_intersect):
         #plt.tight_layout(h_pad=1)
     
         # sc.pl.violin(adata, list(set(adata.var.index) & set(markers)), show=True, groupby=f"leiden_{l_param}")
+    plt.savefig(f'{PLOT_PATH}/{sample_type}_{marker}.pdf');
     plt.show();
+    
 
-    sc.pl.umap(adata, color=marker)
-
-#  python vis_visualize_cluster.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data
+    sc.pl.umap(adata, color=marker, save=f"{sample_type}_{marker}.pdf");

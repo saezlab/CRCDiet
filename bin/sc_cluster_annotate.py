@@ -29,12 +29,10 @@ parser = argparse.ArgumentParser(prog='cluster', description='Run annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
-parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # "sc_cluster_annotate"
-output_file = args['output_file']
 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
@@ -62,6 +60,7 @@ l_param_list = [0.20] # for SC data
 step = 0.10
 for l_param in l_param_list:
 #for l_param in np.arange(0.1, 1.01, step):
+    
     l_param = f"{l_param:.2f}"
     printmd(f"## Clusters with resolution param: {l_param} <a class='anchor' id='seventh-bullet-1'></a>")
     
@@ -88,6 +87,8 @@ for l_param in l_param_list:
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')#
     # mpl.rcParams['axes.titlesize'] = 60
     # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    sc.tl.rank_genes_groups(adata_concat, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition")
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_condition", show=True, groupby="condition", save=f'{sample_type}_one_vs_rest_condition')#
 
     wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
     # print(l_param)
