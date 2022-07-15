@@ -68,11 +68,12 @@ for l_param in l_param_list:
     adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
     mpl.rcParams['figure.dpi']= 300
     mpl.rcParams["figure.figsize"] = (10,10)
-    mpl.rcParams["legend.fontsize"]  = 'xx-small'
+    mpl.rcParams["legend.fontsize"]  = 30
+    
     mpl.rcParams["legend.loc"]  = "upper right"
     mpl.rcParams['axes.facecolor'] = "white"
 
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 ,legend_loc='on data', show=True, save=f'{sample_type}_leiden_{l_param}_ondata')
+    """sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 ,legend_loc='on data', show=True, save=f'{sample_type}_leiden_{l_param}_ondata')
     sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
 
     # "Pdgrfra",
@@ -89,7 +90,22 @@ for l_param in l_param_list:
     # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
     sc.tl.rank_genes_groups(adata_concat, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition")
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_condition", show=True, groupby="condition", save=f'{sample_type}_one_vs_rest_condition')#
+    """
 
-    wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
+    mpl.rcParams['figure.dpi']= 300
+    mpl.rcParams["figure.figsize"] = (5,5)
+    mpl.rcParams['axes.titlesize'] = 15
+    # mpl.rcParams["font.size"]  = 50
+    adata_concat_immune = adata_concat[adata_concat.obs["condition"].str.contains("Immune"), : ].copy()
+    sc.tl.rank_genes_groups(adata_concat_immune, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition_immune")
+    sc.pl.rank_genes_groups(adata_concat_immune, n_genes=25, sharey=False, key=f"wilcoxon_condition_immune", show=True, groupby="condition", save=f'{sample_type}_immune_one_vs_rest_condition')
+    
+
+
+    adata_concat_epi = adata_concat[adata_concat.obs["condition"].str.contains("Epi_"), : ].copy()
+    sc.tl.rank_genes_groups(adata_concat_epi, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition_epithelial")
+    sc.pl.rank_genes_groups(adata_concat_epi, n_genes=25, sharey=False, key=f"wilcoxon_condition_epithelial", show=True, groupby="condition", save=f'{sample_type}_epithelial_one_vs_rest_condition')
+
+    # wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
     # print(l_param)
     # print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))
