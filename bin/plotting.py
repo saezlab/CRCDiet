@@ -1,9 +1,15 @@
+from cProfile import label
+from turtle import color
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
 from matplotlib import cm
+import scanpy as sc
+import utils
+import numpy as np
+import matplotlib
 
 '''Plotting functions'''
 
@@ -73,6 +79,90 @@ def plot_ncell_diff(data, ax, labels, n_rem, fontsize=11):
     ax.set_title('Cells removed per filter', fontsize=fontsize)
     ax.tick_params(axis='x', rotation=45)
     
+def plot_cell_type_proportion(cond_list, adata=None, sample_type="sc"):
+    input_path = "/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_integrated_cluster_scannot.h5ad"
+    sample_type="sc"
+    adata = sc.read_h5ad(input_path)
+    meta = utils.get_meta_data(sample_type)
+    condition = list(np.unique(meta['condition']))
+    c_type_list = list(adata.obs["cell_type_0.20"].cat.categories)
+
+    # CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN
+    # CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune
+    cond_list = cond_list.split(",")
+    # cond_list = ["CD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune"]
+    # cond_list = ["CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN"]
+    cond_prop = dict()
+    cond_arr = []
+    for cond in cond_list:
+        cond_arr.append([])
+        # print(cond, cond_arr)
+        cond_prop[cond] = []
+        adata_tmp = adata[adata.obs["condition"]==cond,:]
+        # print(adata_tmp.shape)
+        sum = 0
+        for c_type in c_type_list:
+            print("c_type", c_type, adata_tmp[adata_tmp.obs["cell_type_0.20"]==c_type].shape)
+            cond_arr[-1].append(100*(adata_tmp[adata_tmp.obs["cell_type_0.20"]==c_type].shape[0]/adata_tmp.shape[0]))
+            #cond_prop[cond][c_type] = adata_tmp.obs["cell_type_0.20"].str.count(c_type).sum()/adata_tmp.shape[0]
+            # cond_prop[cond][c_type] = adata_tmp.obs["cell_type_0.20"].str.count(c_type).sum()/adata_tmp.shape[0]
+            #sum += adata_tmp.obs["cell_type_0.20"].str.count(c_type).sum()
+
+    data = np.array(cond_arr).T
+
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+
+    # For loop for creating stacked bar chart
+    cmap = matplotlib.cm.get_cmap('tab20')
+
+    X = np.arange(data.shape[1])
+    for i in range(data.shape[0]):
+        ax1.bar(X, data[i],bottom = np.sum(data[:i], 
+                    axis =0), width= 0.85, color = cmap.colors[i], label=c_type_list[i]  )
+
+    ax1.set_xticks([0,1,2])
+    ax1.set_xticklabels(cond_list) # , rotation=45)
+    ax1.set_xlabel("Condition", fontweight='bold')
+    ax1.set_ylabel("Proportion (%)", fontweight='bold')
+    ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.subplots_adjust(bottom=0.45)
+    fig.tight_layout()
+    plt.savefig("../plots/sc_cell_type_annot/cell_type_prop_immune_barplot.pdf")
+
+    fig, axs = plt.subplots(5, 4, figsize=[15, 15])
+    
+    for ind, c_t in enumerate(c_type_list):
+        fig_row, fig_col = int(ind/4), ind%4
+        axs[fig_row][fig_col].plot(cond_list, data[ind,:], marker='o', mec = 'grey', mfc = 'grey', markersize=12, linewidth=5, color=cmap.colors[ind], label=c_t)
+        axs[fig_row][fig_col].set_title(c_t)
+        axs[fig_row][fig_col].set_xticklabels(["CD", "LFD", "HFD"])
+        axs[fig_row][fig_col].tick_params(axis='y', which='major', labelsize=8)
+
+    
+    plt.subplots_adjust(bottom=0.45)
+    fig.supxlabel('Condition', fontweight='bold')
+    fig.supylabel('Proportion (%)', fontweight='bold')
+    fig.tight_layout()
+    
+    fig.delaxes(axs[4][3])
+    fig.delaxes(axs[4][2])
+    fig.delaxes(axs[4][1])
+    plt.savefig("../plots/sc_cell_type_annot/cell_type_prop_immune_line.pdf")
+
+
+
+
+
+        
+
+
+
+            
+
+
+    
+
+
     
 def plot_ngene_diff(adata, ax, fontsize=11):
     ax.set_title('Num genes filtered', fontsize=fontsize)

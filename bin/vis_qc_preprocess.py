@@ -27,6 +27,7 @@ sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_qc_preprocess")
 ############################### BOOOORIING STUFF ABOVE ###############################
 
+
 sample_type = "visium"
 meta = utils.get_meta_data("visium")
 

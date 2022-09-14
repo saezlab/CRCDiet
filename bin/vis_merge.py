@@ -35,12 +35,14 @@ parser = argparse.ArgumentParser(prog='merge', description='Run Merging')
 parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
 parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 args = vars(parser.parse_args())
 input_path = args['input_dir']
 output_path = args['output_dir']
 normalization = args['normalization']
+analysis_name = args['analysis_name'] # "visium_merge"
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_merge")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
 
 sample_type = "visium"

@@ -24,11 +24,13 @@ sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Harmony')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name'] #visium_integrate
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_integrate")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type = "visium"
@@ -45,7 +47,7 @@ print("Computing neighbours ...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 
-mpl.rcParams['figure.dpi']= 150
+mpl.rcParams['figure.dpi']= 300
 mpl.rcParams["figure.figsize"] = (10,10)
 mpl.rcParams["legend.fontsize"]  = 'xx-small'
 mpl.rcParams["legend.loc"]  = "upper right"
@@ -70,6 +72,6 @@ for i in range(rows * columns):
 
 print("Saving the integrated object...")
 # Write to file
-adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
+# adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
 
 #  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data

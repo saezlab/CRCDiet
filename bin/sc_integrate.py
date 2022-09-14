@@ -24,11 +24,13 @@ sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Harmony')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
+analysis_name = args['analysis_name'] # sc_integrate
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_integrate")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
 sample_type ="sc"

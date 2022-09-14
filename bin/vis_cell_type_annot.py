@@ -1,20 +1,18 @@
+import os
+import sys
+import decoupler as dc  
+import scanpy as sc
+import pandas as pd
+import numpy as np
+
 from genericpath import sameopenfile
 from operator import index
 import matplotlib.pyplot as plt
 from pathlib import Path
 import seaborn as sns 
-import decoupler as dc  
-import scanpy as sc
-import pandas as pd
-import numpy as np
 import argparse
-import os
-import sys
-from sklearn.metrics import silhouette_score, pairwise_distances
-import sys
+
 import warnings
-from utils import printmd
-import anndata
 import utils
 import matplotlib as mpl
 
