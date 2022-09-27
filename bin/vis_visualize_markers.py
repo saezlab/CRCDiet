@@ -36,27 +36,14 @@ sample_type ="visium"
 adata_integ_clust = sc.read_h5ad(input_path)
 
 
-meta = utils.get_meta_data("visium")
+meta = utils.get_meta_data(sample_type)
+condition = np.unique(meta['condition'])
 # adata = sc.read_h5ad(input_path)
 
-adata = []
-for ind, row in meta.iterrows():
-    sample_id = row["sample_id"]
-    condition = row["condition"]
-    # print(sample_id)
-    tmp = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
-    # Fetch sample metadata
-    m = meta[meta['sample_id'] == sample_id]
-    # Add metadata to adata
-    for col in m.columns:
-        tmp.obs[col] = m[col].values[0]
-    # Append
-    adata.append(tmp)
-    del tmp
+adata = utils.get_filtered_concat_data(sample_type)
 
-# Merge objects and delete list
-adata = adata[0].concatenate(adata[1:], join='outer')
-
+# filter out the cells missing in adata_integ_clust
+adata = adata[adata_integ_clust.obs_names,:]
 
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 
@@ -97,4 +84,4 @@ for ind, marker in enumerate(marker_intersect):
     plt.show();
     
 
-    sc.pl.umap(adata, color=marker, save=f"{sample_type}_{marker}.pdf");
+    sc.pl.umap(adata, color=marker, show=True, save=f"{sample_type}_{marker}.pdf");

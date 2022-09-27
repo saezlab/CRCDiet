@@ -72,7 +72,6 @@ for l_param in leiden_res_params:
 
 
 acts.write(os.path.join(output_path, f'{sample_type}_integrated_progeny_act.h5ad'))
-acts.write(os.path.join(output_path, f'{sample_type}_integrated_progeny_act.h5ad'))
 
 # python downstream_analysis.py -i ../data/out_data/mouse_integrated.h5ad -o ../data/out_data -st mouse
 # python downstream_analysis.py -i ../data/out_data/human_integrated.h5ad -o ../data/out_data -st human

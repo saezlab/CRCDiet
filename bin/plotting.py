@@ -79,13 +79,13 @@ def plot_ncell_diff(data, ax, labels, n_rem, fontsize=11):
     ax.set_title('Cells removed per filter', fontsize=fontsize)
     ax.tick_params(axis='x', rotation=45)
     
-def plot_cell_type_proportion(cond_list, adata=None, sample_type="sc"):
+def plot_cell_type_proportion(cond_list, cond_name ="Immune", adata=None, obs_col = "cell_type_0.20", sample_type="sc"):
     input_path = "/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_integrated_cluster_scannot.h5ad"
     sample_type="sc"
     adata = sc.read_h5ad(input_path)
     meta = utils.get_meta_data(sample_type)
     condition = list(np.unique(meta['condition']))
-    c_type_list = list(adata.obs["cell_type_0.20"].cat.categories)
+    c_type_list = list(adata.obs[obs_col].cat.categories)
 
     # CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN
     # CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune
@@ -102,8 +102,8 @@ def plot_cell_type_proportion(cond_list, adata=None, sample_type="sc"):
         # print(adata_tmp.shape)
         sum = 0
         for c_type in c_type_list:
-            print("c_type", c_type, adata_tmp[adata_tmp.obs["cell_type_0.20"]==c_type].shape)
-            cond_arr[-1].append(100*(adata_tmp[adata_tmp.obs["cell_type_0.20"]==c_type].shape[0]/adata_tmp.shape[0]))
+            print("c_type", c_type, adata_tmp[adata_tmp.obs[obs_col]==c_type].shape)
+            cond_arr[-1].append(100*(adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]/adata_tmp.shape[0]))
             #cond_prop[cond][c_type] = adata_tmp.obs["cell_type_0.20"].str.count(c_type).sum()/adata_tmp.shape[0]
             # cond_prop[cond][c_type] = adata_tmp.obs["cell_type_0.20"].str.count(c_type).sum()/adata_tmp.shape[0]
             #sum += adata_tmp.obs["cell_type_0.20"].str.count(c_type).sum()
@@ -127,7 +127,7 @@ def plot_cell_type_proportion(cond_list, adata=None, sample_type="sc"):
     ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.subplots_adjust(bottom=0.45)
     fig.tight_layout()
-    plt.savefig("../plots/sc_cell_type_annot/cell_type_prop_immune_barplot.pdf")
+    plt.savefig(f"../plots/sc_cell_type_annot/major_cell_type_prop_{cond_name}_barplot.pdf")
 
     fig, axs = plt.subplots(5, 4, figsize=[15, 15])
     
@@ -147,11 +147,12 @@ def plot_cell_type_proportion(cond_list, adata=None, sample_type="sc"):
     fig.delaxes(axs[4][3])
     fig.delaxes(axs[4][2])
     fig.delaxes(axs[4][1])
-    plt.savefig("../plots/sc_cell_type_annot/cell_type_prop_immune_line.pdf")
+    plt.savefig(f"../plots/sc_cell_type_annot/majorcell_type_prop_{cond_name}_line.pdf")
 
 
 
-
+plot_cell_type_proportion("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", cond_name ="epithelial", adata=None, obs_col = "major_cell_types", sample_type="sc")
+plot_cell_type_proportion("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", cond_name ="immune", adata=None, obs_col = "major_cell_types", sample_type="sc")
 
         
 
