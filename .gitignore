@@ -139,3 +139,5 @@ docs/
 data/
 bin/*.ipynb
 bin/.pybiomart.sqlite
+plots/*
+.gitignore
