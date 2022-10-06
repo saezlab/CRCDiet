@@ -1,19 +1,14 @@
-from genericpath import sameopenfile
 import os
 import utils
 import numpy as np
 import scanpy as sc
-import pandas as pd
 import seaborn as sns
-from pathlib import Path
 import matplotlib.pyplot as plt
 from utils import OUT_DATA_PATH, PLOT_PATH, DATA_PATH
-import os
 import plotting
 from tabulate import tabulate
 import warnings
 from utils import printmd
-from matplotlib import rcParams
 import matplotlib as mpl
 
 
@@ -30,6 +25,7 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_q
 
 sample_type = "visium"
 meta = utils.get_meta_data("visium")
+print(meta)
 
 
 def get_threshold_dict():
@@ -71,7 +67,7 @@ def filter_cells_genes(adata, sample_id):
 
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     mpl.rcParams["image.cmap"]= plt.cm.Spectral
-    sc.pl.spatial(adata, img_key="hires", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 0.3, show=True, save=f"vis_{sample_id}.pdf")
+    sc.pl.spatial(adata, img_key="hires", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 1.0, hspace = 1.0, show=True, save=f"vis_{sample_id}.pdf")
     plt.show();
 
     fig, axs = plt.subplots(1, 5, figsize=(30, 10));
@@ -120,7 +116,10 @@ def filter_cells_genes(adata, sample_id):
     adata.layers["raw"] = adata.X.copy()
     adata.layers["sqrt_norm"] = np.sqrt(
     sc.pp.normalize_total(adata, inplace=False)["X"]
-)
+)   
+
+    adata.layers["log1p_transformed"] = sc.pp.log1p(
+    sc.pp.normalize_total(adata, target_sum=1e6, inplace=False)["X"])
 
     print("Saving filtered AnnData file...")
     adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
@@ -138,5 +137,5 @@ def create_filtered_adata_files():
         adata = utils.read_raw_visium_sample(sample_id)
         printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
         filter_cells_genes(adata, sample_id)
-        # break
 
+create_filtered_adata_files()

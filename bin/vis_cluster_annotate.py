@@ -49,7 +49,7 @@ adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var
 # https://github.com/scverse/scanpy/issues/2239
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
-adata.uns['log1p']["base"] = None
+# adata.uns['log1p']["base"] = None
 
 # Reasanable clusters after visual inspection
 # 0.10, 0.40, 0.60

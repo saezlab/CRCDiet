@@ -72,6 +72,6 @@ for i in range(rows * columns):
 
 print("Saving the integrated object...")
 # Write to file
-# adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
+adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
 
 #  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data

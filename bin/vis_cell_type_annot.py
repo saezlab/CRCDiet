@@ -143,3 +143,6 @@ dict_mean_enr = dict()
 
 # python vis_cluster_annotate.py -i ../data/out_data/visium_integrated.h5ad -o ../data/out_data
 
+# %run vis_cell_type_annot.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data
+
+# # Cell Type Annotation<a class="anchor" id="sixth-bullet"></a>

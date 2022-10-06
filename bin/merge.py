@@ -39,17 +39,19 @@ parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
 parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
 parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 
 args = vars(parser.parse_args())
 
 input_path = args['input_dir']
 output_path = args['output_dir']
 normalization = args['normalization']
+sample_type = args['sample_type']
 ###############################
 
-sample_type = "sc"
+
 # Load meta data
-meta = utils.get_meta_data("sc")
+meta = utils.get_meta_data(sample_type)
 samples = np.unique(meta['sample_id'])
 
 # put the samples in a list

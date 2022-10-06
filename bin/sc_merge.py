@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import scanpy as sc
 import pandas as pd
 import numpy as np
@@ -16,24 +17,30 @@ Open all samples QC processed files, merge, perform HVGs selection and save the 
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", fontsize=8, dpi=80, dpi_save=300)
+sc.set_figure_params(scanpy=True, facecolor="white", fontsize=8, dpi=150, dpi_save=300)
 plt.rcParams['figure.constrained_layout.use'] = True
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='qc', description='Run Merging')
 parser.add_argument('-i', '--input_dir', help='Input directory containing the preprocessed AnnData object ', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the processed object', required=True)
 parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+parser.add_argument('-an', '--analysis_name', default="an", help='Analysis name', required=False)
+
 args = vars(parser.parse_args())
 input_path = args['input_dir']
 output_path = args['output_dir']
 normalization = args['normalization']
+sample_type = args['sample_type']
+analysis_name = args['analysis_name']
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_merge")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
 
-sample_type = "sc"
+# sample_type = "sc"
+
 # Load meta data
-meta = utils.get_meta_data("sc")
+meta = utils.get_meta_data(sample_type)
 samples = np.unique(meta['sample_id'])
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
@@ -43,7 +50,7 @@ adata = utils.get_filtered_concat_data(sample_type)
 
 sc.pp.calculate_qc_metrics(adata, inplace=True)
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
-            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
+            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=90, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
 
 # keep raw counts in layers
 adata.layers['counts'] = adata.X.copy()
@@ -117,6 +124,13 @@ adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
 
 # Filter by HVG
 num_hvg_genes = 4000
+# for sc
+if sample_type=="sc":
+    num_hvg_genes = 4000
+# for atlas
+elif sample_type=="atlas":
+    num_hvg_genes = 5000
+
 batch_msk = np.array(adata.var.highly_variable_nbatches > 1)
 hvg = adata.var[batch_msk].sort_values('highly_variable_nbatches').tail(num_hvg_genes).index
 adata.var['highly_variable'] = [g in hvg for g in adata.var.index]
@@ -141,7 +155,8 @@ print("Computing neighbors...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 print("\nUMAP of merged objects before integration")
-sc.pl.umap(adata, color=["condition"], palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
+mpl.rcParams['figure.dpi']= 300
+sc.pl.umap(adata, color=["condition"], size=10, palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
 plt.show();
 
 # plt.clf()

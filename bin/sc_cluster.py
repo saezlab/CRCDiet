@@ -27,69 +27,71 @@ parser.add_argument('-i', '--input_path', help='Input path to merged object', re
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 parser.add_argument('-of', '--output_file', help='Output file name', required=False)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # sc_cluster
 output_file = args['output_file']
+sample_type = args['sample_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
-sample_type = "sc"
+compute_silh = False
+res_param = 0.4
 meta = utils.get_meta_data(sample_type)
 
 if output_file:
     sample_type = f"{sample_type}_{output_file}"
-print(sample_type)
-
 
 adata = sc.read_h5ad(input_path)
 
-markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
-markers = list(set(markers_df["genesymbol"].str.capitalize()))
-
 dist_mat = None
 
-if not os.path.exists(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle'):
-    print("Calculating distance matrix... ")
-    dist_mat = pairwise_distances(adata.obsm["X_pca"], metric='euclidean') #  , n_jobs=-1)
+if compute_silh:
+    if not os.path.exists(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle'):
+        print("Calculating distance matrix... ")
+        dist_mat = pairwise_distances(adata.obsm["X_pca"], metric='euclidean') #  , n_jobs=-1)
 
-    with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'wb') as handle:
-        pickle.dump(dist_mat, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'wb') as handle:
+            pickle.dump(dist_mat, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    else:
+        print("Loading precomputed distance matrix... ")
+        with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'rb') as handle:
+            dist_mat = pickle.load(handle)
+
+    best_l_param, best_s_scr = -1, -1
+    step = 0.10
+
+    silh_param_scores = []
+    # perform clustering, Rank genes for characterizing groups, plot top 5 genes
+    for l_param in np.arange(0.1, 1.01, step):
+    # for l_param in [0.30]:
+
+        print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
+        sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
+        silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
+        print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
+        silh_param_scores.append((l_param, silh_scr))
+
+    for l_param, s_scr in silh_param_scores:
+        if s_scr > best_s_scr:
+            best_l_param, best_s_scr = l_param, s_scr
+
+    adata.uns["leiden_best_silh_param"] = [best_l_param, best_s_scr]
+
+    l_param, _ = adata.uns["leiden_best_silh_param"]
+    l_param = f"{l_param:.2f}"
 
 else:
-    print("Loading precomputed distance matrix... ")
-    with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'rb') as handle:
-        dist_mat = pickle.load(handle)
-
-
-print("Computing neighbourhood graph... ")
-sc.pp.neighbors(adata)
-
-best_l_param, best_s_scr = -1, -1
-step = 0.10
-
-silh_param_scores = []
-# perform clustering, Rank genes for characterizing groups, plot top 5 genes
-#for l_param in np.arange(0.1, 1.01, step):
-for l_param in [0.30]:
-
-    print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
-    sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
-    silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
-    print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
-    silh_param_scores.append((l_param, silh_scr))
-
-for l_param, s_scr in silh_param_scores:
-    if s_scr > best_s_scr:
-        best_l_param, best_s_scr = l_param, s_scr
-
-adata.uns["leiden_best_silh_param"] = [best_l_param, best_s_scr]
-
-l_param, _ = adata.uns["leiden_best_silh_param"]
-l_param = f"{l_param:.2f}"
+    print("Computing neighbourhood graph... ")
+    sc.pp.neighbors(adata)
+    print("Leiden")
+    sc.tl.leiden(adata, resolution=res_param, key_added = f"leiden_{res_param:.2f}")
+    adata.uns["leiden_best_silh_param"] = [res_param, None]
 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file

@@ -140,4 +140,5 @@ data/
 bin/*.ipynb
 bin/.pybiomart.sqlite
 plots/*
+plots/
 .gitignore

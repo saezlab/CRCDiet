@@ -25,19 +25,20 @@ parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Har
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # sc_integrate
+sample_type = args['sample_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
-sample_type ="sc"
 print("Reading merged object...")
 # Read merged object
 adata = sc.read_h5ad(input_path)
-
+print(f"Number of cells: {adata.shape[0]}")
 print("Running harmony ...")
 # Run harmony
 sce.pp.harmony_integrate(adata, 'batch', adjusted_basis='X_pca', max_iter_harmony=30)
@@ -53,10 +54,15 @@ mpl.rcParams["legend.fontsize"]  = 'xx-small'
 mpl.rcParams["legend.loc"]  = "upper right"
 mpl.rcParams['axes.facecolor'] = "white"
 
-# the number of genes expressed in the count matrix
+"""# the number of genes expressed in the count matrix
 sc.pl.umap(
     adata, color=["condition", "n_genes_by_counts"], color_map =plt.cm.afmhot, 
     title= ["Condition", "Num of exp. genes"], s=10, frameon=False, ncols=2,  show=True, save=f"{sample_type}_all_condition_harmony"
+)"""
+
+sc.pl.umap(
+    adata, color="condition",
+    title= "Condition", s=10, frameon=False,show=True, save=f"{sample_type}_all_condition_harmony"
 )
 
 """rows = 2

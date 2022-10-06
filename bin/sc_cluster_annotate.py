@@ -29,16 +29,18 @@ parser = argparse.ArgumentParser(prog='cluster', description='Run annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # "sc_cluster_annotate"
+sample_type = args['sample_type']
 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ###############################
 
-sample_type = "sc"
 adata = sc.read_h5ad(input_path)
 
 adata_concat = utils.get_filtered_concat_data(sample_type)
@@ -57,6 +59,7 @@ l_param = f"{l_param:.2f}"
 
 l_param_list = [0.30] # for major cell types
 l_param_list = [0.20] # for SC data
+l_param_list = [0.40] # for Atlas data
 step = 0.10
 for l_param in l_param_list:
 #for l_param in np.arange(0.1, 1.01, step):
@@ -73,9 +76,9 @@ for l_param in l_param_list:
     mpl.rcParams["legend.loc"]  = "upper right"
     mpl.rcParams['axes.facecolor'] = "white"
 
-    """sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 ,legend_loc='on data', show=True, save=f'{sample_type}_leiden_{l_param}_ondata')
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 ,legend_loc='on data', show=True, save=f'{sample_type}_leiden_{l_param}_ondata')
     sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
-
+    """
     # "Pdgrfra",
     markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]
     sc.pl.dotplot(adata, markers_dot_plot, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=True,  show=True, save=f'{sample_type}_clusters_marker_{l_param}_dotplot_dendogram')
@@ -92,7 +95,7 @@ for l_param in l_param_list:
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_condition", show=True, groupby="condition", save=f'{sample_type}_one_vs_rest_condition')#
     """
 
-    mpl.rcParams['figure.dpi']= 300
+    """mpl.rcParams['figure.dpi']= 300
     mpl.rcParams["figure.figsize"] = (5,5)
     mpl.rcParams['axes.titlesize'] = 15
     # mpl.rcParams["font.size"]  = 50
@@ -105,7 +108,7 @@ for l_param in l_param_list:
     adata_concat_epi = adata_concat[adata_concat.obs["condition"].str.contains("Epi_"), : ].copy()
     sc.tl.rank_genes_groups(adata_concat_epi, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition_epithelial")
     sc.pl.rank_genes_groups(adata_concat_epi, n_genes=25, sharey=False, key=f"wilcoxon_condition_epithelial", show=True, groupby="condition", save=f'{sample_type}_epithelial_one_vs_rest_condition')
-
+    """
     # wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
     # print(l_param)
     # print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))

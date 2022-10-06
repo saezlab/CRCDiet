@@ -24,17 +24,18 @@ parser.add_argument('-i', '--input_path', help='Input path to merged object', re
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-ml', '--marker_list', help='Markers seperated by commmas', required=False)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 marker_list = args['marker_list']
-analysis_name = args['analysis_name'] # "sc_visualize_markers"
+analysis_name = args['analysis_name'] # "sc_        "
+sample_type = args['sample_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
 
-sample_type ="sc"
 adata_integ_clust = sc.read_h5ad(input_path)
 
 meta = utils.get_meta_data(sample_type)
@@ -58,8 +59,8 @@ print("Plotting marker genes on UMAPs...\n")
 if marker_list is None:
 
     markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
-    markers = list(set(markers_df["genesymbol"].str.capitalize()))
-
+    markers = list(set(markers_df["genesymbol"].str.upper()))
+    print(set(markers))
 
 
     marker_intersect = list(set(adata.var.index) & set(markers))

@@ -123,3 +123,13 @@ def set_n_return_paths(name):
     sc.settings.figdir = PLOT_PATH
 
     return S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH
+
+def read_mtx_file(mtx_file_path, var_name_list= None, obs_name_list= None, transpose=False):
+    adata = sc.read_mtx(mtx_file_path)
+    if transpose:
+        adata = adata.transpose()
+    adata.var_names = var_name_list
+    adata.obs_names = obs_name_list
+    return adata
+
+

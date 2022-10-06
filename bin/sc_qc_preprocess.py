@@ -21,6 +21,7 @@ from utils import printmd
 Run QC and filtering per sample
 '''
 
+
 ############################### BOOOORIING STUFF BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
@@ -28,10 +29,12 @@ sc.settings.verbosity = 0
 # Set figure params
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_qc_preprocess")
+# S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_qc_preprocess")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_atlas")
 ############################### BOOOORIING STUFF ABOVE ###############################
+raw = False
 
-meta = utils.get_meta_data("sc")
+meta = utils.get_meta_data("atlas")
 
 def get_threshold_dict():
     """This functions keeps the threshold used to filter the data
@@ -41,7 +44,7 @@ def get_threshold_dict():
     """
 
     threshold_dict = {"mt_thr": 20, # mitochondrial gene threshold
-                "rp_thr": 5, # ribosomal gene threshold
+                "rp_thr": 0, # ribosomal gene threshold
                 "doublet_thr": 0.2, #doublet threshold
                 "gene_thr": 200,
                 "cell_thr": 3,
@@ -68,7 +71,7 @@ def filter_cells_genes(adata, sample_id):
 
     row = meta[meta["sample_id"]==sample_id]
     condition = str(row["condition"].values[0])
-
+    
     # get threshold used to filter data
     df_threshold = get_threshold_dict()
 
@@ -125,7 +128,8 @@ def filter_cells_genes(adata, sample_id):
 
     post_filter_shape = np.shape(adata.X)
 
-    adata.obs["condition"] = condition    
+    adata.obs["condition"] = condition
+    adata.obs["batch"] = condition    
     
     print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]],\
                     [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]],\
@@ -154,7 +158,11 @@ def create_filtered_adata_files():
     
         sample_id = row["sample_id"]
         condition = row["condition"]
-        adata = utils.read_raw_sc_sample(sample_id)
+        adata = None
+        if raw:
+            adata = utils.read_raw_sc_sample(sample_id)
+        else:
+            adata = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f"{sample_id}.h5ad"))
         printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
         print(f"")
         
@@ -174,6 +182,7 @@ def get_processed_sample_from_adata_file(sample_id):
 
     """
     # row = meta[meta["sample_id"]==sample_id]
+    
     adata = sc.read(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
 
     return adata
