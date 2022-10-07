@@ -47,7 +47,7 @@ if output_file:
     sample_type = f"{sample_type}_{output_file}"
 
 adata = sc.read_h5ad(input_path)
-
+print([res_param, None])
 dist_mat = None
 
 if compute_silh:
@@ -91,7 +91,9 @@ else:
     sc.pp.neighbors(adata)
     print("Leiden")
     sc.tl.leiden(adata, resolution=res_param, key_added = f"leiden_{res_param:.2f}")
-    adata.uns["leiden_best_silh_param"] = [res_param, None]
+    adata.uns["leiden_best_silh_param"] = res_param
+
+sc.tl.rank_genes_groups(adata, groupby=f"leiden_{res_param:.2f}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file

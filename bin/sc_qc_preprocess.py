@@ -44,7 +44,7 @@ def get_threshold_dict():
     """
 
     threshold_dict = {"mt_thr": 20, # mitochondrial gene threshold
-                "rp_thr": 0, # ribosomal gene threshold
+                "rp_thr": 5, # ribosomal gene threshold
                 "doublet_thr": 0.2, #doublet threshold
                 "gene_thr": 200,
                 "cell_thr": 3,
@@ -150,7 +150,7 @@ def filter_cells_genes(adata, sample_id):
     print("Saving filtered AnnData file...")
     adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
     
-    return adata
+    del adata
 
 def create_filtered_adata_files():
 
@@ -167,6 +167,8 @@ def create_filtered_adata_files():
         print(f"")
         
         filter_cells_genes(adata, sample_id)
+
+        del adata
         # break
 
 def get_processed_sample_from_adata_file(sample_id):

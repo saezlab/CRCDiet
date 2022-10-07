@@ -1,16 +1,6 @@
-from genericpath import sameopenfile
-from operator import index
-from imageio import save
 import matplotlib.pyplot as plt
-from pathlib import Path
-import seaborn as sns 
-import decoupler as dc  
 import scanpy as sc
-import pandas as pd
-import numpy as np
 import argparse
-import os
-import sys
 from sklearn.metrics import silhouette_score, pairwise_distances
 import sys
 import warnings
@@ -52,8 +42,7 @@ adata_concat = adata_concat[adata.obs_names,:]
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
 adata.uns['log1p']["base"] = None
-
-l_param, _ = adata.uns["leiden_best_silh_param"]
+l_param = adata.uns["leiden_best_silh_param"]
 l_param = f"{l_param:.2f}"
 
 
@@ -70,27 +59,30 @@ for l_param in l_param_list:
     adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
     adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
     mpl.rcParams['figure.dpi']= 300
-    mpl.rcParams["figure.figsize"] = (10,10)
+    mpl.rcParams["figure.figsize"] = (40,30)
     mpl.rcParams["legend.fontsize"]  = 30
     
     mpl.rcParams["legend.loc"]  = "upper right"
     mpl.rcParams['axes.facecolor'] = "white"
 
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 ,legend_loc='on data', show=True, save=f'{sample_type}_leiden_{l_param}_ondata')
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=4 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{l_param}_ondata')
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
     """
     # "Pdgrfra",
     markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]
     sc.pl.dotplot(adata, markers_dot_plot, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=True,  show=True, save=f'{sample_type}_clusters_marker_{l_param}_dotplot_dendogram')
     sc.pl.dotplot(adata, markers_dot_plot, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_marker_{l_param}_dotplot')
+    """
     # change below anndata objects to "anndata" to run on only HVGs
     mpl.rcParams['figure.dpi']= 300
     mpl.rcParams["figure.figsize"] = (5,5)
+    print("DEGs per cluster!")
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
     mpl.rcParams['axes.titlesize'] = 20
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')#
     # mpl.rcParams['axes.titlesize'] = 60
     # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    """
     sc.tl.rank_genes_groups(adata_concat, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition")
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_condition", show=True, groupby="condition", save=f'{sample_type}_one_vs_rest_condition')#
     """
