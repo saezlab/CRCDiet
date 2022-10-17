@@ -77,6 +77,8 @@ def filter_cells_genes(adata, sample_id):
     df_threshold = get_threshold_dict()
 
     pre_filter_shape = np.shape(adata.X)
+    adata.uns["pre_filter_shape"] = pre_filter_shape
+    adata.uns["threshold_dict"] = df_threshold
 
     print("Calculating QC metrics...")
     # calculate qc metrics
