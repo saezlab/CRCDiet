@@ -10,6 +10,7 @@ import scanpy as sc
 import utils
 import numpy as np
 import matplotlib
+import os
 
 '''Plotting functions'''
 
@@ -304,68 +305,6 @@ def violins(arr, meta, ax):
     sns.violinplot(x=data.melt().variable, 
                    y=np.log2(data.melt().value), 
                    hue=meta.loc[data.melt().variable].condition.values)
-    
-def proj(x, y, ax):
-    for label in np.unique(y):
-        m = y == label
-        ax.scatter(x[m,0], x[m,1], label=label)
-        ax.legend()
-        
-        
-def hextofloats(h):
-    '''Takes a hex rgb string (e.g. #ffffff) and returns an RGB tuple (float, float, float).'''
-    return tuple(int(h[i:i + 2], 16) / 255. for i in (1, 3, 5))
-        
-    
-def varshift_condition(df, name):
-    # Define fig
-    fig, ax = plt.subplots(1,1, figsize=(3,3), dpi=150, facecolor='white')
-    
-    # Order by median
-    order = df.groupby('condition').median().sort_values('dist', ascending=False).index
 
-    # Plot boxplot
-    sns.boxplot(data=df, x='condition', y='dist', ax=ax, order=order, palette=cond_colors, linewidth=0.5, fliersize=0)
-    ax.axhline(1, ls='--', c='black')
-    ax.set_xticklabels(ax.get_xticklabels(),rotation=45)
-    ax.set_title('Variation shifts', fontsize=11)
-    ax.set_ylabel('inter / intra dist')
-    ax.set_xlabel('')
 
-    # Save
-    fig.savefig('../plots/{0}'.format(name), bbox_inches='tight')
-    
-
-def varshift_cell_type(df, table, name, order, hue_order):
-    # Define fig
-    fig, ax = plt.subplots(1,1, figsize=(9,3), tight_layout=True, dpi=150, facecolor='white')
-    
-    # Order by median
-    #order = df.groupby('cell_type').median().sort_values('dist', ascending=False).index
-
-    # Plot boxplot
-    sns.boxplot(data=df, x='cell_type', y='dist', hue='condition', ax=ax, palette=cond_colors, linewidth=0.5, 
-                fliersize=0, hue_order=hue_order, order=order)
-    ax.axhline(1, ls='--', c='black')
-    ax.set_xticklabels(ax.get_xticklabels(),rotation=45)
-    ax.set_title('Cell type variation shifts', fontsize=11)
-    ax.set_xlabel('')
-    ax.set_ylabel('inter dist / intra dist')
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
-    
-    n = len(cond_colors)
-    cell_types = np.repeat(order, n)
-    for i,patch in enumerate(ax.artists):
-        hue = hue_order[i % n]
-        ctype = cell_types[i]
-        adj_pval = table.loc[hue].loc[ctype]['adj_pval']
-        if adj_pval < 0.05:
-            a = 1
-        else:
-            a = 0.33
-        r, g, b = hextofloats(cond_colors[hue])
-        patch.set_facecolor((r, g, b, a))
-    
-
-    # Save
-    fig.savefig('../plots/{0}'.format(name), bbox_inches='tight')
+# def plot_qc_after_filtering(sample_type):
