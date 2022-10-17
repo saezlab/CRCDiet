@@ -2,6 +2,7 @@ import os
 import pickle
 import pandas as pd
 import scanpy as sc
+from tqdm import tqdm
 from pathlib import Path
 from IPython.display import Markdown, display
 
@@ -88,12 +89,14 @@ def get_filtered_concat_data(sample_type):
     # Comment out the section below for running DEGs on HVGs
     # TODO: Refactor this script, it is ugly and inefficient
     adata_concat = []
-    for ind, row in meta.iterrows():
+    for ind, row in tqdm(meta.iterrows(), total=meta.shape[0]):
         
-    
+        
         sample_id = row["sample_id"]
         condition = row["condition"]
-        # print(sample_id)
+        
+        print(f"Merging {sample_id}...")
+
         tmp = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
         # Fetch sample metadata
         m = meta[meta['sample_id'] == sample_id]

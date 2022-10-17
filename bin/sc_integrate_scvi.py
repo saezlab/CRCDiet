@@ -1,0 +1,76 @@
+from reprlib import aRepr
+from pathlib import Path
+import scanpy as sc
+import scanpy.external as sce
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import argparse
+import os
+import utils
+import warnings
+import scvi
+
+'''
+Integrate the merged samples using Harmony and save the AnnData object
+'''
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
+warnings.simplefilter(action='ignore')
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
+# Read command line and set args
+parser = argparse.ArgumentParser(prog='qc', description='Run intergration by Harmony')
+parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
+parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+args = vars(parser.parse_args())
+input_path = args['input_path']
+output_path = args['output_dir']
+analysis_name = args['analysis_name'] # sc_integrate
+sample_type = args['sample_type']
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
+############################### BOOOORIING STUFF ABOVE ############################### 
+
+print("Reading merged object...")
+# Read merged object
+adata = sc.read_h5ad(input_path)
+print(f"Number of cells: {adata.shape[0]}")
+
+scvi.data.setup_anndata(adata, layer="counts", batch_key = 'batch')
+scvi.data.view_anndata_setup(adata)
+
+model = scvi.model.SCVI(adata, use_cuda=True)
+model.train()
+model.save("spleen_lymph_cite_scvi", overwrite=True)
+
+
+plt.rcParams['figure.dpi']= 300
+plt.rcParams["figure.figsize"] = (10,10)
+plt.rcParams["legend.fontsize"]  = 'xx-small'
+plt.rcParams["legend.loc"]  = "upper right"
+plt.rcParams['axes.facecolor'] = "white"
+
+"""# the number of genes expressed in the count matrix
+sc.pl.umap(
+    adata, color=["condition", "n_genes_by_counts"], color_map =plt.cm.afmhot, 
+    title= ["Condition", "Num of exp. genes"], s=10, frameon=False, ncols=2,  show=True, save=f"{sample_type}_all_condition_harmony"
+)"""
+
+plt.rcParams['figure.dpi']= 300
+plt.rcParams['figure.figsize']= (45, 30)
+
+sc.pl.umap(
+    adata, color="condition",
+    title= "Condition", size=10, frameon=False, show=True, save=f"{sample_type}_all_condition_scvi"
+)
+
+print("Saving the integrated object...")
+# Write to file
+# adata.write(os.path.join(output_path, f'{sample_type}_integrated_scvi.h5ad'))
+
+#  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data

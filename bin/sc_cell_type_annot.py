@@ -44,9 +44,9 @@ l_param = f"{l_param:.2f}"
 
 adata = utils.get_filtered_concat_data(sample_type)
 
-for ind in range(6):
+"""for ind in range(6):
     adata.var[f'mt-{ind}'] = adata.var[f'mt-{ind}'].astype(str)
-    adata.var[f'rp-{ind}'] = adata.var[f'mt-{ind}'].astype(str)
+    adata.var[f'rp-{ind}'] = adata.var[f'mt-{ind}'].astype(str)"""
 
 adata.obs[f"leiden_{l_param}"] = adata_integ_clust.obs[f"leiden_{l_param}"]
 
@@ -130,14 +130,14 @@ cell_types = list(set(marker_genes["cell_type"]))
 # sc.pl.umap(adata, color=set(adata.obsm["ora_estimate"].columns))#&set(own_cell_type_list))
 sc.pl.umap(adata, color=set(adata.obsm["ora_estimate"].columns) &set(own_cell_type_list))
 
-print("Regeneration plots per sample...")
+"""print("Regeneration plots per sample...")
 for ind, row in meta.iterrows():
     sample_id = row["sample_id"]
     condition = row["condition"]
     adata_tmp = adata[adata.obs["condition"]==condition,:]
     #adata = sc.read_h5ad(os.path.join(input_path,f"{sample_id}_filtered.h5ad"))
     #adata_samp_cc = adata_cc_merged[adata_cc_merged.obs["condition"]==condition,:]
-    sc.pl.umap(adata_tmp, color="Regeneration", title=f"{condition} - Regeneration", save=f"Regeneration - {condition}")
+    sc.pl.umap(adata_tmp, color="Regeneration", title=f"{condition} - Regeneration", save=f"Regeneration - {condition}")"""
 
 
 
@@ -150,7 +150,7 @@ annotation_dict = dc.assign_groups(mean_enr)
 # print(annotation_dict)
 # Manual annotation
 
-annotation_dict['4'] = "Myeloid cells"
+"""annotation_dict['4'] = "Myeloid cells"
 annotation_dict['20'] = "Enteroendocrine"
 annotation_dict['10'] = "ILC2"
 annotation_dict['12'] = "Goblet cells"
@@ -162,9 +162,9 @@ annotation_dict['9'] = "Myofibroblasts"
 annotation_dict['15'] = "Stroma"
 annotation_dict['17'] = "Keratynocytes"
 annotation_dict['23'] = "Prolif."
-annotation_dict['3'] = "Prolif. + Mature enterocytes"
+annotation_dict['3'] = "Prolif. + Mature enterocytes""""
 
-# main cell type annot dict
+"""# main cell type annot dict
 main_ct_annot_dict = dict()
 immnune_clusters = [0, 2, 4, 6, 7, 10, 11, 13, 18, 19, 22, 24]
 epithelial_clusters = [17, 23, 3, 21, 20, 12]
@@ -177,7 +177,7 @@ for ind in range(25):
     else:
         main_ct_annot_dict[str(ind)] = "Stroma cells"
 
-adata.obs[f'major_cell_types'] = [main_ct_annot_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
+adata.obs[f'major_cell_types'] = [main_ct_annot_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]"""
 
 # {'0': 'B cells', '1': 'Fibroblasts', '10': 'T cells', '11': 'Dendritic cells', '12': 'Goblet cells', 
 # '13': 'Neutrophils', '14': 'Endothelial cells', '15': 'Fibroblasts', '16': 'Endothelial cells', '17': 'Fibroblasts', 

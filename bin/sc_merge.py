@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import scanpy as sc
 import pandas as pd
 import numpy as np
@@ -47,16 +46,16 @@ markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
 
 adata = utils.get_filtered_concat_data(sample_type)
+print("Shape of merged object:", adata.shape)
 
+print("Calculating QC metrics for merged samples...")
 sc.pp.calculate_qc_metrics(adata, inplace=True)
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
             wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=90, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
 
+print("Normalizing merged samples...")
 # keep raw counts in layers
 adata.layers['counts'] = adata.X.copy()
-adata.layers["sqrt_norm"] = np.sqrt(
-    sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
-
 adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
 sc.pp.log1p(adata, layer="log1p_transformed")
 
@@ -78,6 +77,7 @@ else:
     # throw NotImplementedError 
 """
 
+print("Calculating HVGs...")
 sc.experimental.pp.highly_variable_genes(
         adata, batch_key='batch', flavor="pearson_residuals", n_top_genes=3000
     )
@@ -117,7 +117,8 @@ ax.xaxis.set_ticks_position("bottom")
 plt.legend()
 
 txt="In the figure below, red dots show the selected genes (i.e. highly variable genes) and the black ones represent the marker genes."
-plt.figtext(0.5, 1.0, txt, wrap=True, horizontalalignment='left', fontsize=12)
+# plt.figtext(0.5, 1.0, txt, wrap=True, horizontalalignment='left', fontsize=12)
+plt.savefig(os.path.join(os.path.join(PLOT_PATH, f"HVG_vs_unselected_{sample_type}.pdf")))
 plt.show();
 
 adata.var = adata.var[['highly_variable','highly_variable_nbatches']]
@@ -142,7 +143,6 @@ sc.experimental.pp.normalize_pearson_residuals(adata)
 
 # Run PCA
 # sc.pp.scale(adata)
-
 sc.tl.pca(adata, svd_solver='arpack', random_state=0)
 
 # Get loadings for each gene for each PC
@@ -155,9 +155,9 @@ print("Computing neighbors...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 print("\nUMAP of merged objects before integration")
-mpl.rcParams['figure.dpi']= 300
+plt.rcParams['figure.dpi']= 300
+plt.rcParams['figure.figsize']= (45, 30)
 sc.pl.umap(adata, color=["condition"], size=10, palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
-plt.show();
 
 # plt.clf()
 print("Saving the merged object...")

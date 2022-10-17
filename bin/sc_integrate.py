@@ -48,11 +48,11 @@ print("Computing neighbours ...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 
-mpl.rcParams['figure.dpi']= 300
-mpl.rcParams["figure.figsize"] = (10,10)
-mpl.rcParams["legend.fontsize"]  = 'xx-small'
-mpl.rcParams["legend.loc"]  = "upper right"
-mpl.rcParams['axes.facecolor'] = "white"
+plt.rcParams['figure.dpi']= 300
+plt.rcParams["figure.figsize"] = (10,10)
+plt.rcParams["legend.fontsize"]  = 'xx-small'
+plt.rcParams["legend.loc"]  = "upper right"
+plt.rcParams['axes.facecolor'] = "white"
 
 """# the number of genes expressed in the count matrix
 sc.pl.umap(
@@ -60,9 +60,12 @@ sc.pl.umap(
     title= ["Condition", "Num of exp. genes"], s=10, frameon=False, ncols=2,  show=True, save=f"{sample_type}_all_condition_harmony"
 )"""
 
+plt.rcParams['figure.dpi']= 300
+plt.rcParams['figure.figsize']= (45, 30)
+
 sc.pl.umap(
     adata, color="condition",
-    title= "Condition", s=10, frameon=False,show=True, save=f"{sample_type}_all_condition_harmony"
+    title= "Condition", size=10, frameon=False, show=True, save=f"{sample_type}_all_condition_harmony"
 )
 
 """rows = 2
