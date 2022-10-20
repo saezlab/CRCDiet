@@ -5,6 +5,7 @@ from sklearn.metrics import silhouette_score, pairwise_distances
 import sys
 import warnings
 import utils
+import os
 from utils import printmd
 import matplotlib as mpl
 
@@ -32,12 +33,19 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 ###############################
 
 adata = sc.read_h5ad(input_path)
-
+"""print(adata)
+for col in adata.obs.columns:
+    print(col)
+    if col not in ['condition', 'batch', 'sample_id']:
+        del adata.obs[col]"""
 adata_concat = utils.get_filtered_concat_data(sample_type)
-"""for item in adata_concat.var_names:
+"""for item in adata_conccat.var_names:
     if item.startswith("Pd"):
         print(item)"""
 adata_concat = adata_concat[adata.obs_names,:]
+
+sc.pp.normalize_total(adata_concat, target_sum=1e6)
+sc.pp.log1p(adata_concat)
 # https://github.com/scverse/scanpy/issues/2239
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
@@ -58,6 +66,9 @@ for l_param in l_param_list:
     
     adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
     adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
+    
+    # do not  del adata for more than one value
+    # del adata
     mpl.rcParams['figure.dpi']= 300
     mpl.rcParams["figure.figsize"] = (40,30)
     mpl.rcParams["legend.fontsize"]  = 30
@@ -78,10 +89,17 @@ for l_param in l_param_list:
     mpl.rcParams["figure.figsize"] = (5,5)
     print("DEGs per cluster!")
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
+    adata.uns[f"wilcoxon_{l_param}"] = adata_concat.uns[f"wilcoxon_{l_param}"]
     mpl.rcParams['axes.titlesize'] = 20
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}')#
-    # mpl.rcParams['axes.titlesize'] = 60
-    # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    mpl.rcParams['axes.titlesize'] = 60
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+
+
+    print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
+    # Write to file
+    adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+
     """
     sc.tl.rank_genes_groups(adata_concat, groupby=f"condition", method='wilcoxon', key_added = f"wilcoxon_condition")
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_condition", show=True, groupby="condition", save=f'{sample_type}_one_vs_rest_condition')#

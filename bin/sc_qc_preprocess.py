@@ -30,9 +30,9 @@ sc.settings.verbosity = 0
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Get necesary paths and create folders if necessary
 # S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_qc_preprocess")
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_atlas")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("atlas_qc_preprocess")
 ############################### BOOOORIING STUFF ABOVE ###############################
-raw = False
+raw = True
 
 meta = utils.get_meta_data("atlas")
 
@@ -44,8 +44,8 @@ def get_threshold_dict():
     """
 
     threshold_dict = {"mt_thr": 20, # mitochondrial gene threshold
-                "rp_thr": 5, # ribosomal gene threshold for sc samples
-                # "rp_thr": 0, # ribosomal gene threshold for atlas samples
+                # "rp_thr": 5, # ribosomal gene threshold for sc samples
+                "rp_thr": 0, # ribosomal gene threshold for atlas samples
                 "doublet_thr": 0.2, #doublet threshold
                 "gene_thr": 200,
                 "cell_thr": 3,
@@ -76,7 +76,7 @@ def filter_cells_genes(adata, sample_id):
     # get threshold used to filter data
     df_threshold = get_threshold_dict()
 
-    pre_filter_shape = np.shape(adata.X)
+    pre_filter_shape = list(np.shape(adata.X))
     adata.uns["pre_filter_shape"] = pre_filter_shape
     adata.uns["threshold_dict"] = df_threshold
 
@@ -85,7 +85,8 @@ def filter_cells_genes(adata, sample_id):
     adata.var["mt"] = adata.var_names.str.contains("^mt-")
     adata.var["rp"] = adata.var_names.str.contains("^Rp[sl]")
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
-
+    
+    print("Calculating doublet scores...")
     # calculate doublet scores
     sce.pp.scrublet(adata, verbose=False)
     # calculate threshold to remove extreme outliers
@@ -96,7 +97,7 @@ def filter_cells_genes(adata, sample_id):
     # plt.figure();
     fig, axs = plt.subplots(2, 4, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0][0])
-    sns.histplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[0][1])
+    sns.histplot(adata.obs["n_genes_by_counts"], kde=False, ax=axs[0][1])
     sns.histplot(adata.obs["total_counts"], kde=False, ax=axs[0][2])
     sns.histplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[0][3])
 
@@ -137,7 +138,7 @@ def filter_cells_genes(adata, sample_id):
     print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]],\
                     [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]],\
                     headers=["Sample ID", 'Stage', "# of cells", "# of genes"], tablefmt='fancy_grid'))
-    # print( {pre_filter_shape}")
+    # print( f"{pre_filter_shape}")
     # print(f"AnnData shape after filtering {post_filter_shape}")
     sc.set_figure_params(figsize=(8, 8)) 
     print("Recalculating QC metrics...")
@@ -145,9 +146,9 @@ def filter_cells_genes(adata, sample_id):
     print("Plotting highest expressed genes after QC and filtering...")
     sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.pdf")
 
-    adata.layers["raw"] = adata.X.copy()
-    adata.layers["sqrt_norm"] = np.sqrt(
-    sc.pp.normalize_total(adata, inplace=False)["X"])
+    adata.layers["counts"] = adata.X.copy()
+    #adata.layers["sqrt_norm"] = np.sqrt(
+    #sc.pp.normalize_total(adata, inplace=False)["X"])
     
     del adata.obs["predicted_doublet"]
     print("Saving filtered AnnData file...")
@@ -195,6 +196,6 @@ def get_processed_sample_from_adata_file(sample_id):
 
 
 
-    
+create_filtered_adata_files()
 
 

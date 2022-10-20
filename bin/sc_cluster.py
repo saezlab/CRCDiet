@@ -47,8 +47,9 @@ if output_file:
     sample_type = f"{sample_type}_{output_file}"
 
 adata = sc.read_h5ad(input_path)
-print([res_param, None])
+
 dist_mat = None
+adata.uns['log1p']["base"] = None
 
 if compute_silh:
     if not os.path.exists(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle'):
@@ -63,25 +64,25 @@ if compute_silh:
         with open(f'{OUT_DATA_PATH}/{sample_type}_dist_mat.pickle', 'rb') as handle:
             dist_mat = pickle.load(handle)
 
-    best_l_param, best_s_scr = -1, -1
+    best_res_param, best_s_scr = -1, -1
     step = 0.10
 
     silh_param_scores = []
     # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-    for l_param in np.arange(0.1, 1.01, step):
+    for l_res_param in np.arange(0.1, 1.01, step):
     # for l_param in [0.30]:
 
-        print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
-        sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
-        silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
-        print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
-        silh_param_scores.append((l_param, silh_scr))
+        print(f"Creating clusters with Leiden resolution param: {l_res_param:.2f}")
+        sc.tl.leiden(adata, resolution = l_res_param, key_added = f"leiden_{l_res_param:.2f}") # default resolution in 1.0
+        silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_res_param:.2f}"]), metric='precomputed')
+        print(f"Clustering param: {l_res_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
+        silh_param_scores.append((l_res_param, silh_scr))
 
-    for l_param, s_scr in silh_param_scores:
+    for l_res_param, s_scr in silh_param_scores:
         if s_scr > best_s_scr:
-            best_l_param, best_s_scr = l_param, s_scr
+            best_res_param, best_s_scr = l_res_param, s_scr
 
-    adata.uns["leiden_best_silh_param"] = [best_l_param, best_s_scr]
+    adata.uns["leiden_best_silh_param"] = [best_res_param, best_s_scr]
 
     l_param, _ = adata.uns["leiden_best_silh_param"]
     l_param = f"{l_param:.2f}"
@@ -93,8 +94,12 @@ else:
     sc.tl.leiden(adata, resolution=res_param, key_added = f"leiden_{res_param:.2f}")
     adata.uns["leiden_best_silh_param"] = res_param
 
-sc.tl.rank_genes_groups(adata, groupby=f"leiden_{res_param:.2f}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
+sc.tl.rank_genes_groups(adata, groupby=f"leiden_{res_param:.2f}", method='wilcoxon', key_added = f"wilcoxon_{res_param}")
 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+
+
+# python sc_cluster.py -i ../data/out_data/atlas_integrated.h5ad -o ../data/out_data -st atlas  -an atlas_cluster
+# python sc_cluster_annotate.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_cluster -st atlas

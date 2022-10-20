@@ -6,6 +6,7 @@ import argparse
 import warnings
 import utils
 import os
+import sys
 
 '''
 Open all samples QC processed files, merge, perform HVGs selection and save the AnnData object
@@ -55,7 +56,7 @@ sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
 
 print("Normalizing merged samples...")
 # keep raw counts in layers
-adata.layers['counts'] = adata.X.copy()
+
 adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
 sc.pp.log1p(adata, layer="log1p_transformed")
 
@@ -165,4 +166,4 @@ print("Saving the merged object...")
 adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 
-# python sc_merge.py -i ../data/out_data -o ../data/out_data
+# python sc_merge.py -i ../data/out_data -o ../data/out_data -st atlas -an atlas_merge

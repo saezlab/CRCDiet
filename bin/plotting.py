@@ -11,6 +11,7 @@ import utils
 import numpy as np
 import matplotlib
 import os
+import matplotlib.image as mpimg
 
 '''Plotting functions'''
 
@@ -308,3 +309,18 @@ def violins(arr, meta, ax):
 
 
 # def plot_qc_after_filtering(sample_type):
+def show_plot(plt_path, text=None):
+    img = mpimg.imread(plt_path)
+    plt.imshow(img)
+
+def show_qc_filtering_plot(plot_fold_path, sample_type):
+    meta = utils.get_meta_data(sample_type)
+
+    for _, row in meta.iterrows():
+        sample_id = row["sample_id"]
+
+        print("QC metrics...")
+        show_plot(os.path.join(plot_fold_path, f"{sample_type}_qc_preprocess", f"basic_stats_before_filtering_{sample_id}.pdf"))
+        print("Plotting highest expressed genes after QC and filtering...")
+        show_plot(os.path.join(plot_fold_path, f"{sample_type}_qc_preprocess", f"highest_expr_genesbasic_stats_after_filtering_{sample_id}.pdf"))
+

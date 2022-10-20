@@ -103,3 +103,4 @@ else:
 # Uba52,Gm10076,Ubb,Wdr89,Bloc1s1,Tmsb10,Fau,H3f3a
 
 #  python sc_visualize_markers.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data
+# python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas
