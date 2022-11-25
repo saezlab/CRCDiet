@@ -38,10 +38,16 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 print("Reading merged object...")
 # Read merged object
 adata = sc.read_h5ad(input_path)
+print(adata.obs)
 print(f"Number of cells: {adata.shape[0]}")
 print("Running harmony ...")
-# Run harmony
-sce.pp.harmony_integrate(adata, 'batch', adjusted_basis='X_pca', max_iter_harmony=30)
+
+if sample_type=="atlas":
+    # Run harmony
+    print("Correcting for batch, technology, study")
+    sce.pp.harmony_integrate(adata, ['batch',"technology", "study"], adjusted_basis='X_pca', max_iter_harmony=30)
+else:
+    sce.pp.harmony_integrate(adata, 'batch', adjusted_basis='X_pca', max_iter_harmony=30)
 
 print("Computing neighbours ...")
 # Run umap with updated connectivity

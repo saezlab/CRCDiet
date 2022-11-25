@@ -142,3 +142,6 @@ bin/.pybiomart.sqlite
 plots/*
 plots/
 .gitignore
+bin/mod.png
+bin/atlas.out
+bin/atlas_construction.out

@@ -40,7 +40,8 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
 compute_silh = False
-res_param = 0.4
+res_param = 0.2 # 0.2 for sc
+res_param = 0.4 # 0.2 for atlas
 meta = utils.get_meta_data(sample_type)
 
 if output_file:

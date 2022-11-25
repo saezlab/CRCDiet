@@ -1,5 +1,6 @@
 import os
 import pickle
+import utils
 import pandas as pd
 import scanpy as sc
 from tqdm import tqdm
@@ -107,6 +108,34 @@ def get_filtered_concat_data(sample_type):
         adata_concat.append(tmp)
         del tmp
     
+    # Merge objects and delete list
+    adata_concat = adata_concat[0].concatenate(adata_concat[1:], join='outer')
+    return adata_concat
+
+
+def get_unfiltered_concat_data(sample_type):
+
+    adata_concat = []
+    meta = get_meta_data(sample_type)
+    # TODO: Use whole transcriptome instead of HVGs
+    # Comment out the section below for running DEGs on HVGs
+    # TODO: Refactor this script, it is ugly and inefficient
+    for _, row in meta.iterrows():
+    
+        sample_id = row["sample_id"]
+        condition = row["condition"]
+        print(f"Merging {sample_id}...")
+
+        tmp = utils.read_raw_sc_sample(sample_id)
+        # Fetch sample metadata
+        m = meta[meta['sample_id'] == sample_id]
+        # Add metadata to adata
+        for col in m.columns:
+            tmp.obs[col] = m[col].values[0]
+        # Append
+        adata_concat.append(tmp)
+        del tmp
+
     # Merge objects and delete list
     adata_concat = adata_concat[0].concatenate(adata_concat[1:], join='outer')
     return adata_concat

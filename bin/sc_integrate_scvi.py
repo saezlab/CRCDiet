@@ -1,5 +1,4 @@
-from reprlib import aRepr
-from pathlib import Path
+
 import scanpy as sc
 import scanpy.external as sce
 import numpy as np
@@ -41,12 +40,27 @@ print("Reading merged object...")
 adata = sc.read_h5ad(input_path)
 print(f"Number of cells: {adata.shape[0]}")
 
-scvi.data.setup_anndata(adata, layer="counts", batch_key = 'batch')
-scvi.data.view_anndata_setup(adata)
+# scvi.model.SCVI.setup_anndata(adata,layer="counts", batch_key = 'batch')
+scvi.model.SCVI.setup_anndata(adata,layer="counts", batch_key = 'batch')
+# scvi.data.view_anndata_setup(adata)
 
-model = scvi.model.SCVI(adata, use_cuda=True)
-model.train()
-model.save("spleen_lymph_cite_scvi", overwrite=True)
+model = scvi.model.SCVI(adata, n_layers=2, n_latent=30, gene_likelihood="nb")
+model.train(max_epochs=200)
+
+# model, trials = scvi.inference.autotune.auto_tune_scvi_model("cortex", adata)
+
+latent = model.get_latent_representation()
+
+adata.obsm["X_scVI"] = latent
+print("calculating neighbors...")
+# use scVI latent space for UMAP generation
+sc.pp.neighbors(adata, use_rep="X_scVI")
+print("calculating neighbors...")
+sc.tl.umap(adata, min_dist=0.3)
+print("performing leiden clustering neighbors...")
+sc.tl.leiden(adata, key_added="leiden_scVI", resolution=0.5)
+
+
 
 
 plt.rcParams['figure.dpi']= 300
@@ -69,8 +83,14 @@ sc.pl.umap(
     title= "Condition", size=10, frameon=False, show=True, save=f"{sample_type}_all_condition_scvi"
 )
 
+sc.pl.umap(
+    adata,
+    color=["leiden_scVI"],
+    title= "Cluster", size=10, frameon=False, show=True, save=f"{sample_type}_all_condition_cluster_scvi",
+)
+
 print("Saving the integrated object...")
 # Write to file
 # adata.write(os.path.join(output_path, f'{sample_type}_integrated_scvi.h5ad'))
 
-#  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data
+#  python sc_integrate_scvi.py -i ../data/out_data/atlas_merged.h5ad -o ../data/out_data -st atlas -an atlas_integrate  e
