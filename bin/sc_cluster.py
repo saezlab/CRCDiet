@@ -95,7 +95,7 @@ else:
     sc.tl.leiden(adata, resolution=res_param, key_added = f"leiden_{res_param:.2f}")
     adata.uns["leiden_best_silh_param"] = res_param
 
-sc.tl.rank_genes_groups(adata, groupby=f"leiden_{res_param:.2f}", method='wilcoxon', key_added = f"wilcoxon_{res_param}")
+sc.tl.rank_genes_groups(adata, groupby=f"leiden_{res_param:.2f}", method='wilcoxon', key_added = f"wilcoxon_{res_param:.2f}")
 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file

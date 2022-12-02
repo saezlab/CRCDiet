@@ -49,6 +49,13 @@ ref_run_name = f'{OUT_DATA_PATH}/cell2location'
 adata_ref = utils.get_unfiltered_concat_data("sc")
 annotated_sc_data = sc.read_h5ad("../data/out_data/sc_integrated_cluster_scannot.h5ad")
 
+
+# calculate qc metrics
+adata_ref.var["mt"] = adata_ref.var_names.str.contains("^mt-")
+
+# remove mitochondrial genes
+adata_ref = adata_ref[:,~adata_ref.var["mt"]]
+
 print("adata_ref" ,adata_ref)
 
 print("annotated_sc_data",annotated_sc_data)
@@ -81,11 +88,11 @@ mod = RegressionModel(adata_ref)
 # view anndata_setup as a sanity check
 mod.view_anndata_setup()
 
-mod.train(max_epochs=100, use_gpu=True)
+mod.train(max_epochs=150, use_gpu=True)
 plt.clf()
 mod.plot_history()
 plt.savefig("mod")
-
+plt.clf()
 # In this section, we export the estimated cell abundance (summary of the posterior distribution).
 adata_ref = mod.export_posterior(
     adata_ref, sample_kwargs={'num_samples': 1000, 'batch_size': 2500, 'use_gpu': True}
@@ -100,7 +107,8 @@ adata_ref.write(adata_file)
 adata_file
 plt.clf()
 mod.plot_QC()
+plt.clf()
 plt.savefig("c2l_qc")
 
 
-# python vis_deconvolute.py -rp path_to_atlas -vp path_to_slide -an  vis_deconvolution -of path_to_out
+# python vis_deconvolute.py -rp path_to_atlas -vp path_to_slide -an  vis_deconvolution -of path_to_out 

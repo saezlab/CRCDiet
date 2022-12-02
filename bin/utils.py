@@ -1,12 +1,13 @@
 import os
 import pickle
-import utils
+import random
 import pandas as pd
 import scanpy as sc
+import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 from IPython.display import Markdown, display
-
+from collections import Counter
 sc.settings.verbosity = 0
 
 
@@ -164,4 +165,62 @@ def read_mtx_file(mtx_file_path, var_name_list= None, obs_name_list= None, trans
     adata.obs_names = obs_name_list
     return adata
 
+
+def calculate_proportions_from_list(lst_cell_type, cell_count_lst, c_type_list=None):
+    
+    sample_1_list = lst_cell_type[:cell_count_lst[0]]
+    sample_2_list = lst_cell_type[cell_count_lst[0]:]
+    c1 = Counter(sample_1_list) 
+    c2 = Counter(sample_2_list) 
+    proportion_s1 = []
+    proportion_s2 = []
+
+
+
+    for c_type in c_type_list:
+        proportion_s1.append(100*(c1[c_type]/cell_count_lst[0]))
+        proportion_s2.append(100*(c2[c_type]/cell_count_lst[1]))
+
+    return proportion_s1, proportion_s2
+
+
+def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_type_0.20", sample_type="sc"):
+    input_path = "../data/out_data/sc_integrated_cluster_scannot.h5ad"
+    sample_type="sc"
+    adata = sc.read_h5ad(input_path)
+    meta = get_meta_data(sample_type)
+    condition = list(np.unique(meta['condition']))
+    c_type_list = list(adata.obs[obs_col].cat.categories)
+    cell_count_lst = []
+    sample_list = sample_list.split(",")
+    all_cells_cell_type_list = []
+    samp_prop_dict = dict()
+    samp_propor_arr = []
+    for samp in sample_list:
+        samp_prop_dict[samp] = dict()
+        samp_propor_arr.append([])
+
+        adata_tmp = adata[adata.obs["condition"]==samp,:]
+        all_cells_cell_type_list.extend(list(adata_tmp.obs[obs_col]))
+        cell_count_lst.append(adata_tmp.shape[0])
+        for c_type in c_type_list:
+            # print("c_type", c_type, adata_tmp[adata_tmp.obs[obs_col]==c_type].shape)
+            proportion = 100*(adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]/adata_tmp.shape[0])
+            samp_prop_dict[samp][c_type] = proportion
+            samp_propor_arr[-1].append(proportion)
+    
+    return c_type_list, samp_propor_arr[0], samp_propor_arr[1], samp_prop_dict, all_cells_cell_type_list, cell_count_lst
+
+def random_populations(number_of_permutations):
+    c_type_list, samp_propor_1, samp_propor_2, samp_prop_dict, all_cells_cell_type_list, cell_count_lst = calculate_cell_type_proportions("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", adata=None, obs_col = "cell_type_0.20", sample_type="sc")
+
+    all_diffs_simulations = []
+    cpy_all_cells_cell_type_list = all_cells_cell_type_list[:]
+    for i in range(number_of_permutations):
+        random.shuffle(cpy_all_cells_cell_type_list)
+        rand_proportion_s1, rand_proportion_s2 = calculate_proportions_from_list(cpy_all_cells_cell_type_list, cell_count_lst, c_type_list)
+        diff_proportion = np.array(rand_proportion_s1) - np.array(rand_proportion_s2) 
+        all_diffs_simulations.append(diff_proportion)
+    print(all_diffs_simulations)
+random_populations(10)
 
