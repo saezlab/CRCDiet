@@ -44,8 +44,8 @@ def get_threshold_dict():
     """
 
     threshold_dict = {"mt_thr": 20, # mitochondrial gene threshold
-                # "rp_thr": 5, # ribosomal gene threshold for sc samples
-                "rp_thr": 0, # ribosomal gene threshold for atlas samples
+                "rp_thr": 5, # ribosomal gene threshold for sc samples
+                # "rp_thr": 0, # ribosomal gene threshold for atlas samples
                 "doublet_thr": 0.2, #doublet threshold
                 "gene_thr": 200,
                 "cell_thr": 3,

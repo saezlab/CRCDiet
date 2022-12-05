@@ -267,11 +267,11 @@ def random_populations(str_sample_list, number_of_simulations):
         
     """axs[ind][0].savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}_{c_type}.pdf")
     axs[ind][0].clf()"""
-random_populations("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
+"""random_populations("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
 random_populations("CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", 10000)
 random_populations("HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
 
 random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
 random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
-random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
+random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)"""
 
