@@ -225,7 +225,7 @@ def random_populations(str_sample_list, number_of_simulations):
     
 
     
-    fig, axs = plt.subplots(len(c_type_list), 2, figsize=(20, 120))
+    fig, axs = plt.subplots(len(c_type_list), 2, figsize=(15, 90))
 
     for ind, c_type in enumerate(c_type_list):
         samp_prop_list = []
