@@ -5,6 +5,7 @@ import pandas as pd
 import scanpy as sc
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 from pathlib import Path
 from IPython.display import Markdown, display
 from collections import Counter
@@ -175,8 +176,6 @@ def calculate_proportions_from_list(lst_cell_type, cell_count_lst, c_type_list=N
     proportion_s1 = []
     proportion_s2 = []
 
-
-
     for c_type in c_type_list:
         proportion_s1.append(100*(c1[c_type]/cell_count_lst[0]))
         proportion_s2.append(100*(c2[c_type]/cell_count_lst[1]))
@@ -189,10 +188,8 @@ def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_typ
     sample_type="sc"
     adata = sc.read_h5ad(input_path)
     meta = get_meta_data(sample_type)
-    condition = list(np.unique(meta['condition']))
     c_type_list = list(adata.obs[obs_col].cat.categories)
     cell_count_lst = []
-    sample_list = sample_list.split(",")
     all_cells_cell_type_list = []
     samp_prop_dict = dict()
     samp_propor_arr = []
@@ -204,23 +201,77 @@ def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_typ
         all_cells_cell_type_list.extend(list(adata_tmp.obs[obs_col]))
         cell_count_lst.append(adata_tmp.shape[0])
         for c_type in c_type_list:
-            # print("c_type", c_type, adata_tmp[adata_tmp.obs[obs_col]==c_type].shape)
+            print("c_type", c_type, adata_tmp[adata_tmp.obs[obs_col]==c_type].shape)
             proportion = 100*(adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]/adata_tmp.shape[0])
             samp_prop_dict[samp][c_type] = proportion
             samp_propor_arr[-1].append(proportion)
+    all_ct_prop_diff_arr = np.array(samp_propor_arr[0])- np.array(samp_propor_arr[1])
+
+    return c_type_list, all_ct_prop_diff_arr, samp_prop_dict, all_cells_cell_type_list, cell_count_lst
+
+def random_populations(str_sample_list, number_of_simulations):
+
+    sample_list = str_sample_list.split(",")
+    c_type_list, all_ct_prop_diff_arr, samp_prop_dict, all_cells_cell_type_list, cell_count_lst = calculate_cell_type_proportions(sample_list,  adata=None, obs_col = "cell_type_0.20", sample_type="sc")
     
-    return c_type_list, samp_propor_arr[0], samp_propor_arr[1], samp_prop_dict, all_cells_cell_type_list, cell_count_lst
-
-def random_populations(number_of_permutations):
-    c_type_list, samp_propor_1, samp_propor_2, samp_prop_dict, all_cells_cell_type_list, cell_count_lst = calculate_cell_type_proportions("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", adata=None, obs_col = "cell_type_0.20", sample_type="sc")
-
     all_diffs_simulations = []
     cpy_all_cells_cell_type_list = all_cells_cell_type_list[:]
-    for i in range(number_of_permutations):
+    for i in range(number_of_simulations):
         random.shuffle(cpy_all_cells_cell_type_list)
         rand_proportion_s1, rand_proportion_s2 = calculate_proportions_from_list(cpy_all_cells_cell_type_list, cell_count_lst, c_type_list)
         diff_proportion = np.array(rand_proportion_s1) - np.array(rand_proportion_s2) 
         all_diffs_simulations.append(diff_proportion)
-    print(all_diffs_simulations)
-random_populations(10)
+    all_diffs_simulations = np.array(all_diffs_simulations)
+    
+
+    
+    fig, axs = plt.subplots(len(c_type_list), 2, figsize=(20, 120))
+
+    for ind, c_type in enumerate(c_type_list):
+        samp_prop_list = []
+        for samp in sample_list:
+            samp_prop_list.append(samp_prop_dict[samp][c_type])
+        
+        real_diff = all_ct_prop_diff_arr[ind]
+        ct_null_dist = all_diffs_simulations[:,ind]
+        
+        num_of_rare_or_rarer = 0.0
+        if real_diff <0.0:
+            num_of_rare_or_rarer = np.sum(ct_null_dist<real_diff)
+        else:
+            num_of_rare_or_rarer = np.sum(ct_null_dist>real_diff)
+
+        p_val = float(num_of_rare_or_rarer)/float(number_of_simulations)
+        
+
+        n, bins, patches = axs[ind][0].hist(ct_null_dist, facecolor='g')
+        axs[ind][0].axvline(real_diff, color='k', linestyle='dashed', linewidth=1)
+        axs[ind][0].set_xlabel('Null distribution')
+        axs[ind][0].set_ylabel('Frequency')
+        axs[ind][0].set_title(f'Histogram of Null Distribution - Cell Type: {c_type}')
+        axs[ind][0].grid(True)
+
+        axs[ind][0].text(.79, 0.99, f"p =  {p_val:.2e}", ha='left', va='top', transform=axs[ind][0].transAxes)
+
+        """plt.savefig(f"../plots/sc_cell_type_prop/hist_{str_sample_list}_{c_type}.pdf")
+        plt.clf()"""
+
+        axs[ind][1].bar(sample_list, samp_prop_list, color = (0.3,0.1,0.4,0.6))
+        axs[ind][1].text(.79, 0.99, f"p = {p_val:.2e}", ha='left', va='top', transform=axs[ind][1].transAxes)
+        axs[ind][1].set_title(f'Cell Type Proportion: {c_type}')
+        axs[ind][1].set_xlabel('Condition')
+        axs[ind][1].set_ylabel('Proportion (%)')
+
+    fig.tight_layout()
+    fig.savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}.pdf")
+        
+    """axs[ind][0].savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}_{c_type}.pdf")
+    axs[ind][0].clf()"""
+random_populations("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
+random_populations("CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", 10000)
+random_populations("HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
+
+random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
+random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
+random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
 
