@@ -156,9 +156,15 @@ print("Computing neighbors...")
 sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 print("\nUMAP of merged objects before integration")
-plt.rcParams['figure.dpi']= 300
-plt.rcParams['figure.figsize']= (45, 30)
-sc.pl.umap(adata, color=["condition"], size=10, palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
+
+if sc=="atlas":
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (45, 30)
+    sc.pl.umap(adata, color=["condition"], size=10, palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
+else:
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (15, 10)
+    sc.pl.umap(adata, color=["condition"], size=10, palette=sc.pl.palettes.default_20, save=f'{sample_type}_merged_condition.pdf');
 
 # plt.clf()
 print("Saving the merged object...")

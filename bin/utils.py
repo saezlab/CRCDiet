@@ -192,27 +192,36 @@ def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_typ
     cell_count_lst = []
     all_cells_cell_type_list = []
     samp_prop_dict = dict()
+    samp_cell_count_dict = dict()
     samp_propor_arr = []
     for samp in sample_list:
         samp_prop_dict[samp] = dict()
+        samp_cell_count_dict[samp] = dict()
         samp_propor_arr.append([])
 
         adata_tmp = adata[adata.obs["condition"]==samp,:]
         all_cells_cell_type_list.extend(list(adata_tmp.obs[obs_col]))
         cell_count_lst.append(adata_tmp.shape[0])
         for c_type in c_type_list:
-            print("c_type", c_type, adata_tmp[adata_tmp.obs[obs_col]==c_type].shape)
-            proportion = 100*(adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]/adata_tmp.shape[0])
+            
+            
+            c_type_count=adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]
+            # print(f"Sample:\t{samp}\tC_type:\t{c_type}\tCell Type Count:\t{c_type_count}\tTotal count:\t{adata_tmp.shape[0]}")
+            samp_cell_count_dict[samp][c_type] = c_type_count
+            proportion = 100*(c_type_count/adata_tmp.shape[0])
             samp_prop_dict[samp][c_type] = proportion
             samp_propor_arr[-1].append(proportion)
     all_ct_prop_diff_arr = np.array(samp_propor_arr[0])- np.array(samp_propor_arr[1])
 
-    return c_type_list, all_ct_prop_diff_arr, samp_prop_dict, all_cells_cell_type_list, cell_count_lst
+    return c_type_list, all_ct_prop_diff_arr, samp_prop_dict, samp_cell_count_dict, all_cells_cell_type_list, cell_count_lst
+
+
+# calculate_cell_type_proportions(["HFD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "CD-AOM-DSS-Immune"])
 
 def random_populations(str_sample_list, number_of_simulations):
 
     sample_list = str_sample_list.split(",")
-    c_type_list, all_ct_prop_diff_arr, samp_prop_dict, all_cells_cell_type_list, cell_count_lst = calculate_cell_type_proportions(sample_list,  adata=None, obs_col = "cell_type_0.20", sample_type="sc")
+    c_type_list, all_ct_prop_diff_arr, samp_prop_dict, samp_cell_count_dict, all_cells_cell_type_list, cell_count_lst = calculate_cell_type_proportions(sample_list,  adata=None, obs_col = "cell_type_0.20", sample_type="sc")
     
     all_diffs_simulations = []
     cpy_all_cells_cell_type_list = all_cells_cell_type_list[:]
@@ -225,12 +234,25 @@ def random_populations(str_sample_list, number_of_simulations):
     
 
     
-    fig, axs = plt.subplots(len(c_type_list), 2, figsize=(15, 90))
+    
+    
 
+    if "Epi_plus_DN" in sample_list[0]:
+        for ct in ["Mast cells", "Dendritic cells", "Neutrophils", "ILC2"]:
+            # print(["Mast cells", "Dendritic cells", "Neutrophils", "ILC2"], sample_list[0])
+            c_type_list.remove(ct)
+        
+    elif "Immune" in sample_list[0]:
+        # print(["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine"], sample_list[0])
+        for ct in ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine"]:
+            c_type_list.remove(ct)
+
+    fig, axs = plt.subplots(len(c_type_list), 2, figsize=(15, 90))
     for ind, c_type in enumerate(c_type_list):
         samp_prop_list = []
         for samp in sample_list:
             samp_prop_list.append(samp_prop_dict[samp][c_type])
+            # print(f"Condition-{samp}\tCell type-{c_type}: {samp_cell_count_dict[samp][c_type]}")
         
         real_diff = all_ct_prop_diff_arr[ind]
         ct_null_dist = all_diffs_simulations[:,ind]
@@ -243,8 +265,8 @@ def random_populations(str_sample_list, number_of_simulations):
 
         p_val = float(num_of_rare_or_rarer)/float(number_of_simulations)
         
-
-        n, bins, patches = axs[ind][0].hist(ct_null_dist, facecolor='g')
+        
+        n, bins, patches = axs[ind][0].hist(ct_null_dist, bins=10, facecolor='g')
         axs[ind][0].axvline(real_diff, color='k', linestyle='dashed', linewidth=1)
         axs[ind][0].set_xlabel('Null distribution')
         axs[ind][0].set_ylabel('Frequency')
@@ -258,6 +280,7 @@ def random_populations(str_sample_list, number_of_simulations):
 
         axs[ind][1].bar(sample_list, samp_prop_list, color = (0.3,0.1,0.4,0.6))
         axs[ind][1].text(.79, 0.99, f"p = {p_val:.2e}", ha='left', va='top', transform=axs[ind][1].transAxes)
+        # axs[ind][1].text(.05, 0.99, f"{samp_cell_count_dict[sample_list[0]][c_type]}, {cell_count_lst[0]}, {samp_cell_count_dict[sample_list[1]][c_type]}, {cell_count_lst[1]}", ha='right', va='top', transform=axs[ind][1].transAxes)
         axs[ind][1].set_title(f'Cell Type Proportion: {c_type}')
         axs[ind][1].set_xlabel('Condition')
         axs[ind][1].set_ylabel('Proportion (%)')

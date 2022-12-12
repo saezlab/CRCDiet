@@ -26,15 +26,25 @@ Run QC and filtering per sample
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
+parser = argparse.ArgumentParser(prog='qc', description='Run QC and filtering')
 # Set figure params
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
+
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+
+args = vars(parser.parse_args())
+analysis_name = args['analysis_name'] # sc_qc_preprocess "atlas_qc_preprocess"
+sample_type = args['sample_type']
 # Get necesary paths and create folders if necessary
-# S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("sc_qc_preprocess")
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("atlas_qc_preprocess")
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
+
 ############################### BOOOORIING STUFF ABOVE ###############################
+
+
 raw = True
 
-meta = utils.get_meta_data("atlas")
+meta = utils.get_meta_data(sample_type)
 
 def get_threshold_dict():
     """This functions keeps the threshold used to filter the data
@@ -75,6 +85,9 @@ def filter_cells_genes(adata, sample_id):
     
     # get threshold used to filter data
     df_threshold = get_threshold_dict()
+
+    if sample_type=="atlas":
+        df_threshold["rp_thr"] = 0
 
     pre_filter_shape = list(np.shape(adata.X))
     adata.uns["pre_filter_shape"] = pre_filter_shape
@@ -156,24 +169,6 @@ def filter_cells_genes(adata, sample_id):
     
     del adata
 
-def create_filtered_adata_files():
-
-    for _, row in meta.iterrows():
-    
-        sample_id = row["sample_id"]
-        condition = row["condition"]
-        adata = None
-        if raw:
-            adata = utils.read_raw_sc_sample(sample_id)
-        else:
-            adata = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f"{sample_id}.h5ad"))
-        printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
-        print(f"")
-        
-        filter_cells_genes(adata, sample_id)
-
-        del adata
-        # break
 
 def get_processed_sample_from_adata_file(sample_id):
     """Given samples id get filtered adata object
@@ -193,6 +188,24 @@ def get_processed_sample_from_adata_file(sample_id):
 
     return adata
 
+def create_filtered_adata_files():
+
+    for _, row in meta.iterrows():
+    
+        sample_id = row["sample_id"]
+        condition = row["condition"]
+        adata = None
+        if raw:
+            adata = utils.read_raw_sc_sample(sample_id)
+        else:
+            adata = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f"{sample_id}.h5ad"))
+        printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
+        print(f"")
+        
+        filter_cells_genes(adata, sample_id)
+
+        del adata
+        # break
 
 
 

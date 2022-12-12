@@ -7,6 +7,7 @@ import warnings
 import utils
 import os
 from utils import printmd
+import decoupler as dc
 import matplotlib as mpl
 
 ############################### BOOOORIING STUFF BELOW ############################### 
@@ -33,6 +34,63 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 
 
 l_param = 0.40
+
+adata = sc.read_h5ad(input_path)
+
+adata_concat = utils.get_filtered_concat_data(sample_type)
+"""for item in adata_conccat.var_names:
+    if item.startswith("Pd"):
+        print(item)"""
+adata_concat = adata_concat[adata.obs_names,:]
+
+sc.pp.normalize_total(adata_concat, target_sum=1e6)
+sc.pp.log1p(adata_concat)
+# https://github.com/scverse/scanpy/issues/2239
+# if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
+# KeyError: 'base'
+adata.uns['log1p']["base"] = None
+
+
+marker_genes = dc.get_resource('PanglaoDB')
+marker_genes = marker_genes[(marker_genes['mouse']=='True')&(marker_genes['canonical_marker']=='True')]
+marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
+
+
+marker_genes["genesymbol"] = marker_genes["genesymbol"].str.capitalize()
+marker_genes["cell_type"] = marker_genes["cell_type"].str.capitalize()
+marker_genes = marker_genes[~marker_genes.duplicated(['cell_type', 'genesymbol'])]
+adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
+
+
+dc.run_ora(mat=adata, net=marker_genes, use_raw=False, source='cell_type', target='genesymbol', min_n=3, verbose=True)
+acts = dc.get_acts(adata, obsm_key='ora_estimate')
+
+for c_t in list(adata.obsm["ora_estimate"].columns):
+    adata.obs[c_t] = adata.obsm["ora_estimate"][c_t]
+
+
+dict_mean_enr = dict()
+
+mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
+# print(mean_enr)
+
+annotation_dict = dc.assign_groups(mean_enr)
+# print(annotation_dict)
+# Manual annotation
+adata.obs[f'cell_type_{l_param}'] = [annotation_dict[clust] for clust in adata.obs[f'leiden_{l_param}']]
+
+
+
+plt.rcParams['figure.dpi']= 300
+plt.rcParams['figure.figsize']= (15, 10)
+# the number of genes expressed in the count matrix
+sc.pl.umap(adata, color=f'cell_type_{l_param}', title= ["Cell type annotation"], show=True, s=10, legend_loc="on data", legend_fontsize="xx-small",  save=f'{sample_type}_cell_type_annot_{l_param}')
+sc.pl.umap(adata, color='major_cell_types', title= ["Major cell types"], show=True, s=10, legend_loc="on data", legend_fontsize="xx-small",  save=f'{sample_type}_major_cell_types')
+adata_integ_clust.obs[f'cell_type_{l_param}'] = adata.obs[f'cell_type_{l_param}']
+adata_integ_clust.obs['major_cell_types'] = adata.obs['major_cell_types']
+
+
+
 cluster_to_cell = [
 "Epithelial cells (SI & colon)",
 "Epithelial cells in (SI Enterocytes)",

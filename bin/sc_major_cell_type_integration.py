@@ -54,6 +54,8 @@ markers = list(set(markers_df["genesymbol"].str.capitalize()))
 # for m_ct in set(adata_integ_clust.obs["major_cell_types"]):
 
 adata_tmp = adata[adata_integ_clust.obs["major_cell_types"]==m_ct,:].copy()
+del adata
+del adata_integ_clust
 sc.pp.calculate_qc_metrics(adata_tmp, inplace=True)
 
 for ind in range(6):

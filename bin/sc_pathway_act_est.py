@@ -46,7 +46,7 @@ meta = utils.get_meta_data(sample_type)
 
 adata_merged = sc.read_h5ad(input_path)
 adata_integ_clust = sc.read_h5ad(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
-adata_merged.X = adata_merged.layers['counts']
+adata_merged.X = adata_merged.layers['log1p_transformed']
 
 # print(adata_integ_clust)
 

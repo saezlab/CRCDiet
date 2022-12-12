@@ -38,7 +38,7 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 print("Reading merged object...")
 # Read merged object
 adata = sc.read_h5ad(input_path)
-print(adata.obs)
+# print(adata.obs)
 print(f"Number of cells: {adata.shape[0]}")
 print("Running harmony ...")
 
@@ -65,9 +65,12 @@ sc.pl.umap(
     adata, color=["condition", "n_genes_by_counts"], color_map =plt.cm.afmhot, 
     title= ["Condition", "Num of exp. genes"], s=10, frameon=False, ncols=2,  show=True, save=f"{sample_type}_all_condition_harmony"
 )"""
-
-plt.rcParams['figure.dpi']= 300
-plt.rcParams['figure.figsize']= (45, 30)
+if sample_type=="atlas":
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (45, 30)
+else:
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (15, 10)
 
 sc.pl.umap(
     adata, color="condition",
@@ -89,3 +92,4 @@ adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
 
 #  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data
 #  python sc_integrate.py -i ../data/out_data/atlas_merged.h5ad -o ../data/out_data -st atlas -an atlas_integrate
+#  python sc_integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data -st atlas -an sc_integrate

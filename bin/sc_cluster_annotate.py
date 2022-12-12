@@ -20,12 +20,14 @@ parser = argparse.ArgumentParser(prog='cluster', description='Run annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # "sc_cluster_annotate"
+output_file = args['output_file']
 sample_type = args['sample_type']
 
 # Get necesary paths and create folders if necessary
@@ -50,15 +52,18 @@ sc.pp.log1p(adata_concat)
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
 adata.uns['log1p']["base"] = None
-l_param = adata.uns["leiden_best_silh_param"]
-l_param = f"{l_param:.2f}"
-
-
-l_param_list = [0.30] # for major cell types
+# l_param = adata.uns["leiden_best_silh_param"]
+# l_param = f"{l_param:.2f}"
 
 
 l_param_list = [0.20] # for SC data
-l_param_list = [0.40] # for Atlas data
+l_param_list = [0.30] # for major cell types
+if sample_type == "atlas":
+    l_param_list = [0.40] # for Atlas data
+
+if output_file:
+    sample_type = f"{sample_type}_{output_file}"
+
 step = 0.10
 for l_param in l_param_list:
 #for l_param in np.arange(0.1, 1.01, step):
@@ -71,15 +76,17 @@ for l_param in l_param_list:
     
     # do not  del adata for more than one value
     # del adata
-    mpl.rcParams['figure.dpi']= 300
+    """mpl.rcParams['figure.dpi']= 300
     mpl.rcParams["figure.figsize"] = (40,30)
-    mpl.rcParams["legend.fontsize"]  = 30
+    mpl.rcParams["legend.fontsize"]  = 30"""
     
-    mpl.rcParams["legend.loc"]  = "upper right"
-    mpl.rcParams['axes.facecolor'] = "white"
+    # mpl.rcParams["legend.loc"]  = "upper right"
+    # mpl.rcParams['axes.facecolor'] = "white"
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (15, 10)
 
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{l_param}_ondata')
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=10 , show=True, legend_loc='on data', save=f'{sample_type}_leiden_{l_param}_ondata')
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=10 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
     """
     # "Pdgrfra",
     markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]
@@ -87,8 +94,8 @@ for l_param in l_param_list:
     sc.pl.dotplot(adata, markers_dot_plot, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_marker_{l_param}_dotplot')
     """
     # change below anndata objects to "anndata" to run on only HVGs
-    mpl.rcParams['figure.dpi']= 300
-    mpl.rcParams["figure.figsize"] = (5,5)
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams["figure.figsize"] = (5,5)
     print("DEGs per cluster!")
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
     adata.uns[f"wilcoxon_{l_param}"] = adata_concat.uns[f"wilcoxon_{l_param}"]
