@@ -40,8 +40,14 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
 compute_silh = False
+
+
 res_param = 0.2 # 0.2 for sc
-res_param = 0.4 # 0.2 for atlas
+res_param = 0.3 # 0.3 for major
+
+if sample_type == "atlas":
+    res_param = 0.4 # 0.4 for atlas
+
 meta = utils.get_meta_data(sample_type)
 
 if output_file:
@@ -101,6 +107,9 @@ print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
 
+
+# python sc_cluster.py -i ../data/out_data/sc_integrated.h5ad -o ../data/out_data -st sc  -an sc_cluster
+# python sc_cluster_annotate.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data -an sc_cluster -st sc
 
 # python sc_cluster.py -i ../data/out_data/atlas_integrated.h5ad -o ../data/out_data -st atlas  -an atlas_cluster
 # python sc_cluster_annotate.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_cluster -st atlas

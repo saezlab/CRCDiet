@@ -60,7 +60,7 @@ if marker_list is None:
 
     markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
     markers = list(set(markers_df["genesymbol"].str.upper()))
-    print(set(markers))
+    # print(set(markers))
 
 
     marker_intersect = list(set(adata.var.index) & set(markers))

@@ -21,12 +21,14 @@ parser = argparse.ArgumentParser(prog='cluster', description='Run annotation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # "sc_cluster_annotate"
+output_file = args['output_file']
 sample_type = args['sample_type']
 
 # Get necesary paths and create folders if necessary
@@ -55,8 +57,8 @@ sc.pp.log1p(adata_concat)
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
 adata.uns['log1p']["base"] = None
-l_param = adata.uns["leiden_best_silh_param"]
-# l_param = f"{l_param:.2f}"
+# l_param = adata.uns["leiden_best_silh_param"]
+# # l_param = f"{l_param:.2f}"
 
 
 
