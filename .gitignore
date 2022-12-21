@@ -145,3 +145,6 @@ plots/
 bin/mod.png
 bin/atlas.out
 bin/atlas_construction.out
+bin/atlas_integrated_subclustered.h5ad
+.gitignore
+bin/sc_00_pipeline_updated.html

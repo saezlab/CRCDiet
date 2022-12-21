@@ -46,6 +46,8 @@ adata = utils.get_filtered_concat_data(sample_type)
 adata = adata[adata_integ_clust.obs_names,:]
 
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
+sc.pp.normalize_total(adata, target_sum=1e6)
+sc.pp.log1p(adata)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
