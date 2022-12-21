@@ -35,4 +35,8 @@ def check_marker_vs_sample_gene_overlap():
 
     marker_genes = pd.DataFrame(marker_genes, columns=['gene', 'cell_type']) 
 
-check_marker_vs_sample_gene_overlap()
+# check_marker_vs_sample_gene_overlap()
+
+"""
+
+"""
