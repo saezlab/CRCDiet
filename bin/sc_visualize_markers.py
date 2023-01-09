@@ -84,10 +84,11 @@ else:
         
         if mrk in adata.var_names.str.upper():
             print(mrk)
-
-            sc.pl.umap(adata, color=mrk.upper(), size=5, title=f"Immune: {mrk}", show=False, save=f"{sample_type}_marker_{mrk}")
+            plt.rcParams['figure.dpi']= 300
+            plt.rcParams['figure.figsize']= (15, 10)
+            sc.pl.umap(adata, color=mrk.upper(), size=10, title=f"{mrk}", show=False, save=f"{sample_type}_marker_{mrk}")
             
-            fig, axs = plt.subplots(1, 4, figsize=(40, 10));
+            """fig, axs = plt.subplots(1, 4, figsize=(40, 10));
             sc.pl.umap(adata, color=mrk.upper(), size=30, title=f"{mrk}: All conditions", show=False, ax=axs[0])
             
             ind = 1
@@ -98,9 +99,11 @@ else:
                     ind += 1
             
             fig.savefig(os.path.join(PLOT_PATH, f"{sample_type}_marker_{mrk}_conditions"));
-            plt.show();
+            plt.show();"""
 
 # Uba52,Gm10076,Ubb,Wdr89,Bloc1s1,Tmsb10,Fau,H3f3a
 
 #  python sc_visualize_markers.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data
 # python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas
+
+# python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas -ml RELN,CD31,PECAM
