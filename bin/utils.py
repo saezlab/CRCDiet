@@ -128,7 +128,7 @@ def get_unfiltered_concat_data(sample_type):
         condition = row["condition"]
         print(f"Merging {sample_id}...")
 
-        tmp = utils.read_raw_sc_sample(sample_id)
+        tmp = read_raw_sc_sample(sample_id)
         # Fetch sample metadata
         m = meta[meta['sample_id'] == sample_id]
         # Add metadata to adata
