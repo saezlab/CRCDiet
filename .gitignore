@@ -148,3 +148,6 @@ bin/atlas_construction.out
 bin/atlas_integrated_subclustered.h5ad
 .gitignore
 bin/sc_00_pipeline_updated.html
+bin/deconv.sh
+.gitignore
+bin/deconv.out
