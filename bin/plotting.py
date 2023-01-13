@@ -153,10 +153,8 @@ def plot_cell_type_proportion(cond_list, cond_name ="Immune", adata=None, obs_co
 
 
 
-# plot_cell_type_proportion("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", cond_name ="epithelial", adata=None, obs_col = "major_cell_types", sample_type="sc")
+plot_cell_type_proportion("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", cond_name ="epithelial", adata=None, obs_col = "major_cell_types", sample_type="sc")
 # plot_cell_type_proportion("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", cond_name ="immune", adata=None, obs_col = "major_cell_types", sample_type="sc")
-
-        
 
 
 
@@ -342,6 +340,8 @@ def plot_clusters(adata):
 # https://stackoverflow.com/questions/11517986/indicating-the-statistically-significant-difference-in-bar-graph
 
 
+# This plotting function comes from the answer in the following link
+# https://stackoverflow.com/questions/11517986/indicating-the-statistically-significant-difference-in-bar-graph
 def barplot_annotate_brackets(num1, num2, data, center, height, yerr=None, dh=.05, barh=.05, fs=None, maxasterix=None):
     """ 
     Annotate barplot with p-values.
@@ -403,12 +403,69 @@ def barplot_annotate_brackets(num1, num2, data, center, height, yerr=None, dh=.0
 
     plt.text(*mid, text, **kwargs)
 
-def label_diff(ax, i,j,text,X,Y):
+
+def test_significance():
+    heights = [1.8, 2, 3]
+    bars = np.arange(len(heights))
+
+    plt.figure()
+    plt.bar(bars, heights, align='center')
+    plt.ylim(0, 5)
+    barplot_annotate_brackets(0, 1, .1, bars, heights)
+    barplot_annotate_brackets(1, 2, .001, bars, heights)
+    barplot_annotate_brackets(0, 2, 'p < 0.0075', bars, heights, dh=.2)
+    plt.savefig("test_sig.pdf")
+
+
+
+
+# Custom function to draw the diff bars
+
+def label_diff(i,j,text,X,Y, ax):
     x = (X[i]+X[j])/2
-    y = 1.1*max(Y[i], Y[j])
+    print(Y[i], Y[j])
+
+    y = max(Y[i], Y[j])
+    
+    print(y)
     dx = abs(X[i]-X[j])
 
     props = {'connectionstyle':'bar','arrowstyle':'-',\
                  'shrinkA':20,'shrinkB':20,'linewidth':2}
-    ax.annotate(text, xy=(X[i],y+7), zorder=10)
+
+    ax.annotate(text, xy=(x,y+10), zorder=10, ha='center')
+    print((x,y+8))
     ax.annotate('', xy=(X[i],y), xytext=(X[j],y), arrowprops=props)
+    print((x,y+8))
+
+
+
+def test_label_diff():
+    import numpy as np
+    import matplotlib.pyplot as plt
+    proportions   = (15, 5, 30)
+    
+    ind  = np.arange(3)    # the x locations for the groups
+    width= 0.7
+    labels = ('A', 'B', 'C')
+
+    # Pull the formatting out here
+    bar_kwargs = {'width':width,'color':'y','linewidth':2,'zorder':5}
+    err_kwargs = {'zorder':0,'fmt':None,'linewidth':2,'ecolor':'k'}  #for matplotlib >= v1.4 use 'fmt':'none' instead
+
+    fig, ax = plt.subplots()
+    ax.p1 = plt.bar(ind, proportions, **bar_kwargs)
+    # ax.errs = plt.errorbar(ind, menMeans, yerr=menStd, **err_kwargs)
+    # Call the function
+    label_diff(0,1,'p=0.0370',ind,proportions, ax)
+    label_diff(1,2,'p<0.0001',ind,proportions, ax)
+    label_diff(0,2,'p=0.0025',ind,proportions, ax)
+
+
+
+    plt.ylim(ymax=60)
+    plt.xticks(ind, labels, color='k')
+    plt.savefig("test_label_diff.pdf")
+
+
+test_label_diff()
