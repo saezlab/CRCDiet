@@ -211,6 +211,8 @@ def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_typ
             proportion = 100*(c_type_count/adata_tmp.shape[0])
             samp_prop_dict[samp][c_type] = proportion
             samp_propor_arr[-1].append(proportion)
+
+    print("sample proportions:", samp_propor_arr)
     all_ct_prop_diff_arr = np.array(samp_propor_arr[0])- np.array(samp_propor_arr[1])
 
     return c_type_list, all_ct_prop_diff_arr, samp_prop_dict, samp_cell_count_dict, all_cells_cell_type_list, cell_count_lst
@@ -237,18 +239,29 @@ def random_populations(str_sample_list, number_of_simulations):
     
     
 
-    if "Epi_plus_DN" in sample_list[0]:
-        for ct in ["Mast cells", "Dendritic cells", "Neutrophils", "ILC2"]:
+    """if "Epi_plus_DN" in sample_list[0]:
+        for ct in [ "T cells", "Plasma cells", "Mast cells", "Neutrophils", "ILC2",  "Dendritic cells", "Myeloid cells", "B cells"]:
             # print(["Mast cells", "Dendritic cells", "Neutrophils", "ILC2"], sample_list[0])
             c_type_list.remove(ct)
         
     elif "Immune" in sample_list[0]:
-        # print(["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine"], sample_list[0])
-        for ct in ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine"]:
-            c_type_list.remove(ct)
+        # print(["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"], sample_list[0])
+        for ct in ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"]:
+            c_type_list.remove(ct)"""
 
+
+    dict_cell_type_pval = dict()
     fig, axs = plt.subplots(len(c_type_list), 2, figsize=(15, 90))
     for ind, c_type in enumerate(c_type_list):
+        if "Epi_plus_DN" in sample_list[0]:
+            if c_type in [ "T cells", "Plasma cells", "Mast cells", "Neutrophils", "ILC2",  "Dendritic cells", "Myeloid cells", "B cells"]:
+                # print(["Mast cells", "Dendritic cells", "Neutrophils", "ILC2"], sample_list[0])
+                continue
+        
+        elif "Immune" in sample_list[0]:
+            # print(["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"], sample_list[0])
+            if c_type in ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"]:
+                continue
         samp_prop_list = []
         for samp in sample_list:
             samp_prop_list.append(samp_prop_dict[samp][c_type])
@@ -264,7 +277,7 @@ def random_populations(str_sample_list, number_of_simulations):
             num_of_rare_or_rarer = np.sum(ct_null_dist>real_diff)
 
         p_val = float(num_of_rare_or_rarer)/float(number_of_simulations)
-        
+        dict_cell_type_pval[c_type] = p_val
         
         n, bins, patches = axs[ind][0].hist(ct_null_dist, bins=10, facecolor='g')
         axs[ind][0].axvline(real_diff, color='k', linestyle='dashed', linewidth=1)
@@ -279,14 +292,18 @@ def random_populations(str_sample_list, number_of_simulations):
         plt.clf()"""
 
         axs[ind][1].bar(sample_list, samp_prop_list, color = (0.3,0.1,0.4,0.6))
-        axs[ind][1].text(.79, 0.99, f"p = {p_val:.2e}", ha='left', va='top', transform=axs[ind][1].transAxes)
+        axs[ind][1].text(.79, 0.99, f"{p_val:.2e}", ha='left', va='top', transform=axs[ind][1].transAxes)
         # axs[ind][1].text(.05, 0.99, f"{samp_cell_count_dict[sample_list[0]][c_type]}, {cell_count_lst[0]}, {samp_cell_count_dict[sample_list[1]][c_type]}, {cell_count_lst[1]}", ha='right', va='top', transform=axs[ind][1].transAxes)
         axs[ind][1].set_title(f'Cell Type Proportion: {c_type}')
         axs[ind][1].set_xlabel('Condition')
         axs[ind][1].set_ylabel('Proportion (%)')
 
+    
     fig.tight_layout()
-    fig.savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}.pdf")
+    fig.savefig(f"../plots/sc_cell_type_prop/DELETEbarplot_{str_sample_list}.pdf")
+    fig.savefig(f"../plots/sc_cell_type_prop/DELETEbarplot_{str_sample_list}.png")
+
+    return c_type_list, samp_prop_dict, dict_cell_type_pval
         
     """axs[ind][0].savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}_{c_type}.pdf")
     axs[ind][0].clf()"""
@@ -297,4 +314,47 @@ random_populations("HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
 random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
 random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
 random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)"""
+
+def p_to_star(p_val):
+    if p_val > 0.05:
+        return "n.s."
+    elif p_val<=0.05 and p_val>0.01:
+        return "*"
+    elif p_val<=0.01 and p_val>0.001:
+        return "**"
+    elif p_val<=0.001:
+        return "***"
+
+from plotting import plot_significance
+
+c_type_list12, samp_prop_dict12, dict_cell_type_pval12 = random_populations("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
+c_type_list13, samp_prop_dict13, dict_cell_type_pval13 = random_populations("CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", 10000)
+c_type_list23, samp_prop_dict23, dict_cell_type_pval23 = random_populations("HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
+"""print(c_type_list12)
+print("samp_prop_dict12", samp_prop_dict12)
+print("samp_prop_dict23", samp_prop_dict23)
+print("samp_prop_dict13", samp_prop_dict13)"""
+for ind, c_type in enumerate(c_type_list12):
+    # plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], f"{dict_cell_type_pval12[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval23[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval13[c_type_list12[ind]]:.2e}")
+    print(c_type)
+    plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], p_to_star(dict_cell_type_pval12[c_type_list12[ind]]), p_to_star(dict_cell_type_pval23[c_type_list12[ind]]), p_to_star(dict_cell_type_pval13[c_type_list12[ind]]), c_type, "Epi_plus_DN")
+
+
+c_type_list12, samp_prop_dict12, dict_cell_type_pval12 = random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
+c_type_list13, samp_prop_dict13, dict_cell_type_pval13 = random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
+c_type_list23, samp_prop_dict23, dict_cell_type_pval23 = random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
+"""print(c_type_list12)
+print("samp_prop_dict12", samp_prop_dict12)
+print("samp_prop_dict23", samp_prop_dict23)
+print("samp_prop_dict13", samp_prop_dict13)"""
+for ind, c_type in enumerate(c_type_list12):
+    # plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], f"{dict_cell_type_pval12[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval23[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval13[c_type_list12[ind]]:.2e}")
+    print(c_type)
+    plot_significance("CD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune", samp_prop_dict12["CD-AOM-DSS-Immune"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Immune"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Immune"][c_type_list12[ind]], p_to_star(dict_cell_type_pval12[c_type_list12[ind]]), p_to_star(dict_cell_type_pval23[c_type_list12[ind]]), p_to_star(dict_cell_type_pval13[c_type_list12[ind]]), c_type, "Immune")
+
+
+"""c_type_list, samp_prop_dict, dict_cell_type_pval = random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
+c_type_list, samp_prop_dict, dict_cell_type_pval = random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
+c_type_list, samp_prop_dict, dict_cell_type_pval = random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)"""
+
 

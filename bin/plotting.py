@@ -7,7 +7,7 @@ import matplotlib.gridspec as gridspec
 import seaborn as sns
 from matplotlib import cm
 import scanpy as sc
-import utils
+# import utils
 import numpy as np
 import matplotlib
 import os
@@ -153,7 +153,7 @@ def plot_cell_type_proportion(cond_list, cond_name ="Immune", adata=None, obs_co
 
 
 
-plot_cell_type_proportion("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", cond_name ="epithelial", adata=None, obs_col = "major_cell_types", sample_type="sc")
+# plot_cell_type_proportion("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", cond_name ="epithelial", adata=None, obs_col = "major_cell_types", sample_type="sc")
 # plot_cell_type_proportion("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", cond_name ="immune", adata=None, obs_col = "major_cell_types", sample_type="sc")
 
 
@@ -431,41 +431,49 @@ def label_diff(i,j,text,X,Y, ax):
     dx = abs(X[i]-X[j])
 
     props = {'connectionstyle':'bar','arrowstyle':'-',\
-                 'shrinkA':20,'shrinkB':20,'linewidth':2}
+                 'shrinkA':5,'shrinkB':5,'linewidth':2}
 
-    ax.annotate(text, xy=(x,y+10), zorder=10, ha='center')
-    print((x,y+8))
+    ax.annotate(text, xy=(x,y), zorder=10, ha='center', fontsize=15)
     ax.annotate('', xy=(X[i],y), xytext=(X[j],y), arrowprops=props)
-    print((x,y+8))
+    
 
 
 
-def test_label_diff():
+def plot_significance(first_label, second_label, third_label, first_prop, second_prop, third_prop, first_second_p_val, second_third_p_val, first_third_pval, c_type, fl_name):
     import numpy as np
     import matplotlib.pyplot as plt
-    proportions   = (15, 5, 30)
-    
+    proportions   = (first_prop, second_prop, third_prop)
+    # print(proportions, max(proportions))
     ind  = np.arange(3)    # the x locations for the groups
     width= 0.7
-    labels = ('A', 'B', 'C')
+    labels = (first_label, second_label, third_label)
 
     # Pull the formatting out here
     bar_kwargs = {'width':width,'color':'y','linewidth':2,'zorder':5}
     err_kwargs = {'zorder':0,'fmt':None,'linewidth':2,'ecolor':'k'}  #for matplotlib >= v1.4 use 'fmt':'none' instead
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (15, 10)
 
     fig, ax = plt.subplots()
     ax.p1 = plt.bar(ind, proportions, **bar_kwargs)
     # ax.errs = plt.errorbar(ind, menMeans, yerr=menStd, **err_kwargs)
     # Call the function
-    label_diff(0,1,'p=0.0370',ind,proportions, ax)
-    label_diff(1,2,'p<0.0001',ind,proportions, ax)
-    label_diff(0,2,'p=0.0025',ind,proportions, ax)
+    label_diff(0,1,f'{first_second_p_val}',ind,proportions, ax)
+    label_diff(1,2,f'{second_third_p_val}',ind,proportions, ax)
+    label_diff(0,2,f'{first_third_pval}',ind,proportions, ax)
+    # ax.set_ylim(max(proportions)+ max(proportions)*0.20)
+
+    ax.set_ylim([0.0, (max(proportions)+ max(proportions)*0.30)])
+    ax.set_title(f'Cell Type Proportion: {c_type}')
+    ax.set_xlabel('Condition', fontsize=20)
+    ax.set_ylabel('Proportion (%)', fontsize=20)
+    ax.spines[['right', 'top']].set_visible(False)
 
 
 
-    plt.ylim(ymax=60)
+    
     plt.xticks(ind, labels, color='k')
-    plt.savefig("test_label_diff.pdf")
+    plt.savefig(f"../plots/sc_cell_type_prop/{fl_name}_{c_type}.pdf")
+    plt.savefig(f"../plots/sc_cell_type_prop/{fl_name}_{c_type}.png")
 
 
-test_label_diff()
