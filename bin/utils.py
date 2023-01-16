@@ -212,7 +212,7 @@ def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_typ
             samp_prop_dict[samp][c_type] = proportion
             samp_propor_arr[-1].append(proportion)
 
-    print("sample proportions:", samp_propor_arr)
+    # print("sample proportions:", samp_propor_arr)
     all_ct_prop_diff_arr = np.array(samp_propor_arr[0])- np.array(samp_propor_arr[1])
 
     return c_type_list, all_ct_prop_diff_arr, samp_prop_dict, samp_cell_count_dict, all_cells_cell_type_list, cell_count_lst
@@ -300,20 +300,11 @@ def random_populations(str_sample_list, number_of_simulations):
 
     
     fig.tight_layout()
-    fig.savefig(f"../plots/sc_cell_type_prop/DELETEbarplot_{str_sample_list}.pdf")
-    fig.savefig(f"../plots/sc_cell_type_prop/DELETEbarplot_{str_sample_list}.png")
+    fig.savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}.pdf")
+    fig.savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}.png")
 
     return c_type_list, samp_prop_dict, dict_cell_type_pval
         
-    """axs[ind][0].savefig(f"../plots/sc_cell_type_prop/barplot_{str_sample_list}_{c_type}.pdf")
-    axs[ind][0].clf()"""
-"""random_populations("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
-random_populations("CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", 10000)
-random_populations("HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", 10000)
-
-random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
-random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
-random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)"""
 
 def p_to_star(p_val):
     if p_val > 0.05:
@@ -337,24 +328,22 @@ print("samp_prop_dict13", samp_prop_dict13)"""
 for ind, c_type in enumerate(c_type_list12):
     # plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], f"{dict_cell_type_pval12[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval23[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval13[c_type_list12[ind]]:.2e}")
     print(c_type)
-    plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], p_to_star(dict_cell_type_pval12[c_type_list12[ind]]), p_to_star(dict_cell_type_pval23[c_type_list12[ind]]), p_to_star(dict_cell_type_pval13[c_type_list12[ind]]), c_type, "Epi_plus_DN")
+    try:
+        plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], p_to_star(dict_cell_type_pval12[c_type_list12[ind]]), p_to_star(dict_cell_type_pval23[c_type_list12[ind]]), p_to_star(dict_cell_type_pval13[c_type_list12[ind]]), c_type, "Epi_plus_DN")
+    except:
+        pass
 
 
 c_type_list12, samp_prop_dict12, dict_cell_type_pval12 = random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
 c_type_list13, samp_prop_dict13, dict_cell_type_pval13 = random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
 c_type_list23, samp_prop_dict23, dict_cell_type_pval23 = random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
-"""print(c_type_list12)
-print("samp_prop_dict12", samp_prop_dict12)
-print("samp_prop_dict23", samp_prop_dict23)
-print("samp_prop_dict13", samp_prop_dict13)"""
 for ind, c_type in enumerate(c_type_list12):
     # plot_significance("CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", samp_prop_dict12["CD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Epi_plus_DN"][c_type_list12[ind]], f"{dict_cell_type_pval12[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval23[c_type_list12[ind]]:.2e}", f"{dict_cell_type_pval13[c_type_list12[ind]]:.2e}")
     print(c_type)
-    plot_significance("CD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune", samp_prop_dict12["CD-AOM-DSS-Immune"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Immune"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Immune"][c_type_list12[ind]], p_to_star(dict_cell_type_pval12[c_type_list12[ind]]), p_to_star(dict_cell_type_pval23[c_type_list12[ind]]), p_to_star(dict_cell_type_pval13[c_type_list12[ind]]), c_type, "Immune")
+    try:
+        plot_significance("CD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune", samp_prop_dict12["CD-AOM-DSS-Immune"][c_type_list12[ind]], samp_prop_dict12["LFD-AOM-DSS-Immune"][c_type_list12[ind]], samp_prop_dict23["HFD-AOM-DSS-Immune"][c_type_list12[ind]], p_to_star(dict_cell_type_pval12[c_type_list12[ind]]), p_to_star(dict_cell_type_pval23[c_type_list12[ind]]), p_to_star(dict_cell_type_pval13[c_type_list12[ind]]), c_type, "Immune")
+    except:
+        pass
 
-
-"""c_type_list, samp_prop_dict, dict_cell_type_pval = random_populations("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)
-c_type_list, samp_prop_dict, dict_cell_type_pval = random_populations("CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", 10000)
-c_type_list, samp_prop_dict, dict_cell_type_pval = random_populations("HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", 10000)"""
 
 
