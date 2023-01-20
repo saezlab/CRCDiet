@@ -41,12 +41,15 @@ output_file = args['output_file']
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
+print("Clustering the visium slides...")
 sample_type = "visium"
 
 adata = sc.read_h5ad(input_path)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
+
+meta = utils.get_meta_data(sample_type)
 
 step = 0.05
 dist_mat = None
@@ -75,10 +78,11 @@ for l_param in np.arange(0.1, 1.01, 0.05):
 
     print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
-    silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
-    print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
-    silh_param_scores.append((l_param, silh_scr))
-    """sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True, save=f'{sample_type}_res-{l_param:.2f}_silh-{silh_scr:.3f}_clusters')
+    # silh_scr = silhouette_score(dist_mat, np.array(adata.obs[f"leiden_{l_param:.2f}"]), metric='precomputed')
+    # print(f"Clustering param: {l_param:.2f}\tSilhoutte score: {silh_scr:.3f}")
+    #silh_param_scores.append((l_param, silh_scr))
+    # sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True, save=f'{sample_type}_res-{l_param:.2f}_silh-{silh_scr:.3f}_clusters')
+    sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True, save=f'{sample_type}_res-{l_param:.2f}_clusters')
     
     l_param = f"{l_param:.2f}"
     rows, cols = (1, 6)
@@ -97,9 +101,16 @@ for l_param in np.arange(0.1, 1.01, 0.05):
         adata_raw.obs[f"leiden_{l_param}"] = adata_temp.obs[f"leiden_{l_param}"]
         sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}",  title=condition, size=1.25, alpha_img=0.3, ax = ax[ind], show=False)
     fig.tight_layout()
-    plt.show();"""
+    plt.savefig(f"{PLOT_PATH}/{sample_type}_res-{l_param}_clusters.pdf")
+    plt.show();
+    break
 
-for l_param, s_scr in silh_param_scores:
+adata.uns["leiden_best_silh_param"] = [0.1, 0.0]
+l_param, _ = adata.uns["leiden_best_silh_param"]
+
+l_param = f"{l_param:.2f}"
+sc.pl.umap(adata, color=[f"leiden_{l_param}"], title=" Clusters - Integrated Samples", palette=sc.pl.palettes.default_20, show=True, save=f'{sample_type}_res-{l_param}_clusters')
+"""for l_param, s_scr in silh_param_scores:
     if s_scr > best_s_scr:
         best_l_param, best_s_scr = l_param, s_scr
 
@@ -107,7 +118,7 @@ adata.uns["leiden_best_silh_param"] = [best_l_param, best_s_scr]
 
 l_param, _ = adata.uns["leiden_best_silh_param"]
 
-l_param = f"{l_param:.2f}"
+l_param = f"{l_param:.2f}"""
 
 """sc.pl.umap(adata, color=[f"leiden_{l_param}"], title=" Clusters - Integrated Samples", palette=sc.pl.palettes.default_20, show=True, save=f'{sample_type}_res-{l_param}_clusters')
 
@@ -137,9 +148,9 @@ for ind, row in meta.iterrows():
 plt.tight_layout()
 plt.show();"""
 
-print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
+# print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file
-adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+# adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
 
 
 

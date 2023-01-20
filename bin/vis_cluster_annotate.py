@@ -58,7 +58,7 @@ adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var
 l_param, _ = adata.uns["leiden_best_silh_param"]
 
 l_param_list = [0.10, 0.40, 0.60]
-l_param_list = [0.40]
+l_param_list = [0.10]
 for l_param in l_param_list:
     l_param = f"{l_param:.2f}"
     printmd(f"## Clusters with resolution param: {l_param} <a class='anchor' id='seventh-bullet-1'></a>")
@@ -110,15 +110,21 @@ for l_param in l_param_list:
 
     adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
     # Comment out the section above for running DEGs on HVGs
-    
+    sc.pp.normalize_total(adata_concat, target_sum=1e6)
+    sc.pp.log1p(adata_concat)
 
     
     # change below anndata objects to "anndata" to run on only HVGs
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
     mpl.rcParams['axes.titlesize'] = 20
-    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}.pdf')#
-    # mpl.rcParams['axes.titlesize'] = 60
-    # sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_25.pdf')
+    sc.pl.rank_genes_groups(adata_concat, n_genes=35, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_35.pdf')#
+    sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", min_logfoldchange = 1, show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    sc.pl.rank_genes_groups_dotplot(adata_concat,  min_logfoldchange = 1, swap_axes=True, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes')
+    # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    # sc.pl.rank_genes_groups_heatmap(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_heatmap_{l_param}')
+
+
 
     wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
     # print(l_param)
