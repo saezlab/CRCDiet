@@ -32,7 +32,7 @@ sc.settings.verbosity = 0
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run deconvolution')
 parser.add_argument('-rp', '--input_path', help='path to referecence atlas', required=True)
-parser.add_argument('-vp', '--vis_path', help='Output directory where to store the object', required=True)
+parser.add_argument('-vp', '--vis_path', help='Output directory where to store the object', required=False)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True) # vis_deconvolution
 parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
@@ -54,8 +54,8 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 ################## Part 1 ################### 
 #############################################
 
-ref_run_name = f'{OUT_DATA_PATH}/cell2location'
-run_name = f'{OUT_DATA_PATH}/cell2location_map'
+ref_run_name = f'{OUT_DATA_PATH}/cell2location_{analysis_name}'
+# run_name = f'{OUT_DATA_PATH}/cell2location_map_{analysis_name}'
 
 annotated_sc_data = sc.read_h5ad(input_path)
 annotated_sc_data.var_names_make_unique()
@@ -78,9 +78,9 @@ cell2location.models.RegressionModel.setup_anndata(adata=annotated_sc_data,
                         # 10X reaction / sample / batch
                         batch_key='batch',
                         # cell type, covariate used for constructing signatures
-                        labels_key='cell_type_level1',
+                        labels_key='cell_type_0.20',
                         # multiplicative technical effects (platform, 3' vs 5', donor effect)
-                        categorical_covariate_keys=['technology', "study"]
+                        # categorical_covariate_keys=['technology', "study"]
                        )
 
 # create the regression model
@@ -89,7 +89,7 @@ mod = RegressionModel(annotated_sc_data)
 # view anndata_setup as a sanity check
 mod.view_anndata_setup()
 
-mod.train(max_epochs=100, use_gpu=True)
+mod.train(max_epochs=250, use_gpu=True) # check qc and change max_epochs 
 plt.clf()
 mod.plot_history()
 plt.savefig(f"{ref_run_name}/regression_mod.png",
@@ -111,7 +111,7 @@ plt.clf()
 mod.plot_QC()
 plt.clf()
 # Save anndata object with results
-adata_file = f"{ref_run_name}/atlas_cell2loc.h5ad"
+adata_file = f"{ref_run_name}/cell2loc.h5ad"
 annotated_sc_data.write(adata_file)
 adata_file
 plt.clf()
@@ -141,6 +141,8 @@ inf_aver.to_csv(f"{ref_run_name}/inf_aver.csv")
 # python vis_deconvolute_part1.py -rp ../data/out_data/atlas_cell_type_annot_light_weight.h5ad -vp ../data/out_data/ext_L24854_CD-AOM-DSS-colon-d81-visium_filtered.h5ad -an  vis_deconvolution -of path_to_out
 
 # python vis_deconvolute_part1.py -rp ../data/out_data/atlas_cell_type_annot_light_weight.h5ad -vp ../data/out_data/ext_L24854_CD-AOM-DSS-colon-d81-visium_filtered.h5ad -an  vis_deconvolution -of path_to_out 
+
+# python vis_deconvolute_part1.py -rp "../data/out_data/sc_Immune cells.h5ad" -an vis_immune_deconvolution
 """
 import cv2
 import matplotlib.pyplot as plt

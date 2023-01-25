@@ -53,8 +53,8 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 ################## Part 2 ################### 
 #############################################
 
-ref_run_name = f'{OUT_DATA_PATH}/cell2location'
-run_name = f'{OUT_DATA_PATH}/cell2location_map'
+ref_run_name = f'{OUT_DATA_PATH}/cell2location_{analysis_name}'
+run_name = f'{OUT_DATA_PATH}/cell2location_map_{analysis_name}'
 
 
 
@@ -116,13 +116,13 @@ adata_vis = mod.export_posterior(
 )
 
 # Save model
-mod.save(f"{run_name}", overwrite=True)
+mod.save(f"{ref_run_name}", overwrite=True)
 
 # mod = cell2location.models.Cell2location.load(f"{run_name}", adata_vis)
 
 # Save anndata object with results
 
-adata_file = f"{run_name}/{out_fl_name}.h5ad"
+adata_file = f"{ref_run_name}/{out_fl_name}.h5ad"
 adata_vis.write(adata_file)
 
 
@@ -135,6 +135,7 @@ slide = select_slide(adata_vis,sample, "condition")
 
 
 lst_cell_types = ["B cells-1", "B cells-2", "B cells-3", "B cells-5", "Endothelial cells-1", "Endothelial cells-2", "Endothelial cells-3", "Enteroendocrine cells", "Epithelial cells-1", "Epithelial cells-2", "Epithelial cells-3", "Epithelial cells-4", "Epithelial cells-5", "Epithelial cells-6", "Epithelial cells-colon-1", "Epithelial cells-colon-2", "Epithelial cells-colon-3", "Epithelial cells-SI enterocytes-1", "Epithelial cells-SI enterocytes-2", "Epithelial cells-SI enterocytes-3", "Epithelial cells?", "Fibroblasts-1", "Fibroblasts-2", "Fibroblasts-3", "Fibroblasts-4", "Fibroblasts-5", "Goblet cells-1", "Goblet cells-2", "Goblet cells-3", "Goblet cells-4", "Goblet cells-5", "Goblet cells-6", "Goblet cells-7", "IgA plasma cells-1", "IgA plasma cells-2", "ILC2", "Keratinocytes", "Macrophages", "Mast cells", "Neuronal cells-1", "Neuronal cells-2", "Neutrophils", "Paneth cells-1", "Paneth cells-2", "Paneth-Goblet cells", "Prolif. cells", "Smooth muscle cells-1", "Smooth muscle cells-2", "T cells", "T cells-NK cells", "Tuft cells"]
+lst_cell_types = ["B cells", "Dendritic cells", "ILC2", "Mast cells", "Myeloid cells", "Neutrophils", "Plasma cells", "T cells"]
 
 # plot in spatial coordinates
 with mpl.rc_context({'axes.facecolor':  'black',

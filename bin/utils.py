@@ -143,7 +143,7 @@ def get_unfiltered_concat_data(sample_type):
     return adata_concat
 
 
-def set_n_return_paths(name):
+def set_n_return_paths(name, plot=True):
     """
     This function sets the paths
     """
@@ -153,7 +153,8 @@ def set_n_return_paths(name):
     PLOT_PATH =  os.path.join(S_PATH, "../plots", name)
 
     Path(OUT_DATA_PATH).mkdir(parents=True, exist_ok=True)
-    Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
+    if plot:
+        Path(PLOT_PATH).mkdir(parents=True, exist_ok=True)
     sc.settings.figdir = PLOT_PATH
 
     return S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH
