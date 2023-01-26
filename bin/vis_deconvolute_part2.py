@@ -33,7 +33,8 @@ sc.settings.verbosity = 0
 # Read command line and set args
 parser = argparse.ArgumentParser(prog='cluster', description='Run deconvolution')
 parser.add_argument('-rp', '--input_path', help='path to referecence atlas', required=True)
-parser.add_argument('-vp', '--vis_path', help='Output directory where to store the object', required=True)
+parser.add_argument('-vp', '--vis_path', help='Output directory where to store the object', required=False)
+parser.add_argument('-ia', '--infav_path', help='Path to inferred signatures', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True) # vis_deconvolution
 parser.add_argument('-nc', '--num_of_cells', default=8, help='Number of cells per location', required=False)
 parser.add_argument('-da', '--detection_alpha', default=20, help='Detection alpha', required=False)
@@ -41,6 +42,7 @@ parser.add_argument('-da', '--detection_alpha', default=20, help='Detection alph
 args = vars(parser.parse_args())
 input_path = args['input_path']
 vis_path = args['vis_path']
+inf_av_path = args['infav_path']
 analysis_name = args['analysis_name'] # vis_deconvolute
 n_cells_per_location = int(args['num_of_cells'])
 detection_alpha = int(args['detection_alpha'])
@@ -57,8 +59,9 @@ ref_run_name = f'{OUT_DATA_PATH}/cell2location_{analysis_name}'
 run_name = f'{OUT_DATA_PATH}/cell2location_map_{analysis_name}'
 
 
-
-inf_aver = pd.read_csv(f"../data/out_data/cell2location_atlas/inf_aver.csv", index_col=0)
+# "../data/out_data/cell2location_atlas/inf_aver.csv"
+# "../data/out_data/cell2location_vis_immune_deconvolution/inf_aver.csv"
+inf_aver = pd.read_csv(inf_av_path, index_col=0)
 print(inf_aver)
 # out_fl_name = vis_path.split("/")[-1].split(".")[0]+"_deconv_"+str(n_cells_per_location)+"_"+str(detection_alpha)
 out_fl_name = "all_sample_deconv_"+str(n_cells_per_location)+"_"+str(detection_alpha)
@@ -72,12 +75,6 @@ intersect = np.intersect1d(adata_vis.var_names, inf_aver.index)
 print("Intersect:", intersect)
 adata_vis = adata_vis[:, intersect].copy()
 inf_aver = inf_aver.loc[intersect, :].copy()
-
-
-print("adata_vis", adata_vis)
-print("inf_aver",inf_aver)
-
-
 
 # prepare anndata for cell2location model
 cell2location.models.Cell2location.setup_anndata(adata=adata_vis, batch_key="condition")
@@ -136,25 +133,38 @@ adata_vis.write(adata_file)
 # to adata.obs with nice names for plotting
 adata_vis.obs[adata_vis.uns['mod']['factor_names']] = adata_vis.obsm['q05_cell_abundance_w_sf']
 
-sample = adata_vis.obs["condition"].cat.categories[0]
-slide = select_slide(adata_vis,sample, "condition")
+samples = list(adata_vis.obs["condition"].cat.categories)
 
 
-lst_cell_types = ["B cells-1", "B cells-2", "B cells-3", "B cells-5", "Endothelial cells-1", "Endothelial cells-2", "Endothelial cells-3", "Enteroendocrine cells", "Epithelial cells-1", "Epithelial cells-2", "Epithelial cells-3", "Epithelial cells-4", "Epithelial cells-5", "Epithelial cells-6", "Epithelial cells-colon-1", "Epithelial cells-colon-2", "Epithelial cells-colon-3", "Epithelial cells-SI enterocytes-1", "Epithelial cells-SI enterocytes-2", "Epithelial cells-SI enterocytes-3", "Epithelial cells?", "Fibroblasts-1", "Fibroblasts-2", "Fibroblasts-3", "Fibroblasts-4", "Fibroblasts-5", "Goblet cells-1", "Goblet cells-2", "Goblet cells-3", "Goblet cells-4", "Goblet cells-5", "Goblet cells-6", "Goblet cells-7", "IgA plasma cells-1", "IgA plasma cells-2", "ILC2", "Keratinocytes", "Macrophages", "Mast cells", "Neuronal cells-1", "Neuronal cells-2", "Neutrophils", "Paneth cells-1", "Paneth cells-2", "Paneth-Goblet cells", "Prolif. cells", "Smooth muscle cells-1", "Smooth muscle cells-2", "T cells", "T cells-NK cells", "Tuft cells"]
-lst_cell_types = ["B cells", "Dendritic cells", "ILC2", "Mast cells", "Myeloid cells", "Neutrophils", "Plasma cells", "T cells"]
+# slide = select_slide(adata_vis,sample, "condition")
 
-# plot in spatial coordinates
-with mpl.rc_context({'axes.facecolor':  'black',
-                     'figure.figsize': [4.5, 5]}):
+lst_cell_types = list(adata_vis.uns['mod']['factor_names'])
 
-	sc.pl.spatial(slide, cmap='magma',
-                  # show first 8 cell types
-                  color=lst_cell_types,
-                  ncols=4, size=1.3,
-                  img_key='hires',
-                  # limit color scale at 99.2% quantile of cell abundance
-                  vmin=0, vmax='p99.2', save=f"{out_fl_name}_cell2loc.pdf"
-                 )
+meta = utils.get_meta_data("visium")
+
+for ind, row in meta.iterrows():
+        
+    # fig_row, fig_col = int(ind/cols), ind%cols
+    sample_id = row["sample_id"]
+    condition = row["condition"]
+    if condition in samples:
+        out_fl_name = f"{condition}_{n_cells_per_location}_{detection_alpha}"
+        slide = utils.read_filtered_visium_sample(sample_id)
+        tmp_adata_vis = adata_vis[adata_vis.obs["condition"]==condition,:]
+        for c_type in lst_cell_types:
+            slide.obs[c_type] = tmp_adata_vis.obs[c_type].values
+        with mpl.rc_context({'axes.facecolor':  'black', 'figure.figsize': [4.5, 5]}):
+            sc.pl.spatial(slide, cmap='magma', color=lst_cell_types, ncols=4, size=1.3, img_key='hires', vmin=0, vmax='p99.2', save=f"{out_fl_name}_cell2loc.pdf")
+
+
+        # lst_cell_types = ["B cells-1", "B cells-2", "B cells-3", "B cells-5", "Endothelial cells-1", "Endothelial cells-2", "Endothelial cells-3", "Enteroendocrine cells", "Epithelial cells-1", "Epithelial cells-2", "Epithelial cells-3", "Epithelial cells-4", "Epithelial cells-5", "Epithelial cells-6", "Epithelial cells-colon-1", "Epithelial cells-colon-2", "Epithelial cells-colon-3", "Epithelial cells-SI enterocytes-1", "Epithelial cells-SI enterocytes-2", "Epithelial cells-SI enterocytes-3", "Epithelial cells?", "Fibroblasts-1", "Fibroblasts-2", "Fibroblasts-3", "Fibroblasts-4", "Fibroblasts-5", "Goblet cells-1", "Goblet cells-2", "Goblet cells-3", "Goblet cells-4", "Goblet cells-5", "Goblet cells-6", "Goblet cells-7", "IgA plasma cells-1", "IgA plasma cells-2", "ILC2", "Keratinocytes", "Macrophages", "Mast cells", "Neuronal cells-1", "Neuronal cells-2", "Neutrophils", "Paneth cells-1", "Paneth cells-2", "Paneth-Goblet cells", "Prolif. cells", "Smooth muscle cells-1", "Smooth muscle cells-2", "T cells", "T cells-NK cells", "Tuft cells"]
+        # lst_cell_types = ["B cells", "Dendritic cells", "ILC2", "Mast cells", "Myeloid cells", "Neutrophils", "Plasma cells", "T cells"]
+
+        # plot in spatial coordinates
+        
+
+
+
 
 
 # to adata.obs with nice names for plotting
