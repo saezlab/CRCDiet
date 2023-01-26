@@ -58,14 +58,16 @@ run_name = f'{OUT_DATA_PATH}/cell2location_map_{analysis_name}'
 
 
 
-inf_aver = pd.read_csv(f"{ref_run_name}/inf_aver.csv", index_col=0)
+inf_aver = pd.read_csv(f"../data/out_data/cell2location_atlas/inf_aver.csv", index_col=0)
 print(inf_aver)
-out_fl_name = vis_path.split("/")[-1].split(".")[0]+"_deconv_"+str(n_cells_per_location)+"_"+str(detection_alpha)
+# out_fl_name = vis_path.split("/")[-1].split(".")[0]+"_deconv_"+str(n_cells_per_location)+"_"+str(detection_alpha)
+out_fl_name = "all_sample_deconv_"+str(n_cells_per_location)+"_"+str(detection_alpha)
 
-adata_vis = sc.read_h5ad(vis_path)
+# adata_vis = sc.read_h5ad(vis_path)
+adata_vis = utils.get_filtered_concat_data("visium")
 adata_vis.var.index = pd.Index(gen.upper() for gen in adata_vis.var.index.values)
 adata_vis.var_names_make_unique()
-
+print(adata_vis.var.columns)
 intersect = np.intersect1d(adata_vis.var_names, inf_aver.index)
 print("Intersect:", intersect)
 adata_vis = adata_vis[:, intersect].copy()
@@ -119,6 +121,10 @@ adata_vis = mod.export_posterior(
 mod.save(f"{ref_run_name}", overwrite=True)
 
 # mod = cell2location.models.Cell2location.load(f"{run_name}", adata_vis)
+
+for col in adata_vis.var.columns:
+    if col.startswith("mt-") or col.startswith("rp-"):
+        adata_vis.var[col] = adata_vis.var[col].astype(str)
 
 # Save anndata object with results
 
