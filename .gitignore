@@ -151,3 +151,4 @@ bin/sc_00_pipeline_updated.html
 bin/deconv.sh
 .gitignore
 bin/deconv.out
+bin/deconv_merged_atlas.out
