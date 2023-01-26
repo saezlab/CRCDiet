@@ -43,7 +43,7 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 sample_type = "visium"
 meta = utils.get_meta_data(sample_type)
 adata = sc.read_h5ad(input_path)
-print(adata)
+
 adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var)
 # print(adata.layers['counts'])
 # https://github.com/scverse/scanpy/issues/2239
@@ -55,7 +55,7 @@ adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var
 # 0.10, 0.40, 0.60
 
 # This is not used, because I wanted to provide a few clustering results based on different res parameter
-# l_param, _ = adata.uns["leiden_best_silh_param"]
+l_param, _ = adata.uns["leiden_best_silh_param"]
 
 l_param_list = [0.10, 0.40, 0.60]
 l_param_list = [0.10]
@@ -117,15 +117,10 @@ for l_param in l_param_list:
     # change below anndata objects to "anndata" to run on only HVGs
     sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
     mpl.rcParams['axes.titlesize'] = 20
-    # sc.pl.rank_genes_groups(adata_concat, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}.pdf')
-    # sc.pl.rank_genes_groups(adata_concat, n_genes=10, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}.pdf')
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_25.pdf')
-    # sc.pl.rank_genes_groups(adata_concat, n_genes=35, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_35.pdf')#
-    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_5')
-    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5,swap_axes=True, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes_5')
-
-    sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
-    sc.pl.rank_genes_groups_dotplot(adata_concat, swap_axes=True, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes')
+    sc.pl.rank_genes_groups(adata_concat, n_genes=35, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_35.pdf')#
+    sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", min_logfoldchange = 1, show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
+    sc.pl.rank_genes_groups_dotplot(adata_concat,  min_logfoldchange = 1, swap_axes=True, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes')
     # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
     # sc.pl.rank_genes_groups_heatmap(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_heatmap_{l_param}')
 
@@ -205,4 +200,4 @@ dict_mean_enr = dict()
 
 mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
 """
-# python vis_cluster_annotate.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_cluster
+# python vis_cluster_annotate.py -i ../data/out_data/visium_integrated.h5ad -o ../data/out_data
