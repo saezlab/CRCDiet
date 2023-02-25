@@ -107,3 +107,4 @@ else:
 # python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas
 
 # python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas -ml RELN,CD31,PECAM
+# python sc_visualize_markers.py -i ../data/out_data/sc_integrated_subclustered_only_tcells.h5ad -o ../data/out_data -an sc_tcells_visualize_markers -st sc

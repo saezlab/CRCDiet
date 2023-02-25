@@ -49,11 +49,14 @@ lst_samples = ["ext_L24854_CD-AOM-DSS-colon-d81-visium_filtered_deconv_15_20",
 "ext_L24854_LFD-AOM-DSS-colon-d81-visium_filtered_deconv_15_20",
 "ext_L24854_LFD-no-AOM-DSS-colon-d81-visium_filtered_deconv_15_20"]
 
+
+lst_samples = ["all_sample_deconv_15_20"]
+
 cell_types = None
 dict_cluster_to_count = dict()
 for sample in lst_samples:
     print(f"Processing sample {sample}")
-    adata_vis = sc.read_h5ad(f"../data/out_data/cell2location_map/{sample}.h5ad")
+    adata_vis = sc.read_h5ad(f"../data/out_data/cell2location_vis_merged_deconvolution/{sample}.h5ad")
     adata_vis.obs[adata_vis.uns['mod']['factor_names']] = adata_vis.obsm['q05_cell_abundance_w_sf']
     if not cell_types:
         cell_types = list(adata_vis.uns['mod']['factor_names'])
@@ -109,13 +112,15 @@ print(df_overall)
 heap_map_plot = sns.heatmap(df_overall, xticklabels=True, yticklabels=True)
 
 fig = heap_map_plot.get_figure()
-fig.savefig("../plots/vis_deconvolution/cluster_vs_deconv_cell_abundance_hmap.pdf", dpi=300)
+# fig.savefig("../plots/vis_deconvolution/cluster_vs_deconv_cell_abundance_hmap.pdf", dpi=300)
+fig.savefig(f"../plots/{analysis_name}/cluster_vs_deconv_cell_abundance_hmap.pdf", dpi=300)
 
 c_map_plot = sns.clustermap(df_overall, xticklabels=True, yticklabels=True)
-c_map_plot.savefig("../plots/vis_deconvolution/cluster_vs_deconv_cell_abundance_cmap.pdf", dpi=300)
+# c_map_plot.savefig("../plots/vis_deconvolution/cluster_vs_deconv_cell_abundance_cmap.pdf", dpi=300)
+c_map_plot.savefig(f"../plots/{analysis_name}/cluster_vs_deconv_cell_abundance_cmap.pdf", dpi=300)
 
 
 # calculate proportion of each cell type per cluster
 # filter by cluster, sum cell_type scores and divide by number of clusters create a dataframe
 
-# python vis_deconvolute_analysis.py 
+# python vis_deconvolute_analysis.py -vp test -an vis_merged_deconvolution

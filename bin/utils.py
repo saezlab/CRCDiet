@@ -371,7 +371,7 @@ def calculate_pval(str_sample_list, number_of_simulations):
 
     return c_type_list, samp_prop_dict, dict_cell_type_pval
 
-sample_pair_list = ["CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN",
+"""sample_pair_list = ["CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN",
                     "CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"]
 p_val_list= []
 
@@ -381,7 +381,7 @@ for samp_pair in tqdm(sample_pair_list):
         c_type_list12, samp_prop_dict12, dict_cell_type_pval12 = calculate_pval(samp_pair, 10000)
         for c_type in dict_cell_type_pval12.keys():
             print([samp_pair, c_type, dict_cell_type_pval12[c_type]])
-            p_val_list.append([samp_pair, c_type, dict_cell_type_pval12[c_type]])
+            p_val_list.append([samp_pair, c_type, dict_cell_type_pval12[c_type]])"""
     
 
 
