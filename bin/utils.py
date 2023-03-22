@@ -104,16 +104,17 @@ def get_filtered_concat_data(sample_type):
         
         print(f"Merging {sample_id}...")
 
-        if "no-AOM-DSS" not in sample_id:
-            tmp = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
-            # Fetch sample metadata
-            m = meta[meta['sample_id'] == sample_id]
-            # Add metadata to adata
-            for col in m.columns:
-                tmp.obs[col] = m[col].values[0]
-            # Append
-            adata_concat.append(tmp)
-            del tmp
+        # if "no-AOM-DSS" not in sample_id:
+        tmp = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
+        # Fetch sample metadata
+        m = meta[meta['sample_id'] == sample_id]
+        # Add metadata to adata
+        for col in m.columns:
+            tmp.obs[col] = m[col].values[0]
+            
+        # Append
+        adata_concat.append(tmp)
+        del tmp
     
     # Merge objects and delete list
     adata_concat = adata_concat[0].concatenate(adata_concat[1:], join='outer')

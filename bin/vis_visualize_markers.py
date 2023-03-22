@@ -34,18 +34,20 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 
 sample_type ="visium"
 adata_integ_clust = sc.read_h5ad(input_path)
-
+print(adata_integ_clust)
 
 meta = utils.get_meta_data(sample_type)
 condition = np.unique(meta['condition'])
 # adata = sc.read_h5ad(input_path)
 
 adata = utils.get_filtered_concat_data(sample_type)
+print(adata)
 
 # filter out the cells missing in adata_integ_clust
 adata = adata[adata_integ_clust.obs_names,:]
 
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
+adata.obs["leiden_0.10"] = adata_integ_clust.obs["leiden_0.10"]
 sc.pp.normalize_total(adata, target_sum=1e6)
 sc.pp.log1p(adata)
 
@@ -58,32 +60,36 @@ marker_intersect = list(set(adata.var.index) & set(markers))
 print(f"Number of intersected marker genes: {len(marker_intersect)}")
 
 for ind, marker in enumerate(marker_intersect):
-    rows, cols = (len(marker_intersect), 6)
-    fig, ax = plt.subplots(1, 6, figsize=(20,2))
-    # fig.tight_layout()
-    print(f"Plotting marker: {marker}")
-    for ind2, row in meta.iterrows():
-    
-        # fig_row, fig_col = int(ind/cols), ind%cols
-        sample_id = row["sample_id"]
-        condition = row["condition"]
-        adata_raw = utils.read_raw_visium_sample(sample_id)
-        adata_temp = adata[adata.obs["condition"]==condition,:]    
-        adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
-        adata_raw = adata_raw[adata_temp.obs.index,:]
-        adata_raw = adata_raw[:, list(adata.var_names)]
+    if not os.path.exists(f'{PLOT_PATH}/{sample_type}_{marker}.pdf'):
+        rows, cols = (len(marker_intersect), 6)
+        fig, ax = plt.subplots(1, 6, figsize=(40,5))
+        # fig.tight_layout()
+        print(f"Plotting marker: {marker}")
+        for ind2, row in meta.iterrows():
+        
+            # fig_row, fig_col = int(ind/cols), ind%cols
+            sample_id = row["sample_id"]
+            condition = row["condition"]
+            adata_raw = utils.read_raw_visium_sample(sample_id)
+            adata_temp = adata[adata.obs["condition"]==condition,:]    
+            adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
+            # adata_raw = adata_raw[adata_temp.obs.index,:]
+            adata_raw = adata_raw[:, list(adata.var_names)]
 
-        mpl.rcParams["image.cmap"]= plt.cm.magma_r
-        mpl.rcParams['axes.titlesize'] = 12
-        # colorbar_loc=None,
-        sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, ax = ax[ind2], show=False)
-        cbar = ax[ind2].collections[0].colorbar
-        cbar.set_ticks([])
-        #plt.tight_layout(h_pad=1)
-    
-        # sc.pl.violin(adata, list(set(adata.var.index) & set(markers)), show=True, groupby=f"leiden_{l_param}")
-    plt.savefig(f'{PLOT_PATH}/{sample_type}_{marker}.pdf');
-    plt.show();
-    
+            mpl.rcParams["image.cmap"]= plt.cm.magma_r
+            mpl.rcParams['axes.titlesize'] = 12
+            # colorbar_loc=None,
+            sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, ax = ax[ind2], show=False)
+            cbar = ax[ind2].collections[0].colorbar
+            cbar.set_ticks([])
+            #plt.tight_layout(h_pad=1)
+        
+            # sc.pl.violin(adata, list(set(adata.var.index) & set(markers)), show=True, groupby=f"leiden_{l_param}")
+        plt.savefig(f'{PLOT_PATH}/{sample_type}_{marker}.pdf');
+        # plt.show();
+        
+        # mpl.rcParams["image.cmap"]= plt.cm.magma_r
+        sc.pl.umap(adata, color=[marker, f"leiden_0.10"], show=False, cmap='viridis', save=f"{sample_type}_{marker}.pdf");
 
-    sc.pl.umap(adata, color=marker, show=True, save=f"{sample_type}_{marker}.pdf");
+
+# python vis_visualize_markers.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_visualize_markers

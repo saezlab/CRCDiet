@@ -44,6 +44,10 @@ sample_type = "visium"
 meta = utils.get_meta_data(sample_type)
 adata = sc.read_h5ad(input_path)
 print(adata)
+
+sc.pl.umap(adata, color=["leiden_0.10"], cmap="tab20", save=f"_{sample_type}_cluster.pdf", show=False)
+sc.pl.umap(adata, color="condition", cmap="tab20", save=f"_{sample_type}_condition.pdf", show=False)
+
 adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var)
 # print(adata.layers['counts'])
 # https://github.com/scverse/scanpy/issues/2239
@@ -58,6 +62,7 @@ adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var
 # l_param, _ = adata.uns["leiden_best_silh_param"]
 
 l_param_list = [0.10, 0.40, 0.60]
+l_param_list = [0.40]
 l_param_list = [0.10]
 for l_param in l_param_list:
     l_param = f"{l_param:.2f}"
@@ -81,7 +86,7 @@ for l_param in l_param_list:
         sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}",  title=condition, size=1.25, alpha_img=0.3, ax = ax[ind], show=False)
     fig.tight_layout()
     plt.savefig(f"{PLOT_PATH}/spatial_cluster.pdf")
-    plt.show();
+    # plt.show();
     
     
 
@@ -112,27 +117,59 @@ for l_param in l_param_list:
     # Comment out the section above for running DEGs on HVGs
     sc.pp.normalize_total(adata_concat, target_sum=1e6)
     sc.pp.log1p(adata_concat)
+    # adata_concat = adata_concat[:,adata.var_names.intersection(adata_concat.var_names)]
+    
 
     
     # change below anndata objects to "anndata" to run on only HVGs
-    sc.tl.rank_genes_groups(adata_concat, groupby=f"leiden_{l_param}", method='wilcoxon', key_added = f"wilcoxon_{l_param}")
+    sc.tl.rank_genes_groups(adata_concat, method="wilcoxon", groupby=f"leiden_{l_param}", show=False, key_added = f"wilcoxon_{l_param}")
     mpl.rcParams['axes.titlesize'] = 20
-    # sc.pl.rank_genes_groups(adata_concat, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}.pdf')
-    # sc.pl.rank_genes_groups(adata_concat, n_genes=10, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}.pdf')
-    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_25.pdf')
-    # sc.pl.rank_genes_groups(adata_concat, n_genes=35, sharey=False, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_35.pdf')#
-    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_5')
-    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5,swap_axes=True, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes_5')
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, standard_scale='var', key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_25.pdf')
+    sc.pl.rank_genes_groups_dotplot(
+            adata_concat,
+            n_genes=5,
+            min_logfoldchange=2,
+            key=f"wilcoxon_{l_param}",
+            standard_scale='var', 
+            show=False,
+            groupby=f"leiden_{l_param}",
+            values_to_plot="logfoldchanges", cmap='bwr',
+            vmin=-4,
+            vmax=4,
+            # colorbar_title='log fold change', 
+            save=f'{sample_type}_deg_clusters_dotplot_{l_param}_minlogfoldchange2'
+        )
+    
+    
+    
+    # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", standard_scale='var', show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{l_param}", standard_scale='var',  show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{l_param}", standard_scale='var',  show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_10')
 
-    sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
-    sc.pl.rank_genes_groups_dotplot(adata_concat, swap_axes=True, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes')
+    # wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.05, log2fc_min=2)[["group", "names", "scores","logfoldchanges"]]
+    wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.05)# [["group", "names", "scores","logfoldchanges"]]
+    print(wc)
+
+    # sc.pl.rank_genes_groups_dotplot(adata_concat, swap_axes=True, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes')
     # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
     # sc.pl.rank_genes_groups_heatmap(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_heatmap_{l_param}')
+    """sc.pl.rank_genes_groups_dotplot(
+            adata_concat,
+            n_genes=4,
+            min_logfoldchange=3,
+            key=f"wilcoxon_{l_param}",
+            show=False,
+            groupby=f"leiden_{l_param}",
+            values_to_plot="pvals_adj", cmap='bwr',
+            vmin=-4,
+            vmax=4,
+            
+            # colorbar_title='log fold change', 
+            save=f'{sample_type}_deg_clusters_dotplot_{l_param}_pvals_adj_default'
+        )"""
 
 
-
-    wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
-    # print(l_param)
+    
     # print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))
 
 """marker_genes = None

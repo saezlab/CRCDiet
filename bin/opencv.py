@@ -9,7 +9,7 @@ img = cv2.imread('TileScan 3_Region3_HFD_No_AOMDSS_Merged_RAW_ch00.tif')
 # img = cv2.imread('V1_Adult_Mouse_Brain_image.tif')
 columns = ["barcode","in_tissue","array_row","array_col","pxl_row_in_fullres", "pxl_col_in_fullres"]
 df_locs = pd.read_csv("tissue_positions_list.csv", header=None)
-df_locs.columns = columns
+df_locs.columns = columnsa
 json_file = open("scalefactors_json.json", "r")
 scale_dict = data = json.loads(json_file.read())
 radius = round(scale_dict["spot_diameter_fullres"]/2)+1
