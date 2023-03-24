@@ -26,3 +26,12 @@ for i in range(100):
         # p_val_list.append([samp_pair, c_type, dict_cell_type_pval12[c_type]])
 
 # python utils_test.py -sp CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN -o ../data/out_data/ > test.txt
+
+"""
+./all_runs_CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN.sh
+./all_runs_CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune.sh
+./all_runs_CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN.sh
+./all_runs_HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN.sh
+./all_runs_CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune.sh
+./all_runs_HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune.sh
+"""

@@ -194,11 +194,13 @@ def calculate_proportions_from_list(lst_cell_type, cell_count_lst, c_type_list=N
 
 
 def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_type_0.20", sample_type="sc"):
-    input_path = "../data/out_data/sc_integrated_cluster_scannot.h5ad"
-    sample_type="sc"
-    adata = sc.read_h5ad(input_path)
+    # input_path = "../data/out_data/sc_integrated_cluster_scannot.h5ad"
+    df_cond_cell_type = pd.read_csv("../data/out_data/sc_cond_cell_type.csv", index_col=0)
+    # print(df_cond_cell_type)
+    # adata = sc.read_h5ad(input_path)
     meta = get_meta_data(sample_type)
-    c_type_list = list(adata.obs[obs_col].cat.categories)
+    # c_type_list = list(adata.obs[obs_col].cat.categories)
+    c_type_list = list(set(df_cond_cell_type["cell_type_0.20"]))
     cell_count_lst = []
     all_cells_cell_type_list = []
     samp_prop_dict = dict()
@@ -209,21 +211,29 @@ def calculate_cell_type_proportions(sample_list, adata=None, obs_col = "cell_typ
         samp_cell_count_dict[samp] = dict()
         samp_propor_arr.append([])
 
-        adata_tmp = adata[adata.obs["condition"]==samp,:]
-        all_cells_cell_type_list.extend(list(adata_tmp.obs[obs_col]))
-        cell_count_lst.append(adata_tmp.shape[0])
+        # adata_tmp = adata[adata.obs["condition"]==samp,:]
+        df_tmp =  df_cond_cell_type[df_cond_cell_type["condition"]==samp]
+        # all_cells_cell_type_list.extend(list(adata_tmp.obs[obs_col]))
+        all_cells_cell_type_list.extend(list(df_tmp[obs_col]))
+        # cell_count_lst.append(adata_tmp.shape[0])
+        cell_count_lst.append(len(df_tmp))
+        
         for c_type in c_type_list:
-            
-            
-            c_type_count=adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]
+            # c_type_count=adata_tmp[adata_tmp.obs[obs_col]==c_type].shape[0]
+            c_type_count=len(df_tmp[df_tmp[obs_col]==c_type])
             # print(f"Sample:\t{samp}\tC_type:\t{c_type}\tCell Type Count:\t{c_type_count}\tTotal count:\t{adata_tmp.shape[0]}")
             samp_cell_count_dict[samp][c_type] = c_type_count
-            proportion = 100*(c_type_count/adata_tmp.shape[0])
+            # proportion = 100*(c_type_count/adata_tmp.shape[0])
+            proportion = 100*(c_type_count/len(df_tmp))
             samp_prop_dict[samp][c_type] = proportion
             samp_propor_arr[-1].append(proportion)
 
+        del df_tmp
+
     # print("sample proportions:", samp_propor_arr)
     all_ct_prop_diff_arr = np.array(samp_propor_arr[0])- np.array(samp_propor_arr[1])
+
+    # del adata
 
     return c_type_list, all_ct_prop_diff_arr, samp_prop_dict, samp_cell_count_dict, all_cells_cell_type_list, cell_count_lst
 
@@ -371,6 +381,15 @@ def calculate_pval(str_sample_list, number_of_simulations):
         
 
     return c_type_list, samp_prop_dict, dict_cell_type_pval
+
+def obs_to_csv(adata):
+    a = pd.concat([df_cond, df_cell_type], axis=1)
+    df_cond = adata.obs["condition"]
+    df_cell_type = adata.obs["cell_type_0.20"]
+    final_df = pd.concat([df_cond, df_cell_type], axis=1)
+
+
+    final = pd.read_csv("../data/out_data/sc_cond_cell_type.csv", index_col=0)
 
 """sample_pair_list = ["CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN",
                     "CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"]

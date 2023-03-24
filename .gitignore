@@ -159,3 +159,6 @@ bin/deconv_atlas_merged.out
 bin/deconv_immune_merged.out
 bin/deconv_atlas_merged.out
 bin/deconv_immune_merged.out
+bin/*.sh
+bin/output*
+
