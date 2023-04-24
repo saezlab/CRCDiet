@@ -33,17 +33,28 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 ############################### BOOOORIING STUFF ABOVE ###############################
 
 sample_type ="sc"
+
+epithelial_samples = ["CD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN"]
+immune_samples = ["CD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune"]
+
 mct_str = "_".join(m_ct.split(" ")).lower()
 adata_integ_clust = sc.read_h5ad(input_path)
+
+"""if "epithelial" in mct_str:
+   adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"].isin(epithelial_samples)]
+elif "immune" in mct_str:
+    adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"].isin(immune_samples)]"""
 
 meta = utils.get_meta_data(sample_type)
 # adata = sc.read_h5ad(input_path)
 
 adata = utils.get_filtered_concat_data(sample_type)
+
+adata = adata[adata_integ_clust.obs_names,:]
 # keep raw counts in layers
 adata.layers['counts'] = adata.X.copy()
-adata.layers["sqrt_norm"] = np.sqrt(
-    sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
+# adata.layers["sqrt_norm"] = np.sqrt(
+#    sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
 
 adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
 sc.pp.log1p(adata, layer="log1p_transformed")
@@ -52,8 +63,15 @@ markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
 
 # for m_ct in set(adata_integ_clust.obs["major_cell_types"]):
+adata_tmp = None
+if m_ct in ["Epithelial cells", "Immune cells", "Stroma cells"]:
+    adata_tmp = adata[adata_integ_clust.obs["major_cell_types"]==m_ct,:].copy()
+else:
+    adata_tmp = adata[adata_integ_clust.obs["cell_type_0.20"]==m_ct,:].copy()
 
-adata_tmp = adata[adata_integ_clust.obs["major_cell_types"]==m_ct,:].copy()
+
+
+# adata_tmp = adata[adata_integ_clust.obs["major_cell_types"]==m_ct,:].copy()
 del adata
 del adata_integ_clust
 sc.pp.calculate_qc_metrics(adata_tmp, inplace=True)
@@ -99,7 +117,7 @@ mpl.rcParams['axes.facecolor'] = "white"
 # the number of genes expressed in the count matrix
 sc.pl.umap(
     adata_tmp, color=["condition", "n_genes_by_counts"], color_map =plt.cm.afmhot, 
-    title= ["Condition", "Num of exp. genes"], s=10, frameon=False, ncols=2,  show=True, save=f"{sample_type}_{mct_str}_all_condition_harmony"
+    title= ["Condition", "Num of exp. genes"], s=15, frameon=False, ncols=2,  show=False, save=f"{sample_type}_{mct_str}_all_condition_harmony"
 )
 
 
@@ -109,6 +127,27 @@ adata_tmp.write(os.path.join(output_path, f'{sample_type}_{mct_str}_integrated.h
 
 
 
+"""
 
 
-#  python sc_major_cell_type.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data
+
+python sc_major_cell_type_integration.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an "sc_epithelial_cells_integrate" -ct "Epithelial cells"
+python sc_major_cell_type_integration.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an "sc_immune_cells_integrate" -ct "Immune cells"
+python sc_major_cell_type_integration.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an "sc_stroma_cells_integrate" -ct "Stroma cells"
+
+
+python sc_cluster.py -i ../data/out_data/sc_epithelial_cells_integrated.h5ad -o ../data/out_data -an sc_epithelial_cells_cluster -of epithelial_cells
+python sc_cluster.py -i ../data/out_data/sc_immune_cells_integrated.h5ad -o ../data/out_data -an sc_immune_cells_cluster -of immune_cells
+python sc_cluster.py -i ../data/out_data/sc_stroma_cells_integrated.h5ad -o ../data/out_data -an sc_stroma_cells_cluster -of stroma_cells
+
+python sc_cluster_annotate.py -i ../data/out_data/sc_epithelial_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_epithelial_cells_cluster -of epithelial_cells
+python sc_cluster_annotate.py -i ../data/out_data/sc_epithelial_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_immune_cells_cluster -of immune_cells
+python sc_cluster_annotate.py -i ../data/out_data/sc_epithelial_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_stroma_cells_cluster -of stroma_cells
+
+python sc_visualize_markers.py -i ../data/out_data/sc_epithelial_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_epithelial_cells_visualize_markers 
+python sc_visualize_markers.py -i ../data/out_data/sc_immune_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_immune_cells_visualize_markers 
+python sc_visualize_markers.py -i ../data/out_data/sc_stroma_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_stroma_cells_visualize_markers 
+
+python sc_major_cell_type_integration.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an "sc_bcells_integrate" -ct "B cells"
+"""
+#  python sc_major_cell_type_integration.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data

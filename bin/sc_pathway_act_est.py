@@ -51,7 +51,7 @@ adata_merged.X = adata_merged.layers['log1p_transformed']
 # print(adata_integ_clust)
 
 adata_merged.var.index = pd.Index(gen.upper() for gen in adata_merged.var.index.values)
-adata_merged.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
+# adata_merged.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 
 # Retrieve PROGENy model weights
 progeny = dc.get_progeny(organism='mouse', top=500)
@@ -72,8 +72,6 @@ mean_acts = dc.summarize_acts(acts, groupby='cell_type_0.20', min_std=0)
 sns.clustermap(mean_acts, xticklabels=mean_acts.columns, vmin=-2, vmax=2, cmap='coolwarm')
 plt.savefig(f"{PLOT_PATH}/{sample_type}_cell_type_pathway_activity_est_cmap.pdf")
 plt.show();
-# , save=f'{sample_type}_pathway_activity_est_clustermap'
-
 
 # Write to file
 adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))

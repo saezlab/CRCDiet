@@ -1,0 +1,213 @@
+import scanpy as sc
+import decoupler as dc
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import argparse
+import warnings
+import utils
+# Only needed for processing
+import numpy as np
+import pandas as pd
+from pydeseq2.dds import DeseqDataSet
+from pydeseq2.ds import DeseqStats
+
+############################### BOOOORIING STUFF BELOW ############################### 
+# Warning settings
+warnings.simplefilter(action='ignore')
+sc.settings.verbosity = 0
+# Set figure params
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
+# Read command line and set args
+parser = argparse.ArgumentParser(prog='nnmfbc', description='Pseudobulk analysis')
+parser.add_argument('-i', '--input_path', help='Input path to integrated object', required=True)
+parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-ss', '--subset', help="Cell type or  subgroup (e.g. cluster) of interest", required=True)
+parser.add_argument('-con', '--condition', help='Condition sample', required=True)
+parser.add_argument('-cont', '--contrast', help="Samples to be compared, E.g., [condition, B, A] will measure the "+ 
+                    "LFC of condition B compared to condition A. If None, the last variable from the design matrix "+
+                    "is chosen as the variable of interest, and the reference level is picked alphabetically", required=True)
+
+args = vars(parser.parse_args())
+input_path = args['input_path']
+output_path = args['output_dir']
+analysis_name = args['analysis_name'] # subset
+subset = args['subset'] # subset
+condition = args['condition'] 
+contrast = args['contrast']
+# Get necesary paths and create folders if necessary
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name, plot=True)
+############################### BOOOORIING STUFF ABOVE ###############################
+
+np.seterr(all="ignore")
+sample_type = "sc"   
+# save the cells coming from major cell type as a seperate object
+adata_integ_clust= sc.read_h5ad(input_path)
+immune_cell_types = [ "T cells", "Plasma cells", "Mast cells", "Neutrophils", "ILC2",  "Dendritic cells", "Myeloid cells", "B cells"]
+epithelial_cell_types = ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"]
+stroma_cell_types = ["Stroma", "Myofibroblasts", "Endothelial cells"]
+lst_contrast = contrast.split(",")
+immune_samples = lst_contrast# , "LFD-AOM-DSS-Immune"]
+
+adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"].isin(immune_samples)]
+adata_integ_clust = adata_integ_clust[adata_integ_clust.obs['cell_type_0.20'].isin(immune_cell_types)]
+
+
+print("###########")
+print(lst_contrast)
+print("###########")
+
+str_comparison = f"condition_{lst_contrast[0]}_vs_{lst_contrast[1]}"
+# adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["cell_type_0.20"]=="B cells"]
+
+
+
+
+# Get pseudo-bulk profile
+pdata = dc.get_pseudobulk(adata_integ_clust,
+                          sample_col=condition,
+                          groups_col='cell_type_0.20',
+                          layer='counts',
+                          mode='sum',
+                          min_cells=0,
+                          min_counts=0
+                         )
+# print(pdata.obs["cell_type_0.20"])
+
+
+dc.plot_psbulk_samples(pdata, groupby=[condition, 'cell_type_0.20'], save=f"{PLOT_PATH}/pseudobulk_{str_comparison}.pdf", figsize=(24, 6))
+
+# print(pdata)
+# Get filtered pseudo-bulk profile
+pdata = dc.get_pseudobulk(adata_integ_clust,
+                          sample_col=condition,
+                          groups_col='cell_type_0.20',
+                          layer='counts',
+                          mode='sum',
+                          min_cells=10,
+                          min_counts=1000
+                         )
+
+dc.plot_psbulk_samples(pdata, groupby=[condition, 'cell_type_0.20'], save=f"{PLOT_PATH}/pseudobulk_after_filtering_{str_comparison}.pdf", figsize=(24, 6))
+
+
+# Select T cell profiles
+xcells = pdata[pdata.obs['cell_type_0.20'] == subset].copy()
+
+# dc.plot_filter_by_expr(tcells, group='condition', min_count=10, save="testpsd2.pdf", min_total_count=15)
+
+# Obtain genes that pass the thresholds
+genes = dc.filter_by_expr(xcells, group=condition, min_count=10, min_total_count=15)
+# Filter by these genes
+xcells = xcells[:, genes].copy()
+
+
+dds = DeseqDataSet(
+    adata=xcells,
+    design_factors="condition",  # compare samples based on the "condition"
+    # column ("B" vs "A")
+    refit_cooks=True,
+    n_cpus=8,
+)
+
+
+dds.fit_size_factors()
+print(dds.obsm["size_factors"])
+
+dds.fit_genewise_dispersions()
+print(dds.varm["genewise_dispersions"])
+
+dds.fit_dispersion_trend()
+print(dds.uns["trend_coeffs"])
+print(dds.varm["fitted_dispersions"])
+
+dds.fit_dispersion_prior()
+print(
+    f"logres_prior={dds.uns['_squared_logres']}, sigma_prior={dds.uns['prior_disp_var']}"
+)
+
+dds.fit_MAP_dispersions()
+print(dds.varm["MAP_dispersions"])
+print(dds.varm["dispersions"])
+
+dds.fit_LFC()
+print(dds.varm["LFC"])
+
+dds.calculate_cooks()
+if dds.refit_cooks:
+    # Replace outlier counts
+    dds.refit()
+
+stat_res = DeseqStats(dds, contrast= [condition]+ lst_contrast, alpha=0.05, cooks_filter=True, independent_filter=True)
+
+
+stat_res.run_wald_test()
+stat_res.p_values
+
+if stat_res.independent_filter:
+    stat_res._independent_filtering()
+else:
+    stat_res._p_value_adjustment()
+
+stat_res.padj
+
+stat_res.summary()
+
+stat_res.lfc_shrink(coeff=str_comparison)
+
+results_df = stat_res.results_df
+print(results_df)
+
+dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, figsize=(14,10), dpi=300, save=f"{PLOT_PATH}/volcano_after_{str_comparison}.pdf")
+"""
+dds = DeseqDataSet(
+    adata=xcells,
+    design_factors='condition',
+    refit_cooks=True,
+    n_cpus=8,
+)
+
+dds.deseq2()
+
+print([condition]+ lst_contrast)
+# print(lst_contrast)
+# Extract contrast between two conditions
+# stat_res = DeseqStats(dds, contrast= [condition]+ lst_contrast, n_cpus=8)
+stat_res = DeseqStats(dds, contrast= [condition]+ lst_contrast, alpha=0.05, cooks_filter=True, independent_filter=True)
+
+# stat_res.run_wald_test()
+
+print("############### stat_res.summary() ##############")
+stat_res.summary()
+print("############### stat_res.summary() ##############")
+
+print("############### dds.varm[LFC] ##############")
+print(dds.varm["LFC"])
+print("############### dds.varm[LFC] ##############")
+
+# Extract results
+results_df = stat_res.results_df
+
+print("############### results_df ##############")
+print(results_df)
+print("############### results_df ##############")
+
+dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, save=f"{PLOT_PATH}/volcano_before_{str_comparison}.pdf", )
+
+print("############### stat_res.LFC ##############")
+print(stat_res.LFC)
+print("############### stat_res.LFC ##############")
+
+# Shrink LFCs
+stat_res.lfc_shrink(coeff= stat_res.LFC.columns[-1])
+
+# Extract results
+results_df = stat_res.results_df
+print(results_df)
+
+dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, figsize=(14,10), dpi=300, save=f"{PLOT_PATH}/volcano_after_{str_comparison}.pdf")"""
+
+# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ss "B cells" -con condition -cont "LFD-AOM-DSS-Immune,CD-AOM-DSS-Immune"
+# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ss "B cells" -con condition -cont "HFD-AOM-DSS-Immune,CD-AOM-DSS-Immune"
+# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ss "B cells" -con condition -cont "HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"
+

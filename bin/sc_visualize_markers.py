@@ -70,7 +70,7 @@ if marker_list is None:
     while marker_ind<len(marker_intersect):
         mrk_str = ",".join(marker_intersect[marker_ind:marker_ind+4])
         print(f"Plotting markers: {mrk_str}")
-        sc.pl.umap(adata, color=marker_intersect[marker_ind:marker_ind+4], ncols=len(marker_intersect[marker_ind:marker_ind+4]), save=f'{sample_type}_marker_{mrk_str}')
+        sc.pl.umap(adata, color=marker_intersect[marker_ind:marker_ind+4], show=False, ncols=len(marker_intersect[marker_ind:marker_ind+4]), save=f'{sample_type}_marker_{mrk_str}')
         marker_ind += 4
         
         
@@ -108,3 +108,4 @@ else:
 
 # python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas -ml RELN,CD31,PECAM
 # python sc_visualize_markers.py -i ../data/out_data/sc_integrated_subclustered_only_tcells.h5ad -o ../data/out_data -an sc_tcells_visualize_markers -st sc
+# python sc_visualize_markers.py -i ../data/out_data/sc_epithelial_cells_integrated.h5ad -o ../data/out_data -an sc_epithelial_cells_visualize_markers -st sc -ml CDH2,FN1,VIM,SNAI1,Twist1,Defa,Mptx2,Axin2,Myc,Ccnd1

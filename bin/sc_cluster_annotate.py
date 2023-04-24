@@ -76,10 +76,10 @@ broad_markers = [mrk.upper() for mrk in broad_markers]
 
 l_param_list = [0.30] # for major cell types
 
-if sample_type=="atlas":
+"""if sample_type=="atlas":
     l_param_list = [0.40] # for Atlas data
 elif sample_type=="sc":
-    l_param_list = [0.20] # for SC data
+    l_param_list = [0.20] # for SC data"""
 
 
 step = 0.10
@@ -92,7 +92,7 @@ for l_param in l_param_list:
     adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
     adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
     del adata
-    adata_concat = adata_concat[:,marker_intersect]
+    
     
     # do not  del adata for mor e than one value
     # del adata
@@ -103,21 +103,31 @@ for l_param in l_param_list:
     mpl.rcParams["legend.loc"]  = "upper right"
     mpl.rcParams['axes.facecolor'] = "white"
 
+    sc.tl.rank_genes_groups(adata_concat, method="wilcoxon", groupby=f"leiden_{l_param}", show=False, key_added = f"wilcoxon_{l_param}")
+    mpl.rcParams['axes.titlesize'] = 20
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, standard_scale='var', key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_25.pdf')
 
     
+    # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", standard_scale='var', show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{l_param}", standard_scale='var',  show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{l_param}", standard_scale='var',  show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_10')
+
+
+
+    #adata_concat = adata_concat[:,marker_intersect]
     # mpl.rcParams["figure.figsize"] = 5,5)
-    sc.pl.dotplot(adata_concat2, broad_markers, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_broad_markers_{l_param}_dotplot')
-    sc.pl.stacked_violin(adata_concat2, broad_markers, groupby=f'leiden_{l_param}', dendrogram=False, save=f'{sample_type}_clusters_broad_markers_{l_param}_stacked_violin')
-    sc.pl.stacked_violin(adata_concat2, broad_markers, groupby=f'leiden_{l_param}', dendrogram=False, swap_axes=True,  save=f'{sample_type}_clusters_broad_markers_{l_param}_stacked_violin_axis_swapped')
+    # sc.pl.dotplot(adata_concat, broad_markers, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_broad_markers_{l_param}_dotplot')
+    # sc.pl.stacked_violin(adata_concat, broad_markers, groupby=f'leiden_{l_param}', dendrogram=False, save=f'{sample_type}_clusters_broad_markers_{l_param}_stacked_violin')
+    # sc.pl.stacked_violin(adata_concat, broad_markers, groupby=f'leiden_{l_param}', dendrogram=False, swap_axes=True,  save=f'{sample_type}_clusters_broad_markers_{l_param}_stacked_violin_axis_swapped')
     # sc.pl.violin(adata_concat2, broad_markers, groupby=f'leiden_{l_param}', save=f'{sample_type}_clusters_broad_markers_{l_param}_violin')
 
     # sc.pl.dotplot(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=True,  show=True, save=f'{sample_type}_clusters_all_marker_{l_param}_dotplot_dendogram')
-    sc.pl.dotplot(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_all_marker_{l_param}_dotplot')
-    sc.pl.stacked_violin(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', dendrogram=False, save=f'{sample_type}_clusters_all_marker_{l_param}_stacked_violin')
+    #sc.pl.dotplot(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_all_marker_{l_param}_dotplot')
+    #sc.pl.stacked_violin(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', dendrogram=False, save=f'{sample_type}_clusters_all_marker_{l_param}_stacked_violin')
     # sc.pl.violin(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', save=f'{sample_type}_clusters_all_marker_{l_param}_violin')
 
-    """sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{l_param}_ondata')
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')"""
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{l_param}_ondata')
+    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
     """
     # "Pdgrfra",
     markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]

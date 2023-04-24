@@ -35,7 +35,7 @@ analysis_name = args['analysis_name']
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
 
-sample_type = "visium"
+sample_type = "sc"
 # Load meta data
 meta = utils.get_meta_data(sample_type)
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
