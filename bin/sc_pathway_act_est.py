@@ -30,12 +30,15 @@ parser = argparse.ArgumentParser(prog='Progeny', description='Pathway activity e
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+parser.add_argument('-gb', '--group_by', help='Group by cell type, condition etc. for comparison', required=False)
+parser.add_argument('-samp', '--samples', help='Samples to subset', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name'] # "sc_pse_func_analys"  
-
+group_by = args['group_by']
+samples = args['samples']
 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
@@ -47,6 +50,13 @@ meta = utils.get_meta_data(sample_type)
 adata_merged = sc.read_h5ad(input_path)
 adata_integ_clust = sc.read_h5ad(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
 adata_merged.X = adata_merged.layers['log1p_transformed']
+if samples:
+
+    lst_samples = samples.split(",")
+    adata_merged = adata_merged[adata_merged.obs["condition"].isin(lst_samples)]
+
+adata_integ_clust = adata_integ_clust[adata_merged.obs_names,:]
+
 
 # print(adata_integ_clust)
 
@@ -63,18 +73,22 @@ dc.run_mlm(mat=adata_merged, net=progeny, source='source', target='target', weig
 adata_integ_clust.obsm['progeny_mlm_estimate'] = adata_merged.obsm['mlm_estimate'].copy()
 adata_integ_clust.obsm['progeny_mlm_pvals'] = adata_merged.obsm['mlm_pvals'].copy()
 
-acts = dc.get_acts(adata_integ_clust, obsm_key='progeny_mlm_estimate')
+print(adata_merged)
+print(adata_merged.obsm['mlm_estimate'])
+acts = dc.get_acts(adata_merged, obsm_key='mlm_estimate')
+print(group_by, acts)
+sc.pl.umap(acts, color=adata_merged.obsm['mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est')
 
-sc.pl.umap(acts, color=adata_integ_clust.obsm['progeny_mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est')
-
-mean_acts = dc.summarize_acts(acts, groupby='cell_type_0.20', min_std=0)
+mean_acts = dc.summarize_acts(acts, groupby=group_by, min_std=0)
 
 sns.clustermap(mean_acts, xticklabels=mean_acts.columns, vmin=-2, vmax=2, cmap='coolwarm')
-plt.savefig(f"{PLOT_PATH}/{sample_type}_cell_type_pathway_activity_est_cmap.pdf")
+plt.savefig(f"{PLOT_PATH}/{sample_type}_{group_by}_pathway_activity_est_cmap.pdf")
 plt.show();
 
 # Write to file
-adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+# adata_integ_clust.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+
+# python sc_pathway_act_est.py -i ../data/out_data/sc_b_cells_integrated.h5ad -o ../data/out_data/ -an sc_bcells_pathway_act_est -gb condition -samp "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"
 
 
 
