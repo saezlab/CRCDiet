@@ -42,9 +42,42 @@ def check_marker_vs_sample_gene_overlap():
 
 """
 
-def calculate_correlation_between_factors():
-    anndata_
+def calculate_correlation_between_factors(df_path1,df_path2,condition):
+    df1 = pd.read_csv(df_path1, index_col=0)
+    df2 = pd.read_csv(df_path2, index_col=0)
+    df2["condition"] = df1["condition"]
+    df1 = df1.loc[df1["condition"].isin([condition]),:]
+    df2 = df2.loc[df2["condition"].isin([condition]),:]
+    
+    
+    # mergedStuff = pd.concat([df1, df2], axis=1)
+    print(df1)
+    print(df2)
+    # print(mergedStuff)
+    # corr = df1.corrwith(df2)
+    # corr = mergedStuff.corr(method='pearson', min_periods=1, numeric_only=False)
+    corr_mat = np.ones((len(df1.columns)-1, len(df2.columns)-1))
+    print(corr_mat)
+    for ind, fac1 in enumerate(df1.columns[:-1]):
+        for ind2, pw in enumerate(df2.columns[:-1]):
+            corr_mat[ind][ind2] = df1[fac1].corr(df2[pw])
+    print(corr_mat)
+    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+    df_corr = pd.DataFrame(corr_mat, index=df1.columns[:-1], columns=df2.columns[:-1])
+    print(df_corr)
+    sns.clustermap(df_corr, annot=False, cmap=cmap)
+    # sns.heatmap(df_corr, annot=False, cmap=cmap)
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (90, 90)
+    plt.savefig(f"../plots/corr_nnmf_pathway_{condition}.pdf")
+    plt.clf()
+    # print(corr)
+    
 
+"""calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "LFD-AOM-DSS-Immune")
+calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "HFD-AOM-DSS-Immune")
+calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "CD-AOM-DSS-Immune")
+"""
 def colocalization_analysis():
 
     # colocalization analysis performed based on https://www.nature.com/articles/s41467-021-21892-z#Sec8
@@ -105,7 +138,7 @@ def colocalization_analysis():
             break
         """
     print(lst_cell_types)    
-# colocalization_analysis()
+colocalization_analysis()
 
 
 def extract_cell_type_abundances():
@@ -119,6 +152,29 @@ def extract_cell_type_abundances():
         adata = sc.read_h5ad(f"../data/out_data/cell2location_map/{sample_id}_filtered_deconv_15_20.h5ad")
         adata.obsm['q05_cell_abundance_w_sf'].to_csv(f"../data/out_data/cell2location_map/cell_type_abundances_{sample_id}_filtered_deconv_15_20.csv")
 
+def extract_nnmf_weights(adata_path, n_of_factors):
+    adata = sc.read_h5ad(adata_path)
+
+    print(adata.obs["condition"])
+    weights_arr  = []
+    lst_columns = []
+    for fact_num in range(1,n_of_factors+1):
+        wght = list(adata.obs[f"W{n_of_factors}_{fact_num}"].values)
+
+        weights_arr.append(wght)
+        lst_columns.append(f"W{n_of_factors}_{fact_num}")
+    
+    weights_arr = np.array(weights_arr).reshape(n_of_factors, adata.shape[0]).T
+    df_weights = pd.DataFrame(data = weights_arr, 
+                  index = adata.obs_names, 
+                  columns = lst_columns)
+    df_weights["condition"] = adata.obs["condition"]
+    
+    df_weights.to_csv("../data/out_data/sc_bcells_nnmf_factors.csv")
+
+
+# extract_nnmf_weights("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_bcells_nnmf_42.h5ad", 20)  
+# adata = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/adata_sc_bcells_nnmf_42.h5ad")
 # extract_cell_type_abundances()
 
 """

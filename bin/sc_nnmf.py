@@ -187,7 +187,7 @@ for factor_ind in range(W20.shape[1]):
 for factor_ind in range(H20.shape[0]):
     adata_integ_clust.var[f"H20_{factor_ind+1}"] = H20[factor_ind , :]
 
-adata_integ_clust.write(os.path.join(OUT_DATA_PATH,f'{sample_type}_{analysis_name}_{random_seed}.h5ad'))
+# adata_integ_clust.write(os.path.join(OUT_DATA_PATH,f'{analysis_name}_{random_seed}.h5ad'))
 #utils.write_pickle(os.path.join(OUT_DATA_PATH,f'adata_bcells_merged_nnmf_{random_seed}.pckl'), adata_integ_clust)
 
 
