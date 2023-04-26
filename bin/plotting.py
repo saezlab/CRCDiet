@@ -477,3 +477,40 @@ def plot_significance(first_label, second_label, third_label, first_prop, second
     plt.savefig(f"../plots/sc_cell_type_prop/{fl_name}_{c_type}.png")
 
 
+def deg_venn_diagram(sign_thr=0.05, lFCs_thr=0.5, topn=50):
+    from matplotlib_venn import venn3
+
+    df_hfd_vs_cd = pd.read_csv("../data/analysis/condition_HFD-AOM-DSS-Immune_vs_CD-AOM-DSS-Immune_deg.csv")
+    df_lfd_vs_cd = pd.read_csv("../data/analysis/condition_LFD-AOM-DSS-Immune_vs_CD-AOM-DSS-Immune_deg.csv")
+    df_lfd_vs_hfd = pd.read_csv("../data/analysis/condition_LFD-AOM-DSS-Immune_vs_HFD-AOM-DSS-Immune_deg.csv")
+
+
+    """df_hfd_vs_cd = pd.read_csv("../data/analysis/condition_HFD-AOM-DSS-Immune_vs_CD-AOM-DSS-Immune_before_shrink_deg.csv")
+    df_lfd_vs_cd = pd.read_csv("../data/analysis/condition_LFD-AOM-DSS-Immune_vs_CD-AOM-DSS-Immune_before_shrink_deg.csv")
+    df_lfd_vs_hfd = pd.read_csv("../data/analysis/condition_LFD-AOM-DSS-Immune_vs_HFD-AOM-DSS-Immune_before_shrink_deg.csv")"""
+
+    df_hfd_vs_cd_mask_upreg = (df_hfd_vs_cd['log2FoldChange'] >= lFCs_thr) & (df_hfd_vs_cd['padj'] <= sign_thr)
+    df_hfd_vs_cd_mask_downreg = (df_hfd_vs_cd['log2FoldChange'] <= -lFCs_thr) & (df_hfd_vs_cd['padj'] <= sign_thr)
+    set_hfd_vs_cd_mask_upreg= set(df_hfd_vs_cd[df_hfd_vs_cd_mask_upreg].sort_values('padj', ascending=True).iloc[:topn]["Unnamed: 0"])
+    set_hfd_vs_cd_mask_downreg= set(df_hfd_vs_cd[df_hfd_vs_cd_mask_downreg].sort_values('padj', ascending=True).iloc[:topn]["Unnamed: 0"])
+
+    df_lfd_vs_cd_mask_upreg = (df_lfd_vs_cd['log2FoldChange'] >= lFCs_thr) & (df_lfd_vs_cd['padj'] <= sign_thr)
+    df_lfd_vs_cd_mask_downreg = (df_lfd_vs_cd['log2FoldChange'] <= -lFCs_thr) & (df_lfd_vs_cd['padj'] <=sign_thr)
+    set_lfd_vs_cd_mask_upreg= set(df_lfd_vs_cd[df_lfd_vs_cd_mask_upreg].sort_values('padj', ascending=True).iloc[:topn]["Unnamed: 0"])
+    set_lfd_vs_cd_mask_downreg= set(df_lfd_vs_cd[df_lfd_vs_cd_mask_downreg].sort_values('padj', ascending=True).iloc[:topn]["Unnamed: 0"])
+
+    df_lfd_vs_hfd_mask_upreg = (df_lfd_vs_hfd['log2FoldChange'] >= lFCs_thr) & (df_lfd_vs_hfd['padj'] <= sign_thr)
+    df_lfd_vs_hfd_mask_downreg = (df_lfd_vs_hfd['log2FoldChange'] <= -lFCs_thr) & (df_lfd_vs_hfd['padj'] <= sign_thr)
+    set_lfd_vs_hfd_mask_upreg= set(df_lfd_vs_hfd[df_lfd_vs_hfd_mask_upreg].sort_values('padj', ascending=True).iloc[:topn]["Unnamed: 0"])
+    set_lfd_vs_hfd_mask_downreg= set(df_lfd_vs_hfd[df_lfd_vs_hfd_mask_downreg].sort_values('padj', ascending=True).iloc[:topn]["Unnamed: 0"])
+
+    # venn3([set_hfd_vs_cd_mask_upreg.union(set_hfd_vs_cd_mask_downreg), set_lfd_vs_cd_mask_upreg.union(set_lfd_vs_cd_mask_downreg), set_lfd_vs_hfd_mask_upreg.union(set_lfd_vs_hfd_mask_downreg)], ('HFD vs. CD', 'LFD vs. CD', 'LFD vs. HFD'))
+    venn3([set_hfd_vs_cd_mask_upreg, set_lfd_vs_cd_mask_upreg, set_lfd_vs_hfd_mask_upreg], ('HFD vs. CD', 'LFD vs. CD', 'LFD vs. HFD'))
+
+ 
+    plt.show()
+    venn3([set_hfd_vs_cd_mask_downreg, set_lfd_vs_cd_mask_downreg, set_lfd_vs_hfd_mask_downreg], ('HFD vs. CD', 'LFD vs. CD', 'LFD vs. HFD'))
+
+    plt.show()
+
+# deg_venn_diagram()

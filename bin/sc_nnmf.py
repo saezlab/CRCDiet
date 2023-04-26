@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from sklearn.decomposition import NMF
+from matplotlib import cm
 import argparse
 import math
 import os
@@ -111,8 +112,8 @@ def analyse_nmf_results(random_state, adata_nnmf_merged, n_of_factors=20):
             
                 fig_row, fig_col = int(ind/cols), ind%cols
                 
-                
-                mpl.rcParams["image.cmap"]= plt.cm.magma_r
+                magma_r = cm.get_cmap('magma_r', 12)
+                plt.set_cmap(magma_r)
                 mpl.rcParams['axes.titlesize'] = 30
                 # sc.pl.umap(processed_sample_dict[sample_id], title=condition, color=f"W20_{factor_ind}", ax = axsLeft[fig_row][fig_col], show=False)
                 # cbar = axsLeft[fig_row][fig_col].collections[0].colorbar
@@ -184,7 +185,7 @@ for factor_ind in range(W20.shape[1]):
 for factor_ind in range(H20.shape[0]):
     adata_integ_clust.var[f"H20_{factor_ind+1}"] = H20[factor_ind , :]
 
-# adata_integ_clust.write(os.path.join(OUT_DATA_PATH,f'adata_{analysis_name}_{random_seed}.pckl'))
+adata_integ_clust.write(os.path.join(OUT_DATA_PATH,f'{sample_type}_{analysis_name}_{random_seed}.h5ad'))
 #utils.write_pickle(os.path.join(OUT_DATA_PATH,f'adata_bcells_merged_nnmf_{random_seed}.pckl'), adata_integ_clust)
 
 
@@ -192,7 +193,6 @@ for factor_ind in range(H20.shape[0]):
 analyse_nmf_results(42, adata_integ_clust, 20)
 analyse_nmf_results(42, adata_integ_clust, 3)
 analyse_nmf_results(42, adata_integ_clust, 5)
-
 
 
 

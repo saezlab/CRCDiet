@@ -153,10 +153,16 @@ stat_res.padj
 
 stat_res.summary()
 
+results_df = stat_res.results_df
+results_df.to_csv(f"{DATA_PATH}/analysis/{str_comparison}_before_shrink_deg.csv")
+dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, figsize=(14,10), dpi=300, save=f"{PLOT_PATH}/volcano_before_{str_comparison}.pdf")
+
 stat_res.lfc_shrink(coeff=str_comparison)
 
 results_df = stat_res.results_df
-print(results_df)
+
+
+results_df.to_csv(f"{DATA_PATH}/analysis/{str_comparison}_deg.csv")
 
 dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, figsize=(14,10), dpi=300, save=f"{PLOT_PATH}/volcano_after_{str_comparison}.pdf")
 """
@@ -207,7 +213,7 @@ print(results_df)
 
 dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, figsize=(14,10), dpi=300, save=f"{PLOT_PATH}/volcano_after_{str_comparison}.pdf")"""
 
-# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ss "B cells" -con condition -cont "LFD-AOM-DSS-Immune,CD-AOM-DSS-Immune"
-# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ss "B cells" -con condition -cont "HFD-AOM-DSS-Immune,CD-AOM-DSS-Immune"
-# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ss "B cells" -con condition -cont "HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"
+# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_bcells_deg_analysis -ss "B cells" -con condition -cont "LFD-AOM-DSS-Immune,CD-AOM-DSS-Immune"
+# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_bcells_deg_analysis -ss "B cells" -con condition -cont "HFD-AOM-DSS-Immune,CD-AOM-DSS-Immune"
+# python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_bcells_deg_analysis -ss "B cells" -con condition -cont "LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune"
 

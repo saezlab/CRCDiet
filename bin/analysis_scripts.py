@@ -40,3 +40,6 @@ def check_marker_vs_sample_gene_overlap():
 """
 
 """
+
+def calculate_correlation_between_factors():
+    anndata_
