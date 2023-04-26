@@ -73,6 +73,8 @@ dc.run_mlm(mat=adata_merged, net=progeny, source='source', target='target', weig
 adata_integ_clust.obsm['progeny_mlm_estimate'] = adata_merged.obsm['mlm_estimate'].copy()
 adata_integ_clust.obsm['progeny_mlm_pvals'] = adata_merged.obsm['mlm_pvals'].copy()
 
+adata_integ_clust.obsm['progeny_mlm_estimate'].to_csv(f"{OUT_DATA_PATH}/{analysis_name}_mlm_estimate.csv")
+
 print(adata_merged)
 print(adata_merged.obsm['mlm_estimate'])
 acts = dc.get_acts(adata_merged, obsm_key='mlm_estimate')

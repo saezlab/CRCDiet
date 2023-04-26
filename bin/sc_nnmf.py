@@ -179,6 +179,8 @@ for factor_ind in range(H5.shape[0]):
 print("Performing NMF... Number of factors: 20")
 W20, H20 = run_NMF(adata_integ_clust.layers["log1p_transformed"], 20, random_state=random_seed)
 
+print(W20)
+
 for factor_ind in range(W20.shape[1]):
     adata_integ_clust.obs[f"W20_{factor_ind+1}"] = W20[: , factor_ind]
 
