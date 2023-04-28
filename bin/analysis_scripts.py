@@ -76,8 +76,8 @@ def calculate_correlation_between_factors(df_path1,df_path2,condition):
 
 """calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "LFD-AOM-DSS-Immune")
 calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "HFD-AOM-DSS-Immune")
-calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "CD-AOM-DSS-Immune")
-"""
+calculate_correlation_between_factors("../data/out_data/sc_bcells_nnmf_factors.csv","../data/out_data/sc_bcells_pathway_act_est_mlm_estimate.csv", "CD-AOM-DSS-Immune")"""
+
 def colocalization_analysis():
 
     # colocalization analysis performed based on https://www.nature.com/articles/s41467-021-21892-z#Sec8
@@ -138,7 +138,7 @@ def colocalization_analysis():
             break
         """
     print(lst_cell_types)    
-colocalization_analysis()
+# colocalization_analysis()
 
 
 def extract_cell_type_abundances():
@@ -185,3 +185,23 @@ ext_L24854_HFD-no-AOM-DSS-colon-d81-visium
 ext_L24854_LFD-AOM-DSS-colon-d81-visium
 ext_L24854_LFD-no-AOM-DSS-colon-d81-visium
 """
+
+
+def create_adata_file_with_only_epi_cells():
+    df_meta_data = pd.read_csv("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/Parigi_GSE163638_GSM4983265_IEC-Stroma-control_Epi_MetaData.txt")
+    lst_barcodes = list(df_meta_data[df_meta_data["orig.ident"]=="control"]["Unnamed: 0"])
+    
+    for ind, barcode in enumerate(lst_barcodes):
+        lst_barcodes[ind] = barcode.split("_")[1]+"-1"
+    
+
+
+    print(lst_barcodes)
+    adata_stroma_bcells_ctrl = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/Parigi_GSE163638_GSM4983265_IEC-Stroma-control_filtered.h5ad")
+    adata_stroma_bcells_ctrl = adata_stroma_bcells_ctrl[adata_stroma_bcells_ctrl.obs_names.isin(lst_barcodes),:]
+    adata_stroma_bcells_ctrl.write_h5ad(f"../data/out_data/Parigi_GSE163638_GSM4983265_only-IEC-control_filtered.h5ad")
+
+    
+
+
+create_adata_file_with_only_epi_cells()

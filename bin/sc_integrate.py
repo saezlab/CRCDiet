@@ -93,3 +93,7 @@ adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
 #  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data
 #  python sc_integrate.py -i ../data/out_data/atlas_merged.h5ad -o ../data/out_data -st atlas -an atlas_integrate
 #  python sc_integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data -st atlas -an sc_integrate
+
+# python sc_integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data -st atlas -an sc_integrate
+
+# python sc_integrate.py -i ../data/out_data/sc_epicells_merged.h5ad -o ../data/out_data -st sc_epicells -an sc_epicells_aom_noaom_integrate

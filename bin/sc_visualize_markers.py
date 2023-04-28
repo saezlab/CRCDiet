@@ -109,3 +109,5 @@ else:
 # python sc_visualize_markers.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_visualize_markers -st atlas -ml RELN,CD31,PECAM
 # python sc_visualize_markers.py -i ../data/out_data/sc_integrated_subclustered_only_tcells.h5ad -o ../data/out_data -an sc_tcells_visualize_markers -st sc
 # python sc_visualize_markers.py -i ../data/out_data/sc_epithelial_cells_integrated.h5ad -o ../data/out_data -an sc_epithelial_cells_visualize_markers -st sc -ml CDH2,FN1,VIM,SNAI1,Twist1,Defa,Mptx2,Axin2,Myc,Ccnd1
+
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_visualize_markers -st sc_epicells

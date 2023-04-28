@@ -42,8 +42,9 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 compute_silh = False
 
 
-res_param = 0.2 # 0.2 for sc
+# res_param = 0.2 # 0.2 for sc and epicells
 res_param = 0.3 # 0.3 for major
+res_param = 0.2 # 0.2 for sc and epicells
 
 if sample_type == "atlas":
     res_param = 0.4 # 0.4 for atlas
@@ -113,3 +114,6 @@ adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'
 
 # python sc_cluster.py -i ../data/out_data/atlas_integrated.h5ad -o ../data/out_data -st atlas  -an atlas_cluster
 # python sc_cluster_annotate.py -i ../data/out_data/atlas_integrated_clustered.h5ad -o ../data/out_data -an atlas_cluster -st atlas
+
+# python sc_cluster.py -i ../data/out_data/sc_epicells_integrated.h5ad -o ../data/out_data -st sc_epicells  -an sc_epicells_aom_noaom_cluster
+# python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -st sc_epicells -an sc_epicells_aom_noaom_cluster

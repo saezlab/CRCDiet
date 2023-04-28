@@ -38,6 +38,7 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 
 
 adata = sc.read_h5ad(input_path)
+print(adata)
 """print(adata)
 for col in adata.obs.columns:
     print(col)
@@ -75,6 +76,7 @@ broad_markers =["Ptprc", "EpCam", "Pdgfra", "Myh11", "Ms4a1", "Cd3e", "Itgax", "
 broad_markers = [mrk.upper() for mrk in broad_markers]
 
 l_param_list = [0.30] # for major cell types
+l_param_list = [0.20] # for sc and epicells
 
 """if sample_type=="atlas":
     l_param_list = [0.40] # for Atlas data

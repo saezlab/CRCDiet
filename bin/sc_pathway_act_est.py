@@ -50,10 +50,7 @@ meta = utils.get_meta_data(sample_type)
 adata_merged = sc.read_h5ad(input_path)
 adata_integ_clust = sc.read_h5ad(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
 adata_merged.X = adata_merged.layers['log1p_transformed']
-if samples:
 
-    lst_samples = samples.split(",")
-    adata_merged = adata_merged[adata_merged.obs["condition"].isin(lst_samples)]
 
 adata_integ_clust = adata_integ_clust[adata_merged.obs_names,:]
 
@@ -73,13 +70,19 @@ dc.run_mlm(mat=adata_merged, net=progeny, source='source', target='target', weig
 adata_integ_clust.obsm['progeny_mlm_estimate'] = adata_merged.obsm['mlm_estimate'].copy()
 adata_integ_clust.obsm['progeny_mlm_pvals'] = adata_merged.obsm['mlm_pvals'].copy()
 
+
 adata_integ_clust.obsm['progeny_mlm_estimate'].to_csv(f"{OUT_DATA_PATH}/{analysis_name}_mlm_estimate.csv")
 
-print(adata_merged)
-print(adata_merged.obsm['mlm_estimate'])
+if samples:
+
+    lst_samples = samples.split(",")
+    adata_merged = adata_merged[adata_merged.obs["condition"].isin(lst_samples)]
+    
+
 acts = dc.get_acts(adata_merged, obsm_key='mlm_estimate')
-print(group_by, acts)
+
 sc.pl.umap(acts, color=adata_merged.obsm['mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est')
+
 
 mean_acts = dc.summarize_acts(acts, groupby=group_by, min_std=0)
 

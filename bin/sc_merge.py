@@ -173,3 +173,4 @@ adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 
 # python sc_merge.py -i ../data/out_data -o ../data/out_data -st atlas -an atlas_merge
+# python sc_merge.py -i ../data/out_data -o ../data/out_data -st sc_epicells -an sc_epicells_aom_noaom_merge
