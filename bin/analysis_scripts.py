@@ -138,7 +138,7 @@ def colocalization_analysis():
             break
         """
     print(lst_cell_types)    
-colocalization_analysis()
+# colocalization_analysis()
 
 
 def extract_cell_type_abundances():
