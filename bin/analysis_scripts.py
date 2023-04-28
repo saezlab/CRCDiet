@@ -98,9 +98,9 @@ def colocalization_analysis():
         corr = df_abundance.corr(method='pearson', min_periods=1, numeric_only=False)
         
         cmap = sns.diverging_palette(230, 20, as_cmap=True)
-        sns.clustermap(corr, annot=False, cmap=cmap)
+        sns.clustermap(corr, annot=False, cmap=cmap, xticklabels=True, yticklabels=True)
         plt.rcParams['figure.dpi']= 300
-        plt.rcParams['figure.figsize']= (90, 90)
+        plt.rcParams['figure.figsize']= (120, 120)
         plt.savefig(f"../plots/vis_deconvolution/corr_{sample_id}.pdf")
 
         
@@ -138,7 +138,7 @@ def colocalization_analysis():
             break
         """
     print(lst_cell_types)    
-# colocalization_analysis()
+colocalization_analysis()
 
 
 def extract_cell_type_abundances():
@@ -204,4 +204,4 @@ def create_adata_file_with_only_epi_cells():
     
 
 
-create_adata_file_with_only_epi_cells()
+# create_adata_file_with_only_epi_cells()
