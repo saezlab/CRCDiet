@@ -11,6 +11,7 @@ import scanpy as sc
 import numpy as np
 import matplotlib
 import os
+import utils
 import matplotlib.image as mpimg
 
 '''Plotting functions'''
@@ -157,14 +158,6 @@ def plot_cell_type_proportion(cond_list, cond_name ="Immune", adata=None, obs_co
 # plot_cell_type_proportion("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", cond_name ="immune", adata=None, obs_col = "major_cell_types", sample_type="sc")
 
 
-
-            
-
-
-    
-
-
-    
 def plot_ngene_diff(adata, ax, fontsize=11):
     ax.set_title('Num genes filtered', fontsize=fontsize)
     ax.bar(x="Before", height=adata.uns['hvg']['ngene'])
@@ -440,8 +433,6 @@ def label_diff(i,j,text,X,Y, ax):
 
 
 def plot_significance(first_label, second_label, third_label, first_prop, second_prop, third_prop, first_second_p_val, second_third_p_val, first_third_pval, c_type, fl_name):
-    import numpy as np
-    import matplotlib.pyplot as plt
     proportions   = (first_prop, second_prop, third_prop)
     # print(proportions, max(proportions))
     ind  = np.arange(3)    # the x locations for the groups
@@ -514,3 +505,76 @@ def deg_venn_diagram(sign_thr=0.05, lFCs_thr=0.5, topn=50):
     plt.show()
 
 # deg_venn_diagram()
+
+def plot_custom_corr_heatmap():
+    # colocalization analysis performed based on https://www.nature.com/articles/s41467-021-21892-z#Sec8
+    sample_type = "visium"
+    meta = utils.get_meta_data(sample_type)
+    ref_ct= "B cells-1"
+    cell_types = ["IgA plasma cells-1", "Neutrophils"]
+    str_cell_types = "_".join(cell_types)
+    lst_corr = []
+    lst_cond = []
+    dict_colocalization = dict()
+    for ind, row in meta.iterrows():
+        lst_cell_types = []
+        sample_id = row["sample_id"]
+        condition = row["condition"]
+        df_abundance = pd.read_csv(f"../data/out_data/cell2location_map/cell_type_abundances_{sample_id}_filtered_deconv_15_20.csv", index_col=0)
+        for ct in df_abundance.columns:
+                ct = ct.split("_")[-1]
+                lst_cell_types.append(ct)
+        df_abundance.columns = lst_cell_types
+        
+        corr = df_abundance.corr(method='pearson', min_periods=1)
+        # print(corr)
+        lst_cond.append(condition)
+        lst_corr.append(list(corr[cell_types].loc[[ref_ct]].values[0]))
+
+    pd_results = pd.DataFrame(lst_corr, columns=cell_types, index=lst_cond)
+    print(pd_results)
+    
+    dict_cell_type =dict()
+
+    for c_t in cell_types:
+        dict_cell_type[c_t] = []
+
+
+    for ind, row in pd_results.iterrows():
+        diet = ind.split("-")[0]
+        
+        for c_t in cell_types:
+            
+            if "no-AOM-DSS" in ind:
+                dict_cell_type[c_t].append(["no-AOM-DSS", diet, row[c_t]])
+            else:
+                dict_cell_type[c_t].append(["AOM-DSS", diet, row[c_t]])
+
+    print(dict_cell_type)
+
+    for c_t in cell_types:
+        print(c_t)
+        df = pd.DataFrame(dict_cell_type[c_t], columns=['Group', "Diet", "Score"])
+        print(df)
+        # plot with seaborn barplot
+        sns.barplot(data=df, x='Diet', y='Score', hue='Group').set(title=f'{ref_ct} vs. {c_t}')
+        plt.tight_layout()
+        plt.rcParams['figure.dpi']= 300
+        plt.rcParams['figure.figsize']= (240, 120)
+        plt.savefig(f"../plots/vis_deconvolution/barplot_{ref_ct}_vs_{c_t}.pdf")
+        plt.clf()
+    
+    pd_results = pd_results.transpose()
+    # print(pd_results)
+    # cmap = sns.diverging_palette(230, 20, as_cmap=True)
+    sns.heatmap(pd_results, annot=False, xticklabels=True, yticklabels=True)
+    plt.tight_layout()
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (240, 120)
+    plt.savefig(f"../plots/vis_deconvolution/heatmap_{ref_ct}_vs_{str_cell_types}.pdf")
+    plt.close()
+
+
+
+
+# plot_custom_corr_heatmap()

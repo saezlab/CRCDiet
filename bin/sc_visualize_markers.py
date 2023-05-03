@@ -119,9 +119,9 @@ else:
 
 # python sc_visualize_markers.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_visualize_markers -st sc_epicells
 
-# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Axin2,Notum,Prox1,MMP7,Sox4,Ifitm3 -fn tumor_markers
-# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_aom_noaom_visualize_markers -st sc_epicells -ml CDH2,FN1,VIM,SNAI1,Twist1 -fn bonafide_EMT_markers 
-
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Axin2,Notum,Prox1,MMP7,Sox4,Ifitm3 -fn tumor_markers
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml CDH2,FN1,VIM,SNAI1,Twist1 -fn bonafide_EMT_markers 
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells
 
 
 # Wif1, Nkd1, Axin2, Notum, Prox1, MMP7, Sox4, Ifitm3

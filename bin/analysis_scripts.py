@@ -187,19 +187,49 @@ ext_L24854_LFD-no-AOM-DSS-colon-d81-visium
 """
 
 
+# create_adata_file_with_only_epi_cells()
+
 def create_adata_file_with_only_epi_cells():
-    df_meta_data = pd.read_csv("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/Parigi_GSE163638_GSM4983265_IEC-Stroma-control_Epi_MetaData.txt")
-    lst_barcodes = list(df_meta_data[df_meta_data["orig.ident"]=="control"]["Unnamed: 0"])
-    
-    for ind, barcode in enumerate(lst_barcodes):
-        lst_barcodes[ind] = barcode.split("_")[1]+"-1"
-    
+    # since the epithelial samples includes both epi and stromal i exluded the epithelial cells 
+    # with this script. 
+    # this is done after the annotation that we were done using both epi plus dn samples. 
+    sample_type = "sc_epicells"
+    meta = utils.get_meta_data(sample_type)
+    samples = np.unique(meta['sample_id'])
+    lst_samples = ["CD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN"]
+    adata_all_integrated = sc.read_h5ad("../data/out_data/sc_integrated_clustered.h5ad")
+    adata_epi_plus_dn = adata_all_integrated[adata_all_integrated.obs["condition"].isin(lst_samples)]
+    print(adata_epi_plus_dn)
+    adata_epi_plus_dn = adata_epi_plus_dn[adata_epi_plus_dn.obs["major_cell_types"]=="Epithelial cells",:]
+    print(adata_epi_plus_dn.obs["condition"])
+    adata_immun_epi_cells = sc.read_h5ad("../data/out_data/Parigi_GSE163638_GSM4983265_only-IEC-control_filtered.h5ad")
+    # print(adata_immun_epi_cells)
+    lst_obs_names = []
+    for ind, samp in enumerate(lst_samples):
+        # print(samp)
+        adata_tmp = adata_epi_plus_dn[adata_epi_plus_dn.obs["condition"]==samp,:]
+        tmp_lst_obs_names = list(adata_tmp.obs_names)
+        for ind2, o_n in enumerate(tmp_lst_obs_names):
+            # print(ind2, o_n)
+            obs_id = o_n.split("-")[0] 
+            tmp_lst_obs_names[ind2] = f"{obs_id}-1-{ind}"
 
+        lst_obs_names.extend(tmp_lst_obs_names)
 
-    print(lst_barcodes)
-    adata_stroma_bcells_ctrl = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/Parigi_GSE163638_GSM4983265_IEC-Stroma-control_filtered.h5ad")
-    adata_stroma_bcells_ctrl = adata_stroma_bcells_ctrl[adata_stroma_bcells_ctrl.obs_names.isin(lst_barcodes),:]
-    adata_stroma_bcells_ctrl.write_h5ad(f"../data/out_data/Parigi_GSE163638_GSM4983265_only-IEC-control_filtered.h5ad")
+    lst_obs_names.extend([f"{obs_n}-3" for obs_n in list(adata_immun_epi_cells.obs_names)])
+    print(lst_obs_names)
+    adata_only_epi_cells = sc.read_h5ad("../data/out_data/sc_epicells_integrated_clustered.h5ad")
+    adata_only_epi_cells = adata_only_epi_cells[adata_only_epi_cells.obs_names.isin(lst_obs_names),:]
+    clusters = ["2", "5", "7", "8", "14", "16"]
+    adata_only_epi_cells = adata_only_epi_cells[adata_only_epi_cells.obs["leiden_0.20"].isin(clusters)]
+    print(adata_only_epi_cells.obs["condition"])
+    adata_only_epi_cells.write("../data/out_data/sc_epicells_only_integrated_clustered.h5ad")
+
+    sc.pl.umap(adata_only_epi_cells, color="leiden_0.20", legend_loc='on data')
+    # print(adata_only_epi_cells)
+
+# this is to correct the epithelial samples 
+# create_adata_file_with_only_epi_cells()
 
     
 
