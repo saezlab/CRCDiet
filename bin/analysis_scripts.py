@@ -96,7 +96,7 @@ def colocalization_analysis():
         df_abundance.columns = lst_cell_types
         
         corr = df_abundance.corr(method='pearson', min_periods=1, numeric_only=False)
-        
+        print(corr)
         cmap = sns.diverging_palette(230, 20, as_cmap=True)
         sns.clustermap(corr, annot=False, cmap=cmap, xticklabels=True, yticklabels=True)
         plt.rcParams['figure.dpi']= 300
@@ -138,7 +138,7 @@ def colocalization_analysis():
             break
         """
     print(lst_cell_types)    
-# colocalization_analysis()
+colocalization_analysis()
 
 
 def extract_cell_type_abundances():
@@ -201,7 +201,47 @@ def create_adata_file_with_only_epi_cells():
     adata_stroma_bcells_ctrl = adata_stroma_bcells_ctrl[adata_stroma_bcells_ctrl.obs_names.isin(lst_barcodes),:]
     adata_stroma_bcells_ctrl.write_h5ad(f"../data/out_data/Parigi_GSE163638_GSM4983265_only-IEC-control_filtered.h5ad")
 
+
+# create_adata_file_with_only_epi_cells()
+
+def create_adata_file_with_only_epi_cells():
+    # since the epithelial samples includes both epi and stromal i exluded the epithelial cells 
+    # with this script. 
+    # this is done after the annotation that we were done using both epi plus dn samples. 
+    sample_type = "sc_epicells"
+    meta = utils.get_meta_data(sample_type)
+    samples = np.unique(meta['sample_id'])
+    lst_samples = ["CD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN"]
+    adata_all_integrated = sc.read_h5ad("../data/out_data/sc_integrated_clustered.h5ad")
+    adata_epi_plus_dn = adata_all_integrated[adata_all_integrated.obs["condition"].isin(lst_samples)]
+    print(adata_epi_plus_dn)
+    adata_epi_plus_dn = adata_epi_plus_dn[adata_epi_plus_dn.obs["major_cell_types"]=="Epithelial cells",:]
+    print(adata_epi_plus_dn.obs["condition"])
+    adata_immun_epi_cells = sc.read_h5ad("../data/out_data/Parigi_GSE163638_GSM4983265_only-IEC-control_filtered.h5ad")
+    # print(adata_immun_epi_cells)
+    lst_obs_names = []
+    for ind, samp in enumerate(lst_samples):
+        # print(samp)
+        adata_tmp = adata_epi_plus_dn[adata_epi_plus_dn.obs["condition"]==samp,:]
+        tmp_lst_obs_names = list(adata_tmp.obs_names)
+        for ind2, o_n in enumerate(tmp_lst_obs_names):
+            # print(ind2, o_n)
+            obs_id = o_n.split("-")[0] 
+            tmp_lst_obs_names[ind2] = f"{obs_id}-1-{ind}"
+            
+        lst_obs_names.extend(tmp_lst_obs_names)
     
+    lst_obs_names.extend([f"{obs_n}-3" for obs_n in list(adata_immun_epi_cells.obs_names)])
+    print(lst_obs_names)
+    adata_only_epi_cells = sc.read_h5ad("../data/out_data/sc_epicells_integrated_clustered.h5ad")
+    adata_only_epi_cells = adata_only_epi_cells[adata_only_epi_cells.obs_names.isin(lst_obs_names),:]
+    clusters = ["2", "5", "7", "8", "14", "16"]
+    adata_only_epi_cells = adata_only_epi_cells[adata_only_epi_cells.obs["leiden_0.20"].isin(clusters)]
+    print(adata_only_epi_cells.obs["condition"])
+    adata_only_epi_cells.write("../data/out_data/sc_epicells_only_integrated_clustered.h5ad")
 
+    # sc.pl.umap(adata_only_epi_cells, color="leiden_0.20", legend_loc='on data')
+    # print(adata_only_epi_cells)
 
+# this is to correct the epithelial samples 
 # create_adata_file_with_only_epi_cells()

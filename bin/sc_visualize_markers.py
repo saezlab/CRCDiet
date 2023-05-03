@@ -25,6 +25,7 @@ parser.add_argument('-o', '--output_dir', help='Output directory where to store 
 parser.add_argument('-ml', '--marker_list', help='Markers seperated by commmas', required=False)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+parser.add_argument('-fn', '--file_name', default="marker_plot", help='File name', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
@@ -32,6 +33,7 @@ output_path = args['output_dir']
 marker_list = args['marker_list']
 analysis_name = args['analysis_name'] # "sc_        "
 sample_type = args['sample_type']
+file_name = args['file_name']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
@@ -79,27 +81,32 @@ if marker_list is None:
 else:
     
     marker_list = [mrk.upper() for mrk in marker_list.split(",")]
-    
-    for mrk in marker_list:
-        
-        if mrk in adata.var_names.str.upper():
-            print(mrk)
-            plt.rcParams['figure.dpi']= 300
-            plt.rcParams['figure.figsize']= (15, 10)
-            sc.pl.umap(adata, color=mrk.upper(), size=10, title=f"{mrk}", show=False, save=f"{sample_type}_marker_{mrk}")
+    if file_name:
+        marker_intersect = list(set(adata.var.index) & set(marker_list))
+        sc.pl.umap(adata, color=marker_intersect, size=10, frameon=False, ncols=4, show=False, save=f"{sample_type}_marker_{file_name}")
+
+    else:
+
+        for mrk in marker_list:
             
-            """fig, axs = plt.subplots(1, 4, figsize=(40, 10));
-            sc.pl.umap(adata, color=mrk.upper(), size=30, title=f"{mrk}: All conditions", show=False, ax=axs[0])
-            
-            ind = 1
-            for cond in condition:
-                if "Immune" in cond:
-                    adata_temp = adata[adata.obs["condition"]==cond,:]        
-                    sc.pl.umap(adata_temp,  title=f"{mrk}: {cond}", color=mrk.upper(), show=False, ax=axs[ind])
-                    ind += 1
-            
-            fig.savefig(os.path.join(PLOT_PATH, f"{sample_type}_marker_{mrk}_conditions"));
-            plt.show();"""
+            if mrk in adata.var_names.str.upper():
+                print(mrk)
+                plt.rcParams['figure.dpi']= 300
+                plt.rcParams['figure.figsize']= (15, 10)
+                sc.pl.umap(adata, color=mrk.upper(), size=10, title=f"{mrk}", show=False, save=f"{sample_type}_marker_{mrk}")
+                
+                # fig, axs = plt.subplots(1, 4, figsize=(40, 10));
+                # sc.pl.umap(adata, color=mrk.upper(), size=30, title=f"{mrk}: All conditions", show=False, ax=axs[0])
+                
+                #ind = 1
+                #for cond in condition:
+                #    if "Immune" in cond:
+                #        adata_temp = adata[adata.obs["condition"]==cond,:]        
+                #        sc.pl.umap(adata_temp,  title=f"{mrk}: {cond}", color=mrk.upper(), show=False, ax=axs[ind])
+                #        ind += 1
+                
+                # fig.savefig(os.path.join(PLOT_PATH, f"{sample_type}_marker_{mrk}_conditions"));
+                # plt.show();
 
 # Uba52,Gm10076,Ubb,Wdr89,Bloc1s1,Tmsb10,Fau,H3f3a
 
@@ -111,3 +118,10 @@ else:
 # python sc_visualize_markers.py -i ../data/out_data/sc_epithelial_cells_integrated.h5ad -o ../data/out_data -an sc_epithelial_cells_visualize_markers -st sc -ml CDH2,FN1,VIM,SNAI1,Twist1,Defa,Mptx2,Axin2,Myc,Ccnd1
 
 # python sc_visualize_markers.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_visualize_markers -st sc_epicells
+
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Axin2,Notum,Prox1,MMP7,Sox4,Ifitm3 -fn tumor_markers
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epicells_aom_noaom_visualize_markers -st sc_epicells -ml CDH2,FN1,VIM,SNAI1,Twist1 -fn bonafide_EMT_markers 
+
+
+
+# Wif1, Nkd1, Axin2, Notum, Prox1, MMP7, Sox4, Ifitm3

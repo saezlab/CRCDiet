@@ -163,8 +163,21 @@ results_df = stat_res.results_df
 
 
 results_df.to_csv(f"{DATA_PATH}/analysis/{str_comparison}_deg.csv")
-
+import gseapy
 dc.plot_volcano_df(results_df, x='log2FoldChange', y='padj', top=20, figsize=(14,10), dpi=300, save=f"{PLOT_PATH}/volcano_after_{str_comparison}.pdf")
+lFCs_thr, sign_thr = 0.5, 0.05
+two_cond_upregul = (results_df['log2FoldChange'] >= lFCs_thr) & (results_df['padj'] <= sign_thr)
+lst_two_cond_upreg_genes= list(results_df[two_cond_upregul].sort_values('padj', ascending=True).index)
+lst_two_cond_upreg_genes = [gene_id.upper() for gene_id in lst_two_cond_upreg_genes]
+print(lst_two_cond_upreg_genes)
+
+enr_res = gseapy.enrichr(gene_list=lst_two_cond_upreg_genes,
+                     organism='Mouse',
+                     gene_sets='GO_Biological_Process_2021',
+                     cutoff = 0.05)
+
+print(enr_res.res2d)
+gseapy.barplot(enr_res.res2d, title='GO_Biological_Process_2021', ofname=f"{PLOT_PATH}/barplot_upregulated_gea_{str_comparison}.pdf")
 """
 dds = DeseqDataSet(
     adata=xcells,
