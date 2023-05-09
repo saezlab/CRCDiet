@@ -85,6 +85,31 @@ else:
         marker_intersect = list(set(adata.var.index) & set(marker_list))
         sc.pl.umap(adata, color=marker_intersect, size=10, frameon=False, ncols=4, show=False, save=f"{sample_type}_marker_{file_name}")
 
+        plt.clf()
+        # print(marker_intersect)
+        # plt.rcParams['figure.figsize']=(6,4)
+        # ax = sc.pl.umap(adata, color=["WIF1"], color_map=mpl.cm.Reds, size=10, show=False, vmax=8, frameon=False)
+        # ax = sc.pl.umap(adata, color=["NKD1"], color_map=mpl.cm.Blues, size=10, show=True, vmax=8, frameon=False)
+        # ax = sc.pl.umap(adata, color=["NKD1"], color_map=mpl.cm.Blues, size=10, show=False, vmax=8, frameon=False, ax=ax)
+        # ax = sc.pl.umap(adata, color=["AXIN2"], color_map=mpl.cm.Greens, size=10, show=False, vmax=8, frameon=False, ax=ax)
+        # ax = sc.pl.umap(adata, color=["NOTUM"], color_map=mpl.cm.Reds, size=10, show=False, vmax=8, frameon=False, ax=ax)
+        # ax = sc.pl.umap(adata, color=["PROX1"], color_map=mpl.cm.Reds, size=10, show=False, vmax=8, frameon=False, ax=ax)
+        # ax = sc.pl.umap(adata, color=["MMP7"], color_map=mpl.cm.Reds, size=10, show=False, vmax=8, frameon=False, ax=ax)
+        # ax = sc.pl.umap(adata, color=["SOX4"], color_map=mpl.cm.Reds, size=10, show=True, vmax=8, frameon=False, ax=ax)
+
+        plot_multiple_markers_bool = True
+        if plot_multiple_markers_bool:
+        # 10 is the threshold
+            umi_thr = 5
+            plt.rcParams['figure.dpi']= 300
+            plt.rcParams['figure.figsize']= (15, 10)
+            bool_over_threshold = (adata[:,adata.var_names.isin(marker_intersect)].layers["counts"]>umi_thr).toarray()
+            bool_over_threshold = np.logical_or.reduce(bool_over_threshold, 1).astype(np.int32)
+            df_over_threshold = pd.DataFrame(bool_over_threshold, index=adata.obs_names, columns=["Over threshold"])
+            df_over_threshold.to_csv(f"{OUT_DATA_PATH}/{sample_type}_tumor_markers_combined_thr_{umi_thr}.csv")
+            adata.obs["tumor_markers"] = bool_over_threshold
+            sc.pl.umap(adata, color=["tumor_markers"], color_map=mpl.cm.Reds, title="Markers: "+", ".join(marker_intersect), size=40, show=False, frameon=False, save=f"{sample_type}_tumor_markers_combined_thr_{umi_thr}.pdf")
+
     else:
 
         for mrk in marker_list:
@@ -122,6 +147,11 @@ else:
 # python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Axin2,Notum,Prox1,MMP7,Sox4,Ifitm3 -fn tumor_markers
 # python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml CDH2,FN1,VIM,SNAI1,Twist1 -fn bonafide_EMT_markers 
 # python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Axin2,Notum,Prox1,MMP7,Sox4,Ifitm3,CDH2,FN1,VIM,SNAI1,Twist1 -fn all_tumor_markers
+
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Notum,Prox1,MMP7,FN1 -fn all_tumor_markers_figure
+
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers -st sc_epicells -ml Wif1,Nkd1,Axin2,Notum,Prox1,MMP7,Sox4 -fn tumor_markers_together
 
 
-# Wif1, Nkd1, Axin2, Notum, Prox1, MMP7, Sox4, Ifitm3
+# Wif1, Nkd1, Axin2, Notum, Prox1, MMP7, Sox4

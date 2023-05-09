@@ -578,3 +578,118 @@ def plot_custom_corr_heatmap():
 
 
 # plot_custom_corr_heatmap()
+
+def plot_dotplot_tumor_markers_vs_conditions():
+    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad")
+    df_over_threshold = pd.read_csv(f"/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_tumor_markers_combined_thr_5.csv")
+    
+    adata = utils.get_filtered_concat_data("sc_epicells")
+    adata = adata[adata_integ_clust.obs_names,:]
+    adata.obs["leiden_0.20"] = adata_integ_clust.obs["leiden_0.20"]
+    sc.pp.normalize_total(adata, target_sum=1e6)
+    sc.pp.log1p(adata)
+    print(df_over_threshold["Over threshold"].values)
+    adata.obs["tumor_markers"] = df_over_threshold["Over threshold"].values
+    # adata = adata[adata.obs["tumor_markers"]==1,:]
+    # filter out the cells missing in adata_integ_clust
+    # 
+    # print(adata[adata.obs["tumor_markers"].isin([1]),:])
+    
+    print(adata)
+    adata.var.index = pd.Index(gen.upper() for gen in adata.var.index.values)
+    # markers = ["WIF1", "AXIN2", "NKD1", "NOTUM", "MMP7", "PROX1", "SOX4"]
+    markers = ["WIF1", "NKD1", "NOTUM", "MMP7", "PROX1"]
+    # sc.pl.dotplot(adata, markers, groupby='condition', standard_scale='group', dendrogram=False, show=False)
+    # sc.pl.dotplot(adata, markers, groupby='condition', standard_scale='var', dendrogram=False, show=False)
+    sc.pl.dotplot(adata, markers, groupby='condition', dendrogram=True, show=False, save="epicells_tumor_markers_no-AXIN1-no-SOX4.pdf")
+    sc.pl.dotplot(adata, markers, groupby='condition', standard_scale='var', dendrogram=True, show=False, save="epicells_tumor_markers_ss_var-no-AXIN1-no-SOX4.pdf")
+    sc.pl.dotplot(adata, markers, groupby='condition', standard_scale='group', dendrogram=True, show=False, save="epicells_tumor_markers_ss_group-no-AXIN1-no-SOX4.pdf")
+    """sc.pl.dotplot(adata, markers, groupby='condition', dendrogram=True, show=False, save="epicells_tumor_markers.pdf")
+    sc.pl.dotplot(adata, markers, groupby='condition', standard_scale='var', dendrogram=True, show=False, save="epicells_tumor_markers_ss_var.pdf")
+    sc.pl.dotplot(adata, markers, groupby='condition', standard_scale='group', dendrogram=True, show=False, save="epicells_tumor_markers_ss_group.pdf")"""
+    # plt.tight_layout()
+    # plt.savefig("../plots/sc_epi_cells_aom_noaom_visualize_markers/dot_plot.pdf")
+ 
+# plot_dotplot_tumor_markers_vs_conditions()
+
+
+def plot_dotplot_tumor_markers_vs_individual_condition(condition, group_by):
+    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad")
+    adata = utils.get_filtered_concat_data("sc_epicells")
+    adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"]==condition,:]
+    adata = adata[adata_integ_clust.obs_names,:]
+    adata.obs["leiden_0.20"] = adata_integ_clust.obs["leiden_0.20"]
+    adata_integ_clust.obs["condition"][condition] = condition.split("_")[0]
+    condition = condition.split("_")[0]
+
+    sc.pp.normalize_total(adata, target_sum=1e6)
+    sc.pp.log1p(adata)
+    adata_integ_clust.var.index = pd.Index(gen.upper() for gen in adata_integ_clust.var.index.values)
+    adata.var.index = pd.Index(gen.upper() for gen in adata.var.index.values)
+    # markers = ["EPCAM", "CDH1", "MUC3", "CDHR5", "WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "AXIN2", "NOTUM", "SOX4", "PROX1", "MUC2", "REG4", "CCL9", "MMP7",  "IFITM3"]
+    markers = [ "EPCAM", "CDH1", "CDHR5", "MUC3", "MUC2", "REG4", "AXIN2", "SOX4", "IFITM3", "WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "NOTUM", "PROX1", "MMP7"]
+    # markers = ["EPCAM", "MUC3", "CDHR5", "WNT6", "WNT10A", "DKK3", "WIF1", "NKD1", "NOTUM", "SOX4", "PROX1", "MUC2", "REG4", "CCL9", "MMP7",  "IFITM3"]
+
+    sc.pl.dotplot(adata, markers, groupby=group_by, dendrogram=False, vmax=10, show=False, save=f"epicells_{condition}.pdf")
+    # sc.pl.dotplot(adata, markers, groupby=group_by, dendrogram=False, standard_scale='var', show=False, save=f"epicells_{condition}.pdf")
+    
+    # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='var', dendrogram=True, show=False, save=f"epicells_{condition}_ss_var.pdf")
+    # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='group', dendrogram=True, show=False, save=f"epicells_{condition}_ss_group.pdf")
+
+
+"""plot_dotplot_tumor_markers_vs_individual_condition("CD-AOM-DSS-Epi_plus_DN", "leiden_0.20")
+plot_dotplot_tumor_markers_vs_individual_condition("Control-no-AOM-DSS-Immune", "leiden_0.20")
+plot_dotplot_tumor_markers_vs_individual_condition("HFD-AOM-DSS-Epi_plus_DN", "leiden_0.20")
+plot_dotplot_tumor_markers_vs_individual_condition("LFD-AOM-DSS-Epi_plus_DN", "leiden_0.20")"""
+
+
+def plot_dotplot_cancer_vs_control(group_by):
+    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad")
+    adata = utils.get_filtered_concat_data("sc_epicells")
+    adata = adata[adata_integ_clust.obs_names,:]
+    adata.obs["leiden_0.20"] = adata_integ_clust.obs["leiden_0.20"]
+    adata.obs["crc"] = "no-AOM-DSS"
+    adata.obs.loc[adata[adata.obs["condition"].isin(["CD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN"]),:].obs_names, 'crc'] = "AOM-DSS"
+    
+    """for cond in ["CD-AOM-DSS-Epi_plus_DN", "Control-no-AOM-DSS-Immune", "HFD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN"]:
+        
+        if "Immune" in cond:
+            adata[adata.obs["condition"]==cond,: ].obs["crc"] = "no-AOM-DSS"
+        else:
+            adata[adata.obs["condition"]==cond,: ].obs["crc"] = "AOM-DSS"
+        # adata.obs["condition"]["Control-no-AOM-DSS-Immune"] = "No-AOM-DSS"
+        # adata.obs["condition"]["HFD-AOM-DSS-Epi_plus_DN"] = "AOM-DSS"
+        # adata.obs["condition"]["LFD-AOM-DSS-Epi_plus_DN"] = "AOM-DSS"
+    """
+
+    print(adata.obs["crc"])
+    print(adata)
+
+    sc.pp.normalize_total(adata, target_sum=1e6)
+    sc.pp.log1p(adata)
+    adata_integ_clust.var.index = pd.Index(gen.upper() for gen in adata_integ_clust.var.index.values)
+    adata.var.index = pd.Index(gen.upper() for gen in adata.var.index.values)
+    # markers = ["EPCAM", "CDH1", "MUC3", "CDHR5", "WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "AXIN2", "NOTUM", "SOX4", "PROX1", "MUC2", "REG4", "CCL9", "MMP7",  "IFITM3"]
+    # markers = ["WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "NOTUM", "PROX1", "MMP7"] 
+    markers = [ "EPCAM", "CDH1", "CDHR5", "MUC3", "MUC2", "REG4", "AXIN2", "SOX4", "IFITM3", "WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "NOTUM", "PROX1", "MMP7"]
+    # markers = ["EPCAM", "MUC3", "CDHR5", "WNT6", "WNT10A", "DKK3", "WIF1", "NKD1", "NOTUM", "SOX4", "PROX1", "MUC2", "REG4", "CCL9", "MMP7",  "IFITM3"]
+
+    sc.pl.dotplot(adata, markers, groupby=group_by, dendrogram=False, show=False, save=f"epicells_aom-dss_no-aom-dss.pdf")
+
+    markers = ["WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "NOTUM", "PROX1", "MMP7"] 
+    sc.pl.dotplot(adata, markers, groupby=group_by, dendrogram=False, show=False, save=f"epicells_aom-dss_no-aom-dss_excluding_HEGs.pdf")    
+    
+    
+    # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='var', dendrogram=True, show=False, save=f"epicells_{condition}_ss_var.pdf")
+    # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='group', dendrogram=True, show=False, save=f"epicells_{condition}_ss_group.pdf")
+
+# plot_dotplot_cancer_vs_control("crc")
+
+
+def plot_barplot_markers_vs_groups(adata, markers, group_by):
+
+    expression_cutoff = 0.0
+    markers = ['CD3D', 'CD79A','CST3']
+    dp = sc.pl.DotPlot(adata, markers, groupby=group_by)
+    obs_bool = dp.obs_tidy > expression_cutoff
+    dot_color_df = (dp.obs_tidy.mask(~obs_bool).groupby(level=0).mean().fillna(0))
