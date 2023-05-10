@@ -77,7 +77,7 @@ broad_markers = [mrk.upper() for mrk in broad_markers]
 
 l_param_list = [0.30] # for major cell types
 l_param_list = [0.20] # for sc and epicells
-
+l_param_list = [0.30] # for major cell types
 """if sample_type=="atlas":
     l_param_list = [0.40] # for Atlas data
 elif sample_type=="sc":

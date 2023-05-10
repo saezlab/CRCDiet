@@ -155,3 +155,5 @@ else:
 
 
 # Wif1, Nkd1, Axin2, Notum, Prox1, MMP7, Sox4
+
+# python sc_visualize_markers.py -i ../data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad -o ../data/out_data -an sc_epi_cells_aom_noaom_visualize_markers_2 -st sc_epicells_aom_noaom -ml WNT6,WNT10A,FZD10,DKK3,WIF1,NKD1,NOTUM,PROX1,MMP7 -fn tumor_markers_together

@@ -26,6 +26,7 @@ parser.add_argument('-o', '--output_dir', help='Output directory where to store 
 parser.add_argument('-n', '--normalization', default="log1p", help='Normalization technique', required=False)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
 parser.add_argument('-an', '--analysis_name', default="an", help='Analysis name', required=False)
+parser.add_argument('-cf', '--concat_file', default="cf", help='Already concatenated anndata file', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_dir']
@@ -33,6 +34,7 @@ output_path = args['output_dir']
 normalization = args['normalization']
 sample_type = args['sample_type']
 analysis_name = args['analysis_name']
+concatenated_file = args['concat_file'] 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
@@ -46,7 +48,11 @@ samples = np.unique(meta['sample_id'])
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.capitalize()))
 
-adata = utils.get_filtered_concat_data(sample_type)
+adata = None
+if concatenated_file:
+    adata = sc.read_h5ad(concatenated_file)
+else:
+    adata = utils.get_filtered_concat_data(sample_type)
 print("Shape of merged object:", adata.shape)
 
 print("Calculating QC metrics for merged samples...")
@@ -174,3 +180,5 @@ adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 # python sc_merge.py -i ../data/out_data -o ../data/out_data -st atlas -an atlas_merge
 # python sc_merge.py -i ../data/out_data -o ../data/out_data -st sc_epicells -an sc_epicells_aom_noaom_merge
+# For future referecen this merging done by isolating only epi cells by extracting DNs
+# python sc_merge.py -i ../data/out_data -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_merge_2 -cf ../data/out_data/sc_epicells_aom_noaom_concatenated.h5ad

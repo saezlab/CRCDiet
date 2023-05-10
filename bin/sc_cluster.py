@@ -117,3 +117,6 @@ adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'
 
 # python sc_cluster.py -i ../data/out_data/sc_epicells_integrated.h5ad -o ../data/out_data -st sc_epicells  -an sc_epicells_aom_noaom_cluster
 # python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -st sc_epicells -an sc_epicells_aom_noaom_cluster
+
+# python sc_cluster.py -i ../data/out_data/sc_epicells_aom_noaom_integrated.h5ad -o ../data/out_data -st sc_epicells_aom_noaom  -an sc_epicells_aom_noaom_cluster_2
+# python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster_2

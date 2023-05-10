@@ -614,8 +614,8 @@ def plot_dotplot_tumor_markers_vs_conditions():
 
 
 def plot_dotplot_tumor_markers_vs_individual_condition(condition, group_by):
-    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad")
-    adata = utils.get_filtered_concat_data("sc_epicells")
+    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad")
+    adata = utils.get_filtered_concat_data("sc_epicells_aom_noaom")
     adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"]==condition,:]
     adata = adata[adata_integ_clust.obs_names,:]
     adata.obs["leiden_0.20"] = adata_integ_clust.obs["leiden_0.20"]
@@ -645,7 +645,7 @@ plot_dotplot_tumor_markers_vs_individual_condition("LFD-AOM-DSS-Epi_plus_DN", "l
 
 def plot_dotplot_cancer_vs_control(group_by):
     adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad")
-    adata = utils.get_filtered_concat_data("sc_epicells")
+    adata = utils.get_filtered_concat_data("sc_epicells_aom_noaom")
     adata = adata[adata_integ_clust.obs_names,:]
     adata.obs["leiden_0.20"] = adata_integ_clust.obs["leiden_0.20"]
     adata.obs["crc"] = "no-AOM-DSS"
@@ -679,12 +679,54 @@ def plot_dotplot_cancer_vs_control(group_by):
     markers = ["WNT6", "WNT10A", "FZD10", "DKK3", "WIF1", "NKD1", "NOTUM", "PROX1", "MMP7"] 
     sc.pl.dotplot(adata, markers, groupby=group_by, dendrogram=False, show=False, save=f"epicells_aom-dss_no-aom-dss_excluding_HEGs.pdf")    
     
-    
+    top10_16_clust = ["NKD1", "ASPSCR1", "IFITM3", "NOTUM", "PROX1", "CYBA", "WIF1", "FAM89A", "MT3", "IFITM1"]
+    sc.pl.dotplot(adata, top10_16_clust, groupby=group_by, dendrogram=False, show=False, save=f"epicells_aom-dss_no-aom-dss_clust_16_top10_DEGs.pdf")  
     # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='var', dendrogram=True, show=False, save=f"epicells_{condition}_ss_var.pdf")
     # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='group', dendrogram=True, show=False, save=f"epicells_{condition}_ss_group.pdf")
 
 # plot_dotplot_cancer_vs_control("crc")
 
+
+def plot_barplot_cell_proportion_in_cluster(adata_path, sample_type, obs_cluster):
+    # colocalization analysis performed based on https://www.nature.com/articles/s41467-021-21892-z#Sec8
+    adata = sc.read_h5ad(adata_path)
+
+    meta = utils.get_meta_data(sample_type)
+    condition = list(np.unique(meta['condition']))
+    condition = ["Control-no-AOM-DSS-Immune", "CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN"]
+    prop_lst = []
+
+
+    for clust in adata.obs[obs_cluster].cat.categories:
+        adata_tmp = adata[adata.obs[obs_cluster]==clust,:]
+        n_of_cells = adata_tmp.shape[0]
+        # prop_dict[clust] = []
+        
+        for cond in condition:
+            adata_tmp2 = adata_tmp[adata_tmp.obs["condition"]==cond,:]
+            proportion = adata_tmp2.shape[0]/n_of_cells
+
+            print(clust, cond, n_of_cells, adata_tmp2.shape)    
+            cond_lbl = cond.split("_")[0]
+            if "Control" in cond:
+                cond_lbl = "no-AOM-DSS"
+            
+            prop_lst.append([cond_lbl, clust, proportion])
+    
+
+
+
+
+    df = pd.DataFrame(prop_lst, columns=['Group', "Cluster", "Proportion"])
+    sns.barplot(data=df, x='Cluster', y='Proportion', hue='Group').set(title='Proportions of Cells in Clusters')
+    plt.tight_layout()
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (240, 120)
+    plt.savefig(f"../plots/../plots/sc_epicells_aom_noaom_cluster/barplot_proportion_cluster.pdf") 
+    plt.clf()
+
+# plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad", "sc_epicells_aom_noaom", "leiden_0.20")
+# plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad", "sc_epicells_aom_noaom", "leiden_0.20")
 
 def plot_barplot_markers_vs_groups(adata, markers, group_by):
 

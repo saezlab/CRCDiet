@@ -217,8 +217,8 @@ def create_adata_file_with_only_epi_cells():
         lst_obs_names.extend(tmp_lst_obs_names)
 
     lst_obs_names.extend([f"{obs_n}-3" for obs_n in list(adata_immun_epi_cells.obs_names)])
-    print(lst_obs_names)
-    adata_only_epi_cells = sc.read_h5ad("../data/out_data/sc_epicells_integrated_clustered.h5ad")
+    print(lst_obs_names) # 
+    adata_only_epi_cells = sc.read_h5ad("../data/out_data/sc_epi_plus_DN_cells_integrated_clustered.h5ad")
     adata_only_epi_cells = adata_only_epi_cells[adata_only_epi_cells.obs_names.isin(lst_obs_names),:]
     clusters = ["2", "5", "7", "8", "14", "16"]
     adata_only_epi_cells = adata_only_epi_cells[adata_only_epi_cells.obs["leiden_0.20"].isin(clusters)]
@@ -232,6 +232,26 @@ def create_adata_file_with_only_epi_cells():
 # create_adata_file_with_only_epi_cells()
 
     
+def create_concat_epi_cells():
+    sample_type = "sc_epicells"
+    meta = utils.get_meta_data(sample_type)
+    samples = np.unique(meta['sample_id'])
 
+    # this anndata includes only epithelial cells but the integration is done with DN cells too
+    adata_sc_epi_integ_clust = sc.read_h5ad("../data/out_data/sc_epicells_integrated_clustered.h5ad")
 
-# create_adata_file_with_only_epi_cells()
+    for cond in adata_sc_epi_integ_clust.obs["condition"].cat.categories:
+        print(cond, adata_sc_epi_integ_clust[adata_sc_epi_integ_clust.obs["condition"]==cond,:].shape[0]/adata_sc_epi_integ_clust.shape[0])
+    
+    # this anndata includes both epi and DN
+    adata_concat = utils.get_filtered_concat_data(sample_type)
+    # remove the DN samples
+    adata_concat = adata_concat[adata_sc_epi_integ_clust.obs_names,:]
+
+    for ind in range(4):
+        adata_concat.var[f'mt-{ind}'] = adata_concat.var[f'mt-{ind}'].astype(str)
+        adata_concat.var[f'rp-{ind}'] = adata_concat.var[f'mt-{ind}'].astype(str)
+
+    adata_concat.write("../data/out_data/sc_epicells_aom_noaom_concatenated.h5ad")
+
+# create_concat_epi_cells()
