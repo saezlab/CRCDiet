@@ -47,7 +47,9 @@ for samp_id in lst_Ayyaz_GSE123516:
 
     lst_adata.append(anndata)
     toplam += anndata.shape[0]
-    print(toplam)
+    print(toplam) 
+# ['B cells-1' 'Neutrophils' 'IgA plasma cells-1']
+
 
 
 # a  = pd.read_csv("GSE92332_atlas_UMIcounts.txt")

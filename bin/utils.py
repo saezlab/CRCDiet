@@ -391,6 +391,13 @@ def obs_to_csv(adata):
 
     final = pd.read_csv("../data/out_data/sc_cond_cell_type.csv", index_col=0)
 
+
+def subset_ann_data(adata_pth, obs_col, group_lst):
+    adata = sc.read_h5ad(adata_pth)
+    group_lst = group_lst.split(",")
+    return adata[adata.obs[obs_col].isin(group_lst),:]
+
+
 """sample_pair_list = ["CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN",
                     "CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"]
 p_val_list= []

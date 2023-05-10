@@ -46,4 +46,11 @@ def transfer_cell_type_annotation(analysis_name):
         title= "Cell Type", size=10, frameon=False, show=True, save=f"atlas_habercrc_all_cell_type_harmony"
     )
 
-transfer_cell_type_annotation("atlas_cluster")
+# transfer_cell_type_annotation("atlas_cluster")
+
+def create_subanndata():
+    atlas_integrated = sc.read_h5ad("../data/out_data/atlas_integrated_clustered.h5ad")
+    atlas_cell_type_annot = sc.read_h5ad("../data/out_data/sc_integrated_cluster_scannot.h5ad")
+    atlas_integrated.obs["cell_type"] = atlas_cell_type_annot.obs["cell_type_level1"]
+    anndata_b_cells = atlas_integrated[atlas_integrated.obs["cell_type"].isin(['B cells-1', 'B cells-2', 'B cells-3', 'B cells-5'])]
+    anndata_bcell_neutrophils_iga =  atlas_integrated[atlas_integrated.obs["cell_type"].isin(['B cells-1', 'Neutrophils', 'IgA plasma cells-1']),:]
