@@ -255,3 +255,34 @@ def create_concat_epi_cells():
     adata_concat.write("../data/out_data/sc_epicells_aom_noaom_concatenated.h5ad")
 
 # create_concat_epi_cells()
+
+
+def create_concat_epi_cells_with_annotations():
+    sample_type = "sc_epicells_aom_noaom"
+    meta = utils.get_meta_data(sample_type)
+    samples = np.unique(meta['sample_id'])
+
+    # this anndata includes only epithelial cells but the integration is done with DN cells too
+    adata_sc_epi_integ_clust = sc.read_h5ad("../data/out_data/sc_epicells_integrated_clustered.h5ad")
+
+    for cond in adata_sc_epi_integ_clust.obs["condition"].cat.categories:
+        print(cond, adata_sc_epi_integ_clust[adata_sc_epi_integ_clust.obs["condition"]==cond,:].shape[0]/adata_sc_epi_integ_clust.shape[0])
+    
+    # this anndata includes both epi and DN
+    adata_concat = utils.get_filtered_concat_data(sample_type)
+    # remove the DN samples
+    adata_concat = adata_concat[adata_sc_epi_integ_clust.obs_names,:]
+
+    for ind in range(4):
+        adata_concat.var[f'mt-{ind}'] = adata_concat.var[f'mt-{ind}'].astype(str)
+        adata_concat.var[f'rp-{ind}'] = adata_concat.var[f'mt-{ind}'].astype(str)
+    
+    adata_concat.obs["leiden_0.20"] = adata_sc_epi_integ_clust.obs["leiden_0.20"]
+    adata_concat.obsm["X_umap"] = adata_sc_epi_integ_clust.obsm["X_umap"]
+    
+    annotation_dict = {"2":"Proliferating IECs", "5": "Goblet cells", "7":"Proliferating IECs", "8":"Enteroendocrine cell", "14":"Tuft cells", "16":"EC Tumor" }
+    adata_concat.obs[f'cell_type'] = [annotation_dict[clust] for clust in adata_concat.obs[f'leiden_0.20']]
+    sc.pl.umap(adata_concat, color="cell_type")
+    adata_concat.write("../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad")
+
+# create_concat_epi_cells_with_annotations()
