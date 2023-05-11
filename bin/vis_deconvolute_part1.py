@@ -36,6 +36,7 @@ parser.add_argument('-vp', '--vis_path', help='Output directory where to store t
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True) # vis_deconvolution
 parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+parser.add_argument('-lk', '--labels_key', default="sc", help='Sample type', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
@@ -43,6 +44,7 @@ vis_path = args['vis_path']
 analysis_name = args['analysis_name'] # vis_deconvolute
 output_file = args['output_file']
 sample_type = args['sample_type']
+labels_key = args['labels_key']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
@@ -60,6 +62,8 @@ ref_run_name = f'{OUT_DATA_PATH}/cell2location_{analysis_name}'
 annotated_sc_data = sc.read_h5ad(input_path)
 annotated_sc_data.var_names_make_unique()
 
+if "counts" in annotated_sc_data.layers:
+    annotated_sc_data.X = annotated_sc_data.layers["counts"]
 # calculate qc metrics
 annotated_sc_data.var["mt"] = annotated_sc_data.var_names.str.contains("^MT-")
 
@@ -78,7 +82,8 @@ cell2location.models.RegressionModel.setup_anndata(adata=annotated_sc_data,
                         # 10X reaction / sample / batch
                         batch_key='batch',
                         # cell type, covariate used for constructing signatures
-                        labels_key='cell_type_0.20',
+                        # labels_key='cell_type_0.20',
+                        labels_key = labels_key,
                         # multiplicative technical effects (platform, 3' vs 5', donor effect)
                         # categorical_covariate_keys=['technology', "study"]
                        )
@@ -143,6 +148,7 @@ inf_aver.to_csv(f"{ref_run_name}/inf_aver.csv")
 # python vis_deconvolute_part1.py -rp ../data/out_data/atlas_cell_type_annot_light_weight.h5ad -vp ../data/out_data/ext_L24854_CD-AOM-DSS-colon-d81-visium_filtered.h5ad -an  vis_deconvolution -of path_to_out 
 
 # python vis_deconvolute_part1.py -rp "../data/out_data/sc_Immune cells.h5ad" -an vis_immune_deconvolution
+# python vis_deconvolute_part1.py -rp ../data/out_data/sc_epicells_integrated_clustered.h5ad  -an vis_atlas_bcell_populations_deconvolution
 """
 import cv2
 import matplotlib.pyplot as plt

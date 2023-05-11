@@ -48,25 +48,25 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 
 meta = utils.get_meta_data(sample_type)
 
-# adata_merged = sc.read_h5ad(input_path)
+adata_merged = sc.read_h5ad(input_path)
 
-adata_merged = utils.get_filtered_concat_data(sample_type)
+# adata_merged = utils.get_filtered_concat_data(sample_type)
 if "log1p_transformed" not in adata_merged.layers:
     adata_merged.layers["log1p_transformed"] = sc.pp.normalize_total(adata_merged, inplace=False, target_sum=1e6)["X"]
     sc.pp.log1p(adata_merged, layer="log1p_transformed")
 
 # print(adata_merged.obs_names)
-adata_integ_clust = sc.read_h5ad(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+# adata_integ_clust = sc.read_h5ad(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
 adata_merged.X = adata_merged.layers['log1p_transformed']
-print(adata_merged.var_names)
+# print(adata_merged.var_names)
 
 # run only on HVGs
-adata_merged = adata_merged[adata_integ_clust.obs_names,adata_integ_clust.var_names]
+# adata_merged = adata_merged[adata_integ_clust.obs_names,adata_integ_clust.var_names]
 
 # print(adata_integ_clust)
 
 adata_merged.var.index = pd.Index(gen.upper() for gen in adata_merged.var.index.values)
-adata_merged.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
+# adata_merged.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 
 # Retrieve PROGENy model weights
 progeny = dc.get_progeny(organism='mouse', top=500)
@@ -111,3 +111,4 @@ plt.show();
 
 
 
+# python sc_pathway_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_pathway_act_est -gp cell_type

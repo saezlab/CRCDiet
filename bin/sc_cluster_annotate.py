@@ -23,6 +23,7 @@ parser.add_argument('-o', '--output_dir', help='Output directory where to store 
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
 parser.add_argument('-of', '--output_file', help='Output file name', required=False)
 parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+parser.add_argument('-oc', '--obs_column', default="oc", help='Obs column', required=False)
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
@@ -30,6 +31,7 @@ output_path = args['output_dir']
 analysis_name = args['analysis_name'] # "sc_cluster_annotate"
 output_file = args['output_file']
 sample_type = args['sample_type']
+obs_column  = args['obs_column']
 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
@@ -89,9 +91,16 @@ for l_param in l_param_list:
 #for l_param in np.arange(0.1, 1.01, step):
     
     l_param = f"{l_param:.2f}"
+    group_by = f"leiden_{l_param}"
+    if obs_column:
+        group_by=obs_column
     printmd(f"## Clusters with resolution param: {l_param} <a class='anchor' id='seventh-bullet-1'></a>")
     
-    adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
+    if obs_column:
+        adata_concat.obs[obs_column] = adata.obs[obs_column]
+    else:
+
+        adata_concat.obs[f"leiden_{l_param}"] = adata.obs[f"leiden_{l_param}"]
     adata_concat.obsm["X_umap"] = adata.obsm["X_umap"]
     del adata
     
@@ -105,14 +114,14 @@ for l_param in l_param_list:
     mpl.rcParams["legend.loc"]  = "upper right"
     mpl.rcParams['axes.facecolor'] = "white"
 
-    sc.tl.rank_genes_groups(adata_concat, method="wilcoxon", groupby=f"leiden_{l_param}", show=False, key_added = f"wilcoxon_{l_param}")
+    sc.tl.rank_genes_groups(adata_concat, method="wilcoxon", groupby=group_by, show=False, key_added = f"wilcoxon_{obs_column}")
     mpl.rcParams['axes.titlesize'] = 20
-    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, standard_scale='var', key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_one_vs_rest_{l_param}_25.pdf')
+    sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, standard_scale='var', key=f"wilcoxon_{obs_column}", show=False, groupby=group_by, save=f'{sample_type}_one_vs_rest_{obs_column}_25.pdf')
 
     
     # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", standard_scale='var', show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
-    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{l_param}", standard_scale='var',  show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
-    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{l_param}", standard_scale='var',  show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_10')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_default')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_10')
 
 
 
@@ -128,8 +137,8 @@ for l_param in l_param_list:
     #sc.pl.stacked_violin(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', dendrogram=False, save=f'{sample_type}_clusters_all_marker_{l_param}_stacked_violin')
     # sc.pl.violin(adata_concat, marker_intersect, groupby=f'leiden_{l_param}', save=f'{sample_type}_clusters_all_marker_{l_param}_violin')
 
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{l_param}_ondata')
-    sc.pl.umap(adata_concat, color=f"leiden_{l_param}", palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{l_param}_umap')
+    sc.pl.umap(adata_concat, color=obs_column, palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{obs_column}_ondata')
+    sc.pl.umap(adata_concat, color=obs_column, palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{obs_column}_umap')
     """
     # "Pdgrfra",
     markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]

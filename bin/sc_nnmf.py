@@ -148,7 +148,53 @@ def analyse_nmf_results(random_state, adata_nnmf_merged, n_of_factors=20):
         plt.savefig(f'{PLOT_PATH}/{sample_type}_{n_of_factors}_factor_{factor_ind}.pdf');
 
 
-sample_type = "sc" 
+def analyse_nmf_single_sample(random_state, adata_nnmf_merged, n_of_factors=20):
+    processed_sample_dict = dict()
+    # adata_nnmf_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'adata_{analysis_name}_nnmf_{random_seed}.pckl'))
+    # adata_filt_concat = utils.get_filtered_concat_data(sample_type)
+    # adata_filt_concat = adata_filt_concat[adata_bcells_merged.obs_names,:]
+    
+    for factor_ind in range(1,(n_of_factors+1)):
+       
+        # printmd(f"## Factor {factor_ind} <a class='anchor' id='seventh-bullet-1'></a>")
+        
+        print(factor_ind)
+        print(f'{PLOT_PATH}/{sample_type}_{n_of_factors}_factor_{factor_ind}.pdf')
+        fig, (axsLeft, axsRight)  = plt.subplots(1, 2, figsize=(60, 30), width_ratios=[2, 1])
+
+        # axsLeft = subfigs[0]
+        
+        magma_r = cm.get_cmap('magma_r', 12)
+        plt.set_cmap(magma_r)
+        mpl.rcParams['axes.titlesize'] = 30
+        # sc.pl.umap(processed_sample_dict[sample_id], title=condition, color=f"W20_{factor_ind}", ax = axsLeft[fig_row][fig_col], show=False)
+        # cbar = axsLeft[fig_row][fig_col].collections[0].colorbar
+        sc.pl.umap(adata_nnmf_merged, size=40, color=f"W{n_of_factors}_{factor_ind}", ax = axsLeft, show=False)
+        cbar = axsLeft.collections[0].colorbar
+        cbar.set_ticks([])
+        cbar = None
+
+        #axsRight = subfigs[1]
+        top40_genes = adata_nnmf_merged.var[f"H{n_of_factors}_{factor_ind}"].sort_values(ascending=False)[:40]
+        # print(top40_genes)
+        genes = list(top40_genes.keys())
+        loadings = list(top40_genes.tolist())
+        genes.reverse()
+        loadings.reverse()
+        # print(genes)
+        # print(loadings)
+        high = math.floor(max(loadings))+1
+        low = max(0, min(loadings)-1.01)
+        # print(high, low)
+        # print([math.ceil(low-0.5*(high-low)), math.ceil(high+0.5*(high-low))])
+        plt.xlim([low, high])
+        plt.xticks(fontsize=30)
+        plt.yticks(fontsize=30)
+        axsRight.barh(genes, loadings, color='grey')
+        plt.savefig(f'{PLOT_PATH}/{sample_type}_{n_of_factors}_factor_{factor_ind}.pdf');
+
+
+sample_type = "atlas" 
 random_seed= 42                      
 # save the cells coming from major cell type as a seperate object
 adata_integ_clust= sc.read_h5ad(input_path)
@@ -192,13 +238,19 @@ for factor_ind in range(H20.shape[0]):
 
 
 
-analyse_nmf_results(42, adata_integ_clust, 20)
+"""analyse_nmf_results(42, adata_integ_clust, 20)
 analyse_nmf_results(42, adata_integ_clust, 3)
-analyse_nmf_results(42, adata_integ_clust, 5)
+analyse_nmf_results(42, adata_integ_clust, 5)"""
 
+
+# This is for single object
+analyse_nmf_single_sample(42, adata_integ_clust, 20)
+analyse_nmf_single_sample(42, adata_integ_clust, 3)
+analyse_nmf_single_sample(42, adata_integ_clust, 5)
 
 
 # python sc_nnmf.py -i ../data/out_data/sc_immune_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_immunecells_nnmf -ct "B cells"
 # python sc_nnmf.py -i ../data/out_data/sc_immune_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_bcells_nnmf -ct "B cells"
 # python sc_nnmf.py -i ../data/out_data/sc_stroma_cells_integrated_clustered.h5ad -o ../data/out_data -an sc_stromacells_nnmf
+# python sc_nnmf.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -an atlas_bcell_populations_nnmf
 # python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_test -ct "B cells"
