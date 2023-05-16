@@ -120,10 +120,12 @@ for l_param in l_param_list:
 
     
     # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", standard_scale='var', show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
+    """sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_default')
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_10')
+    """
+    # standard scale false for b cell populations
     sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_default')
     sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_10')
-
-
 
     #adata_concat = adata_concat[:,marker_intersect]
     # mpl.rcParams["figure.figsize"] = 5,5)
