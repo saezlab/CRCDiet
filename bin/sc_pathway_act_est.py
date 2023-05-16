@@ -107,8 +107,8 @@ plt.show();
 
 # python sc_pathway_act_est.py -i ../data/out_data/sc_b_cells_integrated.h5ad -o ../data/out_data/ -an sc_bcells_pathway_act_est -gb condition -samp "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"
 # python sc_pathway_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_pathway_act_est -gb condition -st sc_epicells
-# python sc_pathway_act_est.py -i ../data/out_data/sc_epicells_only_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_pathway_act_est -gb condition -st sc_epicells
+# python sc_pathway_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_pathway_act_est -gb condition -st sc_epicells_aom_noaom
 
 
 
-# python sc_pathway_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_pathway_act_est -gp cell_type
+# python sc_pathway_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_pathway_act_est -gb cell_type

@@ -89,6 +89,7 @@ plt.savefig(f"{PLOT_PATH}/{sample_type}_{group_by}_tf_activity_est_cmap.pdf")
 # python sc_tf_act_est.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data/ -an sc_tf_act_est
 
 # python sc_tf_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_tf_act_est -gp cell_type
+# python sc_tf_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_tf_act_est -gb cell_type -st sc_epicells_aom_noaom
 
 
 
