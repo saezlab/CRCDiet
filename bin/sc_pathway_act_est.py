@@ -94,6 +94,11 @@ acts = dc.get_acts(adata_merged, obsm_key='mlm_estimate')
 
 sc.pl.umap(acts, color=adata_merged.obsm['mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est')
 
+# This is done for ../data/out_data/sc_epicells_integrated_clustered.h5ad
+for cond in acts.obs["condition"].cat.categories:
+    sc.pl.umap(acts[acts.obs["condition"]==cond,:], size=20, color=adata_merged[adata_merged.obs["condition"]==cond,:].obsm['mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est_{cond}')
+    
+
 
 mean_acts = dc.summarize_acts(acts, groupby=group_by, min_std=0)
 
@@ -108,6 +113,7 @@ plt.show();
 # python sc_pathway_act_est.py -i ../data/out_data/sc_b_cells_integrated.h5ad -o ../data/out_data/ -an sc_bcells_pathway_act_est -gb condition -samp "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"
 # python sc_pathway_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_pathway_act_est -gb condition -st sc_epicells
 # python sc_pathway_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_pathway_act_est -gb condition -st sc_epicells_aom_noaom
+# python sc_pathway_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_pathway_act_est_test -gb condition -st sc_epicells_aom_noaom
 
 
 

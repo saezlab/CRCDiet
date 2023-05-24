@@ -54,9 +54,16 @@ adata_integ_clust.var.index = pd.Index(gen.upper() for gen in adata_integ_clust.
 dc.run_mlm(mat=adata_integ_clust, net=progeny, source='source', target='target', weight='weight', verbose=True, use_raw=False)
 adata_integ_clust.obsm['dorothea_mlm_estimate'] = adata_integ_clust.obsm['mlm_estimate'].copy()
 adata_integ_clust.obsm['dorothea_mlm_pvals'] = adata_integ_clust.obsm['mlm_pvals'].copy()
-acts_integrated = dc.get_acts(adata_integ_clust, obsm_key='dorothea_mlm_estimate')
-# print(adata_integ_clust.obsm['dorothea_mlm_estimate'])
 
+### This block is for the comparative pathway activity estimation 
+"""adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["leiden_0.10"]=="6",:]
+adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"].isin(["CD-AOM-DSS", "HFD-AOM-DSS", "LFD-AOM-DSS"]),:]
+acts_integrated = dc.get_acts(adata_integ_clust, obsm_key='dorothea_mlm_estimate')
+mean_acts = dc.summarize_acts(acts_integrated, groupby="condition", min_std=0)
+sns.clustermap(mean_acts, xticklabels=mean_acts.columns, vmin=-2, vmax=2, colors_ratio=0.50, cmap='coolwarm')
+plt.savefig(f"{PLOT_PATH}/{sample_type}_aom_dss_only_tumor_cluster_pathway_activity_est_cmap.pdf")
+plt.show();"""
+### This block is for the comparative pathway activity estimation 
 
 adata_dict = dict()
 
