@@ -148,7 +148,7 @@ inf_aver.to_csv(f"{ref_run_name}/inf_aver.csv")
 # python vis_deconvolute_part1.py -rp ../data/out_data/atlas_cell_type_annot_light_weight.h5ad -vp ../data/out_data/ext_L24854_CD-AOM-DSS-colon-d81-visium_filtered.h5ad -an  vis_deconvolution -of path_to_out 
 
 # python vis_deconvolute_part1.py -rp "../data/out_data/sc_Immune cells.h5ad" -an vis_immune_deconvolution
-# python vis_deconvolute_part1.py -rp ../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad  -an vis_atlas_bcell_populations_deconvolution -lk cell_type
+# python vis_deconvolute_part1.py -rp ../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad  -an vis_deconvolution_sc_epicell_aom_noaom -lk cell_type
 """
 import cv2
 import matplotlib.pyplot as plt
