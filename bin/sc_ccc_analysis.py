@@ -76,8 +76,8 @@ print(adata.uns["liana_res"].columns)
 
 my_p = li.pl.dotplot(adata = adata,
                         colour='lrscore', # "propportion" mran #take the mean olrs faf
-                        size='spec_weight',
-                        # size='pvals',
+                        # size='spec_weight',
+                        size='cellphone_pvals',
                         inverse_size=True, # we inverse sign since we want small p-values to have large sizes
                         source_labels=adata.obs["cell_type"].cat.categories,
                         target_labels=adata.obs["cell_type"].cat.categories,

@@ -59,7 +59,7 @@ sc.pp.log1p(adata_concat)
 # https://github.com/scverse/scanpy/issues/2239
 # if 'log1p' in adata.uns_keys() and adata.uns['log1p']['base'] is not None:
 # KeyError: 'base'
-adata.uns['log1p']["base"] = None
+# adata.uns['log1p']["base"] = None
 # l_param = adata.uns["leiden_best_silh_param"]
 # # l_param = f"{l_param:.2f}"
 
@@ -127,6 +127,8 @@ for l_param in l_param_list:
     sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_default')
     sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_10')
 
+    sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=10, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by)
+    plt.savefig('destination_path.eps', format='eps')
     #adata_concat = adata_concat[:,marker_intersect]
     # mpl.rcParams["figure.figsize"] = 5,5)
     # sc.pl.dotplot(adata_concat, broad_markers, groupby=f'leiden_{l_param}', swap_axes=True, dendrogram=False,  show=True, save=f'{sample_type}_clusters_broad_markers_{l_param}_dotplot')
@@ -141,6 +143,7 @@ for l_param in l_param_list:
 
     sc.pl.umap(adata_concat, color=obs_column, palette=sc.pl.palettes.default_20, size=8 , show=False, legend_loc='on data', save=f'{sample_type}_leiden_{obs_column}_ondata')
     sc.pl.umap(adata_concat, color=obs_column, palette=sc.pl.palettes.default_20, size=8 , show=False, save=f'{sample_type}_leiden_{obs_column}_umap')
+    plt.savefig('destination_path.eps', format='eps')
     """
     # "Pdgrfra",
     markers_dot_plot = markers_dot_plot = ["Epcam", "Agr2", "Fabp2", "Krt14", "Pdgfra", "Myh11", "Ano1", "Lyve1", "Esam", "Ptprc", "Itgax", "Cd3g", "Mzb1", "Jchain", "Il17rb", "Cpa3", "S100a9", "Mki67"]
@@ -185,3 +188,8 @@ for l_param in l_param_list:
     # wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.01, log2fc_min=0)[["group", "names", "scores","logfoldchanges"]]
     # print(l_param)
     # print(wc.to_csv(os.path.join(output_path, f'{sample_type}_deg_leiden_res_{l_param}.csv'), index=False))
+
+
+# python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster_3 -oc leiden_0.20
+
+ # python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster -oc cluster 

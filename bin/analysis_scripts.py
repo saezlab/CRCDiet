@@ -268,6 +268,19 @@ def create_concat_epi_cells_with_annotations():
     for cond in adata_sc_epi_integ_clust.obs["condition"].cat.categories:
         print(cond, adata_sc_epi_integ_clust[adata_sc_epi_integ_clust.obs["condition"]==cond,:].shape[0]/adata_sc_epi_integ_clust.shape[0])
     
+
+    res_param=0.2
+    new_res_param=0.2
+    sc.tl.leiden(adata_sc_epi_integ_clust, restrict_to=(f'leiden_{res_param:.2f}', ["2"]),  resolution=new_res_param, key_added=f'leiden_{res_param:.2f}')
+    sc.pl.umap(adata_sc_epi_integ_clust, color=f'leiden_{res_param:.2f}', palette=sc.pl.palettes.default_20, size=50)
+    res_param=0.2
+    new_res_param=0.2
+    sc.tl.leiden(adata_sc_epi_integ_clust, restrict_to=(f'leiden_{res_param:.2f}', ["2,1"]),  resolution=new_res_param, key_added=f'leiden_{res_param:.2f}')
+    sc.pl.umap(adata_sc_epi_integ_clust, color=f'leiden_{res_param:.2f}', palette=sc.pl.palettes.default_20, size=50)
+    res_param=0.2
+    new_res_param=0.1
+    sc.tl.leiden(adata_sc_epi_integ_clust, restrict_to=(f'leiden_{res_param:.2f}', ["2,1,2"]),  resolution=new_res_param, key_added=f'leiden_{res_param:.2f}')
+    sc.pl.umap(adata_sc_epi_integ_clust, color=f'leiden_{res_param:.2f}', palette=sc.pl.palettes.default_20, size=50)
     # this anndata includes both epi and DN
     adata_concat = utils.get_filtered_concat_data(sample_type)
     # remove the DN samples
@@ -279,10 +292,13 @@ def create_concat_epi_cells_with_annotations():
     
     adata_concat.obs["leiden_0.20"] = adata_sc_epi_integ_clust.obs["leiden_0.20"]
     adata_concat.obsm["X_umap"] = adata_sc_epi_integ_clust.obsm["X_umap"]
-    
-    annotation_dict = {"2":"Proliferating IECs", "5": "Goblet cells", "7":"Proliferating IECs", "8":"Enteroendocrine cell", "14":"Tuft cells", "16":"EC Tumor" }
+    annotation_dict = {"2,0":"Proliferating Enterocytes", "2,1,2,1":"Proliferating Enterocytes", "2,1,0":"Differentiated Enterocytes", "2,1,1":"Differentiated Enterocytes", "2,1,2,0":"Differentiated Enterocytes", "2,2":"Differentiated Enterocytes", "2,3":"Differentiated Enterocytes", "2,4":"Differentiated Enterocytes", "2,5":"Differentiated Enterocytes", "2,6":"Differentiated Enterocytes", "5": "Goblet cells", "7":"Proliferating ISCs", "8":"Enteroendocrine cell", "14":"Tuft cells", "16":"EC Tumor" }
+
+    new_cluster_dict = {"2,0":"1", "2,1,2,1":"1", "2,1,0":"0", "2,1,1":"0", "2,1,2,0":"0", "2,2":"0", "2,3":"0", "2,4":"0", "2,5":"0", "2,6":"0", "5": "4", "7":"2", "8":"3", "14":"5", "16":"6" }
     adata_concat.obs[f'cell_type'] = [annotation_dict[clust] for clust in adata_concat.obs[f'leiden_0.20']]
+    adata_concat.obs[f'cluster'] = [new_cluster_dict[clust] for clust in adata_concat.obs[f'leiden_0.20']]
     sc.pl.umap(adata_concat, color="cell_type")
+    sc.pl.umap(adata_concat, color="cluster")
     adata_concat.write("../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad")
 
 # create_concat_epi_cells_with_annotations()

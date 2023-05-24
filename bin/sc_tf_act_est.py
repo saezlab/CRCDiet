@@ -24,7 +24,7 @@ from copy import deepcopy
 sc.settings.verbosity = 0
 warnings.simplefilter(action='ignore')
 # Set figure params
-sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=60)
+sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Parse arguments
 parser = argparse.ArgumentParser(prog='Dorothea', description='TF activity estimation')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
@@ -88,7 +88,7 @@ plt.savefig(f"{PLOT_PATH}/{sample_type}_{group_by}_tf_activity_est_cmap.pdf")
 
 # python sc_tf_act_est.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data/ -an sc_tf_act_est
 
-# python sc_tf_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_tf_act_est -gp cell_type
+# python sc_tf_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_tf_act_est -gb cell_type
 # python sc_tf_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_tf_act_est -gb cell_type -st sc_epicells_aom_noaom
 
 

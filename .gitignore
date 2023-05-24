@@ -167,3 +167,4 @@ bin/deconv_immune_merged.out
 bin/deconv_epicell_aom_noaom.out
 bin/deconv_immune_merged.out
 bin/*.out
+bin/figures

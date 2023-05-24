@@ -614,11 +614,12 @@ def plot_dotplot_tumor_markers_vs_conditions():
 
 
 def plot_dotplot_tumor_markers_vs_individual_condition(condition, group_by):
-    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad")
+    # adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad")
+    adata_integ_clust = sc.read_h5ad("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad")
     adata = utils.get_filtered_concat_data("sc_epicells_aom_noaom")
     adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"]==condition,:]
     adata = adata[adata_integ_clust.obs_names,:]
-    adata.obs["leiden_0.20"] = adata_integ_clust.obs["leiden_0.20"]
+    adata.obs[group_by] = adata_integ_clust.obs[group_by]
     adata_integ_clust.obs["condition"][condition] = condition.split("_")[0]
     condition = condition.split("_")[0]
 
@@ -637,10 +638,10 @@ def plot_dotplot_tumor_markers_vs_individual_condition(condition, group_by):
     # sc.pl.dotplot(adata, markers, groupby=group_by, standard_scale='group', dendrogram=True, show=False, save=f"epicells_{condition}_ss_group.pdf")
 
 
-"""plot_dotplot_tumor_markers_vs_individual_condition("CD-AOM-DSS-Epi_plus_DN", "leiden_0.20")
-plot_dotplot_tumor_markers_vs_individual_condition("Control-no-AOM-DSS-Immune", "leiden_0.20")
-plot_dotplot_tumor_markers_vs_individual_condition("HFD-AOM-DSS-Epi_plus_DN", "leiden_0.20")
-plot_dotplot_tumor_markers_vs_individual_condition("LFD-AOM-DSS-Epi_plus_DN", "leiden_0.20")"""
+"""plot_dotplot_tumor_markers_vs_individual_condition("CD-AOM-DSS-Epi_plus_DN", "cluster")
+plot_dotplot_tumor_markers_vs_individual_condition("Control-no-AOM-DSS-Immune", "cluster")
+plot_dotplot_tumor_markers_vs_individual_condition("HFD-AOM-DSS-Epi_plus_DN", "cluster")
+plot_dotplot_tumor_markers_vs_individual_condition("LFD-AOM-DSS-Epi_plus_DN", "cluster")"""
 
 
 def plot_dotplot_cancer_vs_control(group_by):
@@ -718,15 +719,20 @@ def plot_barplot_cell_proportion_in_cluster(adata_path, sample_type, obs_cluster
 
 
     df = pd.DataFrame(prop_lst, columns=['Group', "Cluster", "Proportion"])
+    sns.set(font_scale = 0.5)
     sns.barplot(data=df, x='Cluster', y='Proportion', hue='Group').set(title='Proportions of Cells in Clusters')
-    plt.tight_layout()
+    
     plt.rcParams['figure.dpi']= 300
     plt.rcParams['figure.figsize']= (240, 120)
+    # plt.xticks(rotation=45)
+    # fig.tick_params(labelsize=5)
+    plt.tight_layout()
     plt.savefig(f"../plots/../plots/sc_epicells_aom_noaom_cluster/barplot_proportion_cluster.pdf") 
     plt.clf()
 
 # plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad", "sc_epicells_aom_noaom", "leiden_0.20")
 # plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad", "sc_epicells_aom_noaom", "leiden_0.20")
+plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad", "sc_epicells_aom_noaom", "cluster")
 
 def plot_barplot_markers_vs_groups(adata, markers, group_by):
 
