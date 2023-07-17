@@ -18,3 +18,4 @@ for col in df_dot.columns:
 
 with mpl.rc_context({'axes.facecolor':  'black', 'figure.figsize': [4.5, 5]}):
     sc.pl.spatial(adata, cmap='magma', color=df_dot.columns, ncols=4, size=1.3, img_key='hires', vmin=0, vmax='p99.2')
+

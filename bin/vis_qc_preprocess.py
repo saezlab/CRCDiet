@@ -20,11 +20,13 @@ sc.settings.verbosity = 0
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_qc_preprocess")
+# S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_helminth_qc_preprocess")
 ############################### BOOOORIING STUFF ABOVE ###############################
 
 
+# sample_type = "visium_helminth"
 sample_type = "visium"
-meta = utils.get_meta_data("visium")
+meta = utils.get_meta_data(sample_type)
 print(meta)
 
 
@@ -32,7 +34,7 @@ def get_threshold_dict():
     """This functions keeps the threshold used to filter the data"""
 
     df_threshold = {"mt_thr": 10, # mitochondrial gene threshold
-                # "rp_thr": 3, # ribosomal gene threshold
+                # "rp_thr": 3, # ribosomal gene threshold
                 "gene_thr": 200,
                 "cell_thr": 5}
 
@@ -66,8 +68,8 @@ def filter_cells_genes(adata, sample_id):
     adata.var["rp"] = adata.var_names.str.contains("^Rp[sl]")
 
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
-    mpl.rcParams["image.cmap"]= plt.cm.Spectral
-    sc.pl.spatial(adata, img_key="hires", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 1.0, hspace = 1.0, show=True, save=f"vis_{sample_id}.pdf")
+    # mpl.rcParams["image.cmap"]= plt.cm.Spectral
+    sc.pl.spatial(adata, img_key="hires", cmap = "Spectral", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 1.0, hspace = 1.0, show=True, save=f"vis_{sample_id}.pdf")
     plt.show();
 
     fig, axs = plt.subplots(1, 5, figsize=(30, 10));
