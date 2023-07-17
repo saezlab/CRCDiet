@@ -78,7 +78,14 @@ def read_raw_sc_sample(sample_name):
 
 def read_raw_visium_sample(sample_name):
     '''Read raw visium data'''
-    adata = sc.read_visium(os.path.join(VIS_RAW_DATA_PATH,sample_name , "outs"), count_file="filtered_feature_bc_matrix.h5")
+    adata=None
+    if "Helminth" in sample_name:
+        adata = sc.read_visium(os.path.join(VIS_RAW_DATA_PATH,sample_name ), count_file="h_poly_filtered_feature_bc_matrix.h5")
+        adata = adata[:,adata.var_names.str.contains("refdata-gex-mm10")]
+        adata.var.index = pd.Index(gen.split("refdata-gex-mm10__________")[-1] for gen in adata.var.index.values)
+    else:
+        adata = sc.read_visium(os.path.join(VIS_RAW_DATA_PATH,sample_name , "outs"), count_file="filtered_feature_bc_matrix.h5")
+
     adata.var_names_make_unique()
     return adata
 
@@ -396,6 +403,31 @@ def subset_ann_data(adata_pth, obs_col, group_lst):
     adata = sc.read_h5ad(adata_pth)
     group_lst = group_lst.split(",")
     return adata[adata.obs[obs_col].isin(group_lst),:]
+
+
+def create_ena_read_submission_file(data_path="/Volumes/Transcend/", study="PRJEB64135"):
+    lst_samples_path = [("ERS16007550", "ext_L24854_CD-AOM-DSS-Immune-single-cell_S7"), ("ERS16007552", "ext_L24854_HFD-AOM-DSS-Immune-single-cell_S9"), 
+                        ("ERS16007551", "ext_L24854_LFD-AOM-DSS-Immune-single-cell_S8"), ("ERS15990591", "ext_L24854_CD-AOM-DSS-Epi_plus_DN-single-cell_S10"), 
+                        ("ERS15990593", "ext_L24854_HFD-AOM-DSS-Epi_plus_DN-single-cell_S12"), ("ERS15990592", "ext_L24854_LFD-AOM-DSS-Epi_plus_DN-single-cell_S11"), 
+                        ("ERS15990585", "ext_L24854_CD-no-AOM-DSS-colon-d81-visium_S1"), ("ERS15990586", "ext_L24854_LFD-no-AOM-DSS-colon-d81-visium_S5"), 
+                        ("ERS15990587", "ext_L24854_HFD-no-AOM-DSS-colon-d81-visium_S6"), ("ERS15990588", "ext_L24854_CD-AOM-DSS-colon-d81-visium_S2"), 
+                        ("ERS15990589", "ext_L24854_LFD-AOM-DSS-colon-d81-visium_S3"), ("ERS15990590", "ext_L24854_HFD-AOM-DSS-colon-d81-visium_S4")]
+    for samp, folder in lst_samples_path:
+        path = os.path.join(data_path, folder)
+        for fl in os.listdir(path):
+            if fl.endswith(".fastq.gz"):
+                if "_I1_" in fl:
+                    fl_2 = fl.replace("_I1_", "_I2_")
+                    str_acc = [samp, study, "Illumina NovaSeq 6000", "", "TRANSCRIPTOMIC", "cDNA",	"RNA-Seq",	"PAIRED", fl, "", fl_2, ""]
+                    print("\t".join(str_acc))
+                elif "_R1_" in fl:
+                    fl_2 = fl.replace("_R1_", "_R2_")
+                    str_acc = [samp, study, "Illumina NovaSeq 6000", "", "TRANSCRIPTOMIC", "cDNA",	"RNA-Seq",	"PAIRED", fl, "", fl_2, ""]
+                    print("\t".join(str_acc))
+                else:
+                    pass
+                
+# create_ena_read_submission_file()
 
 
 """sample_pair_list = ["CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN",

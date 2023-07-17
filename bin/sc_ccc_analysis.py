@@ -61,24 +61,17 @@ li.mt.rank_aggregate(adata, groupby='cell_type', use_raw=False, layer="log1p_tra
 
 print(adata.uns["liana_res"].columns)
 
-"""my_p  = li.pl.dotplot(adata = adata,
-              colour='magnitude_rank',
-              size='specificity_rank',
-              inverse_size=True,
-              inverse_colour=True,
-              source_labels=adata.obs["cell_type"].cat.categories,
-              target_labels=adata.obs["cell_type"].cat.categories,
-              top_n=10,
-              orderby='magnitude_rank',
-              orderby_ascending=True,
-              figure_size=(8, 7)
-             )"""
-
 my_p = li.pl.dotplot(adata = adata,
-                        colour='lrscore', # "propportion" mran #take the mean olrs faf
+                        # colour='magnitude_rank', # "propportion" mran #take the mean olrs faf
+                        # colour='magnitude_rank', # "propportion" mran #take the mean olrs faf
+                        # inverse_colour=True,
+                        colour='lr_means', # "propportion" mran #take the mean olrs faf
+
                         # size='spec_weight',
-                        size='cellphone_pvals',
-                        inverse_size=True, # we inverse sign since we want small p-values to have large sizes
+                        # size='lr_means',
+                        size='magnitude_rank',
+                        inverse_size=True,
+                        # inverse_size=True, # we inverse sign since we want small p-values to have large sizes
                         source_labels=adata.obs["cell_type"].cat.categories,
                         target_labels=adata.obs["cell_type"].cat.categories,
                         top_n=25,
@@ -90,6 +83,17 @@ my_p = li.pl.dotplot(adata = adata,
                         filter_lambda=lambda x: x <= 0.05,
                         figure_size=(8, 7)
                         )
+
+adata.uns["liana_res"].to_csv(f"{OUT_DATA_PATH}/{analysis_name}.csv")
+
+"""uniq_pairs = []
+for ind, row in adata.uns["liana_res"].iterrows():
+    str_temp = row["ligand_complex"]+"->"+row["receptor_complex"]
+    if str_temp not in uniq_pairs:
+        uniq_pairs.append(str_temp)
+        print(str_temp)
+    if len(uniq_pairs)==25:
+        break"""
 
 
 my_p = (my_p +
