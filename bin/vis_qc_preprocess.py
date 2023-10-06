@@ -8,6 +8,7 @@ from utils import OUT_DATA_PATH, PLOT_PATH, DATA_PATH
 import plotting
 from tabulate import tabulate
 import warnings
+import argparse
 from utils import printmd
 import matplotlib as mpl
 
@@ -15,27 +16,31 @@ import matplotlib as mpl
 ############################### BOOOORIING STUFF BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
-sc.settings.verbosity = 0
-# Set figure params
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
+sc.settings.verbosity = 0
+
+parser = argparse.ArgumentParser(prog='visium qc preprocess', description='Run QC and preprocess...')
 # Get necesary paths and create folders if necessary
-S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_qc_preprocess")
-# S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths("visium_helminth_qc_preprocess")
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False)
+parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
+
+args = vars(parser.parse_args())
+sample_type = args['sample_type'] # visium, visium_helminth
+analysis_name = args['analysis_name'] # sc_integrate
+S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name) # visium_qc_preprocess, visium_helminth_qc_preprocess
+
 ############################### BOOOORIING STUFF ABOVE ###############################
 
-
-# sample_type = "visium_helminth"
-sample_type = "visium"
+# Read meta data
 meta = utils.get_meta_data(sample_type)
 print(meta)
-
 
 def get_threshold_dict():
     """This functions keeps the threshold used to filter the data"""
 
     df_threshold = {"mt_thr": 10, # mitochondrial gene threshold
                 # "rp_thr": 3, # ribosomal gene threshold
-                "gene_thr": 200,
+                "gene_thr": 300,
                 "cell_thr": 5}
 
     return df_threshold
@@ -84,9 +89,13 @@ def filter_cells_genes(adata, sample_id):
 
     # number og genes at each change it to 300
     # each spot has at least 500 
-    sc.pp.filter_cells(adata, min_genes=300)
+    """sc.pp.filter_cells(adata, min_genes=300)
     sc.pp.filter_cells(adata, min_counts=500)
-    sc.pp.filter_genes(adata, min_cells=5)
+    sc.pp.filter_genes(adata, min_cells=5)"""
+
+    sc.pp.filter_cells(adata, min_genes=df_threshold["gene_thr"])
+    sc.pp.filter_cells(adata, min_counts=500)
+    sc.pp.filter_genes(adata, min_cells=df_threshold["cell_thr"])
 
     adata = adata[adata.obs.pct_counts_mt < df_threshold["mt_thr"], :]
     print("After mit filter ", np.shape(adata.X))
@@ -96,6 +105,8 @@ def filter_cells_genes(adata, sample_id):
     # Filter MALAT1 and Gm42418
     adata = adata[:, ~adata.var_names.str.startswith('Malat1')]
     adata = adata[:, ~adata.var_names.str.startswith('Gm42418')]
+    adata = adata[:, ~adata.var_names.str.startswith('Mtrp')]
+    
     # remove mitochondrial genes
     adata = adata[:,~adata.var["mt"]]
     # remove ribosomal genes
@@ -141,3 +152,5 @@ def create_filtered_adata_files():
         filter_cells_genes(adata, sample_id)
 
 create_filtered_adata_files()
+
+# python vis_qc_preprocess.py -an vis_microbiota_qc_preprocess -st visium_microbiota
