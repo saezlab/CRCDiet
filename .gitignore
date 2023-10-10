@@ -169,3 +169,13 @@ bin/deconv_immune_merged.out
 bin/*.out
 bin/figures
 bin/17_07_2023_pip_freeze.txt
+
+bin/dot/dot.R
+bin/dot/process.R
+bin/dot/run_crcdiet.R
+bin/dot/utilities.R
+bin/jobs/dot_1910949.out
+bin/jobs/dot_1910950.out
+bin/jobs/dot_1910951.out
+bin/jobs/dot_1910952.out
+bin/jobs/submit_dot.sh

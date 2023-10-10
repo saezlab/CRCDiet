@@ -38,6 +38,7 @@ parser.add_argument('-ia', '--infav_path', help='Path to inferred signatures', r
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True) # vis_deconvolution
 parser.add_argument('-nc', '--num_of_cells', default=8, help='Number of cells per location', required=False)
 parser.add_argument('-da', '--detection_alpha', default=20, help='Detection alpha', required=False)
+parser.add_argument('-st', '--sample_type', default="sc", help='Sample type', required=False) # visium, visium_helminth, visium_microbiota
 
 args = vars(parser.parse_args())
 input_path = args['input_path']
@@ -46,6 +47,7 @@ inf_av_path = args['infav_path']
 analysis_name = args['analysis_name'] # vis_deconvolute
 n_cells_per_location = int(args['num_of_cells'])
 detection_alpha = int(args['detection_alpha'])
+sample_type = args['sample_type'] # visium, visium_helminth
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
@@ -56,8 +58,9 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 #############################################
 
 ref_run_name = f'{OUT_DATA_PATH}/cell2location_{analysis_name}'
-run_name = f'{OUT_DATA_PATH}/cell2location_map_{analysis_name}'
+Path(ref_run_name).mkdir(parents=True, exist_ok=True)
 
+# sample_type = "visium_helminth"
 
 # "../data/out_data/cell2location_atlas/inf_aver.csv"
 # "../data/out_data/cell2location_vis_immune_deconvolution/inf_aver.csv"
@@ -68,7 +71,8 @@ out_fl_name = "all_sample_deconv_"+str(n_cells_per_location)+"_"+str(detection_a
 
 # adata_vis = sc.read_h5ad(vis_path)
 # adata_vis = utils.get_filtered_concat_data("visium_aom")
-adata_vis = utils.get_filtered_concat_data("visium_noaom")
+# adata_vis = utils.get_filtered_concat_data("visium_noaom")
+adata_vis = utils.get_filtered_concat_data(sample_type)
 adata_vis.var.index = pd.Index(gen.upper() for gen in adata_vis.var.index.values)
 adata_vis.var_names_make_unique()
 print(adata_vis.var.columns)
@@ -118,6 +122,8 @@ adata_vis = mod.export_posterior(
 # Save model
 mod.save(f"{ref_run_name}", overwrite=True)
 
+
+
 # mod = cell2location.models.Cell2location.load(f"{run_name}", adata_vis)
 
 for col in adata_vis.var.columns:
@@ -129,19 +135,18 @@ for col in adata_vis.var.columns:
 adata_file = f"{ref_run_name}/{out_fl_name}.h5ad"
 adata_vis.write(adata_file)
 
-
 # add 5% quantile, representing confident cell abundance, 'at least this amount is present',
 # to adata.obs with nice names for plotting
 adata_vis.obs[adata_vis.uns['mod']['factor_names']] = adata_vis.obsm['q05_cell_abundance_w_sf']
 
 samples = list(adata_vis.obs["condition"].cat.categories)
 
-
+    
 # slide = select_slide(adata_vis,sample, "condition")
 
 lst_cell_types = list(adata_vis.uns['mod']['factor_names'])
 
-meta = utils.get_meta_data("visium")
+meta = utils.get_meta_data(sample_type)
 
 for ind, row in meta.iterrows():
         
