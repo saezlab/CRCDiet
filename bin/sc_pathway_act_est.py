@@ -46,7 +46,7 @@ samples = args['samples']
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
-meta = utils.get_meta_data(sample_type)
+# meta = utils.get_meta_data(sample_type)
 
 adata_merged = sc.read_h5ad(input_path)
 
@@ -95,10 +95,10 @@ acts = dc.get_acts(adata_merged, obsm_key='mlm_estimate')
 sc.pl.umap(acts, color=adata_merged.obsm['mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est')
 
 # This is done for ../data/out_data/sc_epicells_integrated_clustered.h5ad
-for cond in acts.obs["condition"].cat.categories:
+"""for cond in acts.obs["condition"].cat.categories:
     sc.pl.umap(acts[acts.obs["condition"]==cond,:], size=20, color=adata_merged[adata_merged.obs["condition"]==cond,:].obsm['mlm_estimate'].columns, vcenter=0, cmap='coolwarm', save=f'{sample_type}_pathway_activity_est_{cond}')
     
-
+"""
 
 mean_acts = dc.summarize_acts(acts, groupby=group_by, min_std=0)
 
@@ -118,3 +118,4 @@ plt.show();
 
 
 # python sc_pathway_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_pathway_act_est -gb cell_type
+# python sc_pathway_act_est.py -i ../data/out_data/atlas_bcells_subclustered_integrated_subclustered.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_pathway_act_est -gb cell_type_subclustered

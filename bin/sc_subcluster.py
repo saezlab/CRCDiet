@@ -93,4 +93,6 @@ adata_subclust.write(os.path.join(output_path, f'{sample_type}_integrated_subclu
 adata.write(os.path.join(output_path, f'{sample_type}_integrated_subclustered.h5ad'))
 
 # python sc_subcluster.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data -st sc  -an sc_tcells_subcluster
+# python sc_subcluster.py -i ../data/out_data/sc_integrated_clustered.h5ad -o ../data/out_data -st sc  -an sc_tcells_subcluster
 
+# python sc_subcluster_bcells.py -i /Users/ahmet/Desktop/atlas_bcell_populations_corrected.h5ad -o /Users/ahmet/Desktop/ -st atlas_bcells  -an atlas_bcells_subcluster -cc cell_type -res 0.2,0.1 -cg "B cells-1,B cells-2" --save

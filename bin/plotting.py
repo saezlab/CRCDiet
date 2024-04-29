@@ -83,7 +83,7 @@ def plot_ncell_diff(data, ax, labels, n_rem, fontsize=11):
     ax.tick_params(axis='x', rotation=45)
     
 def plot_cell_type_proportion(cond_list, cond_name ="Immune", adata=None, obs_col = "cell_type_0.20", sample_type="sc"):
-    input_path = "/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_integrated_cluster_scannot.h5ad"
+    input_path = "../data/out_data/sc_integrated_cluster_scannot.h5ad"
     sample_type="sc"
     adata = sc.read_h5ad(input_path)
     meta = utils.get_meta_data(sample_type)
@@ -157,6 +157,46 @@ def plot_cell_type_proportion(cond_list, cond_name ="Immune", adata=None, obs_co
 # plot_cell_type_proportion("CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", cond_name ="epithelial", adata=None, obs_col = "major_cell_types", sample_type="sc")
 # plot_cell_type_proportion("CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", cond_name ="immune", adata=None, obs_col = "major_cell_types", sample_type="sc")
 
+def cell_type_proportion(cell_types="epi", sample_type="sc"):
+    epi_samples = ["CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN"]
+    immune_samples = ["CD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune"]
+    input_path = "../data/out_data/sc_integrated_cluster_scannot.h5ad"
+    immune_cell_types = [ "T cells", "Plasma cells", "Mast cells", "Neutrophils", "ILC2",  "Dendritic cells", "Myeloid cells", "B cells"]
+    epithelial_cell_types = ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"]
+    stroma_cell_types = ["Stroma", "Myofibroblasts", "Endothelial cells"]
+    sample_type="sc"
+    adata = sc.read_h5ad(input_path)
+    if cell_types=="epi":
+        adata = adata[adata.obs["condition"].isin(epi_samples),:]
+        adata=adata[adata.obs["cell_type_0.20"].isin(epithelial_cell_types),:]
+        
+    elif cell_types=="stroma":
+        adata = adata[adata.obs["condition"].isin(epi_samples),:]
+        adata=adata[adata.obs["cell_type_0.20"].isin(stroma_cell_types),:]
+        """print("stroma", adata)
+        for cat in stroma_cell_types:
+            print(cat)
+            print(adata[adata.obs["cell_type_0.20"]==cat,:  ])"""
+    elif cell_types=="immune":
+        adata = adata[adata.obs["condition"].isin(immune_samples),:]
+        adata=adata[adata.obs["cell_type_0.20"].isin(immune_cell_types),:]
+    
+    # print(adata)
+    meta = utils.get_meta_data(sample_type)
+    condition = list(np.unique(meta['condition']))
+    cell_proportion_df = pd.crosstab(adata.obs['cell_type_0.20'],adata.obs['condition'], normalize='columns').T
+    cell_proportion_df.plot(kind='bar', stacked=True)
+    print(list(cell_proportion_df.index))
+    plt.xticks([0,1,2], [cond.split("-")[0] for cond in list(cell_proportion_df.index)], fontsize=14)
+    plt.tight_layout()
+    cell_proportion_df.to_csv(f"../plots/sc_cell_type_proportions/{cell_types}.csv")
+    plt.savefig(f"../plots/sc_cell_type_proportions/{cell_types}.pdf", dpi=300)
+    # plt.show()
+    # print(cell_proportion_df)
+
+cell_type_proportion(cell_types="epi")
+cell_type_proportion(cell_types="stroma")
+cell_type_proportion(cell_types="immune")
 
 def plot_ngene_diff(adata, ax, fontsize=11):
     ax.set_title('Num genes filtered', fontsize=fontsize)
@@ -732,7 +772,7 @@ def plot_barplot_cell_proportion_in_cluster(adata_path, sample_type, obs_cluster
 
 # plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_integrated_clustered.h5ad", "sc_epicells_aom_noaom", "leiden_0.20")
 # plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_integrated_clustered.h5ad", "sc_epicells_aom_noaom", "leiden_0.20")
-plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad", "sc_epicells_aom_noaom", "cluster")
+# plot_barplot_cell_proportion_in_cluster("/Users/ahmet/Google Drive/Projects/saezlab/CRCDiet/data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad", "sc_epicells_aom_noaom", "cluster")
 
 def plot_barplot_markers_vs_groups(adata, markers, group_by):
 

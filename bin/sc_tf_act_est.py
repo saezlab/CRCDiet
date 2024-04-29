@@ -44,7 +44,7 @@ group_by = args['group_by']
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ############################### 
 
-meta = utils.get_meta_data(sample_type)
+# meta = utils.get_meta_data(sample_type)
 
 adata_input = sc.read_h5ad(input_path)
 # adata_integ_clust = sc.read_h5ad(os.path.join(output_path, f'{sample_type}_integrated_cluster_scannot.h5ad'))
@@ -90,6 +90,8 @@ plt.savefig(f"{PLOT_PATH}/{sample_type}_{group_by}_tf_activity_est_cmap.pdf")
 
 # python sc_tf_act_est.py -i ../data/out_data/atlas_bcell_populations.h5ad -o ../data/out_data -st atlas -an atlas_bcell_populations_tf_act_est -gb cell_type
 # python sc_tf_act_est.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data/ -an sc_epi_cells_aom_noaom_tf_act_est -gb cell_type -st sc_epicells_aom_noaom
+
+# python sc_tf_act_est.py -i ../data/out_data/atlas_bcells_subclustered_integrated_subclustered.h5ad -o ../data/out_data/ -an atlas_bcell_populations_tf_act_est -gb cell_type_subclustered -st atlas
 
 
 

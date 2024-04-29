@@ -475,3 +475,158 @@ for ind, c_type in enumerate(c_type_list12):
 """
 
 
+def get_subset_adata(adata, cell_types="epi", sample_type="sc"):
+
+    epi_samples = ["CD-AOM-DSS-Epi_plus_DN", "LFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN"]
+    immune_samples = ["CD-AOM-DSS-Immune", "LFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune"]
+
+    samples = []
+    if cell_types=="epi" or cell_types=="stroma":
+        samples = epi_samples
+    else:
+        samples =immune_samples
+    
+    
+    if cell_types=="epi" or cell_types=="stroma":
+        samples = epi_samples
+    else:
+        samples = immune_samples
+    
+    # input_path = "../data/out_data/sc_integrated_cluster_scannot.h5ad"
+    immune_cell_types = [ "T cells", "Plasma cells", "Mast cells", "Neutrophils", "ILC2",  "Dendritic cells", "Myeloid cells", "B cells"]
+    epithelial_cell_types = ["Tuft cells", "Goblet cells", "Prolif.", "Enteroendocrine", "Keratynocytes", "Prolif. + Mature enterocytes"]
+    stroma_cell_types = ["Stroma", "Myofibroblasts", "Endothelial cells"]
+    sample_type="sc"
+    # adata = sc.read_h5ad(input_path)
+    if cell_types=="epi":
+        adata = adata[adata.obs["condition"].isin(samples),:]
+        adata=adata[adata.obs["cell_type_0.20"].isin(epithelial_cell_types),:]
+        
+    elif cell_types=="stroma":
+        adata = adata[adata.obs["condition"].isin(samples),:]
+        adata=adata[adata.obs["cell_type_0.20"].isin(stroma_cell_types),:]
+        # print("stroma", adata)
+        # for cat in stroma_cell_types:
+            # print(cat)
+            # print(adata[adata.obs["cell_type_0.20"]==cat,:  ])
+    elif cell_types=="immune":
+        adata = adata[adata.obs["condition"].isin(samples),:]
+        adata=adata[adata.obs["cell_type_0.20"].isin(immune_cell_types),:]
+
+    return adata
+
+
+# Create proportion tables for each list
+def create_proportion_table(data):
+    categories = set(data)
+    freq_table = {}
+    for category in categories:
+        freq_table[category] = data.count(category)/len(data)
+        # print(category, data.count(category), len(data))
+    return freq_table
+
+def cal_significance_proportions(list1, list2, num_permutations=10000):
+    freq_table1 = create_proportion_table(list1)
+    freq_table2 = create_proportion_table(list2)
+    # print(freq_table1)
+    # Create a list of all unique categories
+    unique_categories = set(freq_table1.keys()).union(set(freq_table2.keys()))
+
+    # Initialize a dictionary to store p-values for each category
+    p_values = {}
+
+
+    # Perform the permutation test for each category individually
+    for category in unique_categories:
+        # print(category, freq_table1[category], freq_table2[category])
+        observed_diff = freq_table1.get(category, 0) - freq_table2.get(category, 0)
+        # print(observed_diff)
+
+        all_data = list1 + list2
+        num_obs = len(list1)
+        num_perm = 0
+        num_of_rare_or_rarer = 0.0
+        list_of_means = []
+        for _ in range(num_permutations):
+            np.random.shuffle(all_data)
+            # print(all_data)
+            perm_list1 = all_data[:num_obs]
+            perm_list2 = all_data[num_obs:]
+
+            perm_diff = perm_list1.count(category)/len(perm_list1) - perm_list2.count(category)/len(perm_list2)
+            list_of_means.append(perm_diff)
+            """print("First proportion, second p", perm_list1.count(category)/len(perm_list1), perm_list2.count(category)/len(perm_list2))
+            print("Cat, perm_diff, obs diff", category, perm_diff, observed_diff)
+            print("observed_diff", observed_diff)
+            print("Perm. diff", perm_diff)"""
+            """if observed_diff <0.0 and perm_diff<observed_diff:
+
+                num_of_rare_or_rarer += 1
+                # print("First ", category,  observed_diff, perm_diff)
+            elif observed_diff >=0.0 and perm_diff>observed_diff:
+                num_of_rare_or_rarer +=1
+                # print("Second ", category,  observed_diff, perm_diff)"""
+        list_of_means = np.array(list_of_means)
+        num_of_rare_or_rarer2 = 0.0
+        
+        if observed_diff <0.0:
+            num_of_rare_or_rarer_l = np.sum(list_of_means<observed_diff)
+            num_of_rare_or_rarer_r = np.sum(list_of_means>np.abs(observed_diff))
+        else:
+            num_of_rare_or_rarer_l = np.sum(list_of_means<-1*observed_diff)
+            num_of_rare_or_rarer_r = np.sum(list_of_means>np.abs(observed_diff))
+        
+        num_of_rare_or_rarer = num_of_rare_or_rarer_l + num_of_rare_or_rarer_r
+        # p_val = float(num_of_rare_or_rarer2)/float(num_permutations)
+        # print("p_val", category, p_val)
+        # plt.hist(list_of_means[100:])
+        # plt.show()
+        # print(num_of_rare_or_rarer)
+        p_value = (num_of_rare_or_rarer + 1) / (num_permutations + 1)
+        p_values[category] = p_value
+
+    # Correct p-values using the Benjamini-Hochberg procedure
+    p_values_sorted = {k: v for k, v in sorted(p_values.items(), key=lambda item: item[1])}
+    q_values = {}
+    m = len(p_values_sorted)
+    for i, (category, p) in enumerate(p_values_sorted.items()):
+        q_values[category] = (p * m) / (i + 1)
+
+    # Set a significance level (e.g., 0.01)
+    significance_level = 0.01
+
+    # Report whether the change in proportion is statistically significant for each category
+    for category, q in q_values.items():
+        if q < significance_level:
+            print(f"Category: {category} - q-value: {q:.4f} (Significant change)")
+        else:
+            print(f"Category: {category} - q-value: {q:.4f} (No significant change)")
+
+    # Report whether the change in proportion is statistically significant for each category
+    for category, p in p_values.items():
+        if p < significance_level:
+            print(f"Category: {category} - p-value: {p} (Significant change)")
+        else:
+            print(f"Category: {category} - p-value: {p} (No significant change)")
+
+
+
+def get_proportion_significance(cell_types="epi", conditions="CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN"):
+
+    adata = get_subset_adata(cell_types, sample_type="sc")
+    lst_conditions = conditions.split(",")
+    lst_cell_types_1 = list(adata[adata.obs["condition"]==lst_conditions[0],:].obs["cell_type_0.20"].values)
+    lst_cell_types_2 = list(adata[adata.obs["condition"]==lst_conditions[1],:].obs["cell_type_0.20"].values)
+    freq_table1 = create_proportion_table(lst_cell_types_1)
+    freq_table2 = create_proportion_table(lst_cell_types_2)
+    print(lst_conditions[0], freq_table1)
+    print(lst_conditions[1], freq_table2)
+    # cal_significance_proportions(lst_cell_types_1, lst_cell_types_2, num_permutations=10000)
+
+# get_proportion_significance()
+# get_proportion_significance(cell_types="immune", conditions="CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune")
+# get_proportion_significance(cell_types="immune", conditions="CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune")"""
+
+
+sample_pair_list = ["CD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN", "CD-AOM-DSS-Epi_plus_DN,HFD-AOM-DSS-Epi_plus_DN", "HFD-AOM-DSS-Epi_plus_DN,LFD-AOM-DSS-Epi_plus_DN",
+                    "CD-AOM-DSS-Immune,LFD-AOM-DSS-Immune", "CD-AOM-DSS-Immune,HFD-AOM-DSS-Immune", "HFD-AOM-DSS-Immune,LFD-AOM-DSS-Immune"]
