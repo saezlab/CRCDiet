@@ -57,8 +57,12 @@ adata_integ_clust = sc.read_h5ad(input_path)
 if l_param:
     l_param = f"{l_param:.2f}"
 
+progeny = None
 # Retrieve PROGENy model weights
-progeny = dc.get_progeny(organism='mouse', top=500)
+if os.path.exists("../data/progeny.csv"):
+    progeny = pd.read_csv("../data/progeny.csv")
+else:
+    progeny = dc.get_progeny(organism='mouse', top=500)
 
 progeny["target"] = progeny["target"].str.capitalize()
 # print(progeny)
@@ -72,6 +76,8 @@ adata.layers['counts'] = adata.X
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 adata.layers['normalized'] = adata.X
+diet_lst = [col.split("-")[0] for col in adata.obs["condition"].values]
+adata.obs["diet"] = diet_lst
 
 # print(set(adata.obs["condition"].values))
 for ind in range(6):

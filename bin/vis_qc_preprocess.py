@@ -69,13 +69,13 @@ def filter_cells_genes(adata, sample_id):
 
     print("Calculating QC metrics...")
     # calculate qc metrics
-    adata.var["mt"] = adata.var_names.str.contains("^mt-")
-    adata.var["rp"] = adata.var_names.str.contains("^Rp[sl]")
+    adata.var["mt"] = adata.var_names.str.lower().str.contains("^mt-")
+    adata.var["rp"] = adata.var_names.str.lower().str.contains("^rp[sl]")
 
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "rp"], inplace=True)
     # mpl.rcParams["image.cmap"]= plt.cm.Spectral
-    sc.pl.spatial(adata, img_key="hires", cmap = "Spectral", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 1.0, hspace = 1.0, show=True, save=f"vis_{sample_id}.pdf")
-    plt.show();
+    #sc.pl.spatial(adata, img_key="hires", cmap = "Spectral", color = ["total_counts", "n_genes_by_counts",'pct_counts_mt', 'pct_counts_rp'],  size=1.25, alpha_img=0.5, wspace = 1.0, hspace = 1.0, show=True, save=f"vis_{sample_id}.pdf")
+    #plt.show();
 
     fig, axs = plt.subplots(1, 5, figsize=(30, 10));
     sc.pl.highest_expr_genes(adata, n_top=20, show=False, ax=axs[0])
@@ -103,9 +103,9 @@ def filter_cells_genes(adata, sample_id):
     # print("After ribosomal filter ", np.shape(adata.X))
 
     # Filter MALAT1 and Gm42418
-    adata = adata[:, ~adata.var_names.str.startswith('Malat1')]
-    adata = adata[:, ~adata.var_names.str.startswith('Gm42418')]
-    adata = adata[:, ~adata.var_names.str.startswith('Mtrp')]
+    adata = adata[:, ~adata.var_names.str.lower().str.startswith('malat1')]
+    adata = adata[:, ~adata.var_names.str.lower().str.startswith('gm42418')]
+    adata = adata[:, ~adata.var_names.str.lower().str.startswith('mtrp')]
     
     # remove mitochondrial genes
     adata = adata[:,~adata.var["mt"]]
@@ -141,16 +141,19 @@ def filter_cells_genes(adata, sample_id):
 
 
 
-def create_filtered_adata_files():
+def create_filtered_adata_files(raw=True):
 
     for _, row in meta.iterrows():
     
         sample_id = row["sample_id"]
         condition = row["condition"]
-        adata = utils.read_raw_visium_sample(sample_id)
+        if raw:
+            adata = utils.read_raw_visium_sample(sample_id)
+        else:
+            adata = sc.read_h5ad(f"/net/data.isilon/ag-saez/bq_arifaioglu/home/Projects/CRCDiet/data/out_data/{sample_id}.h5ad")
         printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
         filter_cells_genes(adata, sample_id)
 
-create_filtered_adata_files()
+create_filtered_adata_files(raw=False)
 
 # python vis_qc_preprocess.py -an vis_microbiota_qc_preprocess -st visium_microbiota
