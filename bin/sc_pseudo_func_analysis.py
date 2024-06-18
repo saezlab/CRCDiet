@@ -1,7 +1,6 @@
 from genericpath import sameopenfile
 from operator import index
 import matplotlib.pyplot as plt
-from pathlib import Path
 import seaborn as sns 
 import decoupler as dc  
 import scanpy as sc
@@ -10,11 +9,8 @@ import numpy as np
 import argparse
 import os
 import sys
-from sklearn.metrics import silhouette_score, pairwise_distances
 import sys
 import warnings
-from utils import printmd
-import anndata
 import utils
 import matplotlib as mpl
 from copy import deepcopy
@@ -57,17 +53,20 @@ adata_integ_clust = sc.read_h5ad(input_path)
 if l_param:
     l_param = f"{l_param:.2f}"
 
-progeny = None
+prior_net = None
 # Retrieve PROGENy model weights
-if os.path.exists("../data/progeny.csv"):
-    progeny = pd.read_csv("../data/progeny.csv")
+if os.path.exists("../data/dorothea.csv"):
+    prior_net = pd.read_csv("../data/dorothea.csv")
 else:
-    progeny = dc.get_progeny(organism='mouse', top=500)
+    prior_net = dc.get_progeny(organism='mouse', top=500)
 
-progeny["target"] = progeny["target"].str.capitalize()
-# print(progeny)
+prior_net["target"] = prior_net["target"].str.upper()
+prior_net["source"] = prior_net["source"].str.upper()
 
 adata = utils.get_filtered_concat_data(sample_type)
+
+# filter out the remaining cells
+# adata = adata[adata.obs_names.isin(adata_integ_clust.obs_names),:]
 
 # Store raw counts in layers
 adata.layers['counts'] = adata.X
@@ -76,8 +75,8 @@ adata.layers['counts'] = adata.X
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 adata.layers['normalized'] = adata.X
-diet_lst = [col.split("-")[0] for col in adata.obs["condition"].values]
-adata.obs["diet"] = diet_lst
+# diet_lst = [col.split("-")[0] for col in adata.obs["condition"].values]
+# adata.obs["diet"] = diet_lst
 
 # print(set(adata.obs["condition"].values))
 for ind in range(6):
@@ -88,36 +87,45 @@ for ind in range(6):
 # adata.obs[f"leiden_{l_param}"] = adata_integ_clust.obs[f"leiden_{l_param}"]
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 adata.obs[group_col] = adata_integ_clust.obs[group_col] # f"cell_type_{l_param}"
+adata.obs["diet"] = adata_integ_clust.obs["diet"] # f"cell_type_{l_param}"
 
+adata.var_names = [vn.upper() for vn in adata.var_names]
 # adata.obs['selection'] = pd.Categorical(adata.obs[f"leiden_{l_param}"]=="1")
 # adata.obs['selection'] = adata.obs['selection'].astype(str)
 
 # "{'CD-AOM-DSS-Epi_plus_DN', 'CD-AOM-DSS-Immune', 'HFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Immune', 'LFD-AOM-DSS-Epi_plus_DN', 'HFD-AOM-DSS-Epi_plus_DN'}"
+padata = dc.get_pseudobulk(adata, sample_col='sample_id', groups_col=group_col, layer='counts', min_prop=0.2, min_smpls=3)
+sc.pp.normalize_total(padata, target_sum=1e4)
+sc.pp.log1p(padata)
 
-padata = dc.get_pseudobulk(adata, sample_col='condition', groups_col=group_col, layer='counts', min_prop=0.2, min_smpls=3)
+print(padata)
 
-logFCs, pvals = dc.get_contrast(adata,
+logFCs, pvals = dc.get_contrast(padata,
                                 group_col=group_col, # f"cell_type_{l_param}"
-                                condition_col='condition',
+                                condition_col='diet',
                                 # condition='HFD-AOM-DSS-Epi_plus_DN',
                                 # reference='LFD-AOM-DSS-Epi_plus_DN',
                                 condition= condition, # 'HFD-AOM-DSS-Immune',
                                 reference= reference,  #'LFD-AOM-DSS-Immune',
                                 method='t-test'
                                )
-
+print(logFCs)
+print(pvals)
 deg = dc.format_contrast_results(logFCs, pvals)
-# print(deg)
-"""
-How the activities changes in "condition" with respect to "reference"
-"""
 
+# logFCs[logFCs.columns] = logFCs[logFCs.columns].apply(pd.to_numeric)
+# deg = dc.format_contrast_results(logFCs, pvals)
+# print(deg[deg["contrast"] == 'Epithelial cells'].head(50))
+
+# print(deg)
+
+# How the activities changes in "condition" with respect to "reference"
 # Infer pathway activities with mlm
-pathway_acts, pathway_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=progeny, source='source', target='target', weight='weight')
+"""pathway_acts, pathway_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=prior_net, source='source', target='target', weight='weight')
 
 sns.clustermap(pathway_acts, center=0, cmap='coolwarm')
 plt.savefig(f"{PLOT_PATH}/comparative_pathway_act_est_{condition}_wrt_{reference}_{group_col}.pdf")
-plt.show();
+plt.show();"""
 
 # dorothea = dc.get_dorothea()
 """
@@ -139,16 +147,16 @@ sc.pl.umap(adata, size=1.5 )"""
 
 ## Dorothea Part
 
-"""# Retrieve DoRothEA gene regulatory network
-dorothea = dc.get_dorothea()
-dorothea["target"] = dorothea["target"].str.capitalize()
+# Retrieve DoRothEA gene regulatory network
+# dorothea = dc.get_dorothea()
+
 
 # Infer pathway activities with mlm
-tf_acts, tf_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=dorothea, source='source', target='target', weight='weight')
+tf_acts, tf_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=prior_net, source='source', target='target', weight='weight')
 tf_acts
 
 # Get top 5 most active/inactive sources
-top = 5
+top = 10
 top_idxs = set()
 for row in tf_acts.values:
     sort_idxs = np.argsort(-np.abs(row))
@@ -159,9 +167,10 @@ names = tf_acts.index.values
 top = pd.DataFrame(tf_acts.values[:,top_idxs], columns=top_names, index=names)
 
 # Plot
-sns.clustermap(top, center=0, cmap='coolwarm')
+sns.clustermap(top, center=0, cmap='coolwarm', figsize=(15,15))
+plt.savefig(f"{PLOT_PATH}/comparative_tf_act_est_{condition}_wrt_{reference}_{group_col}.pdf")
 plt.show()
-"""
+
 
 
 # Comparative Pseudobulk Pathway Analysis - Major Cell Types <a class="anchor" id="seventh-bullet"></a>
@@ -187,3 +196,11 @@ plt.show()
 # python sc_pseudo_func_analysis.py -i ../data/out_data/_integrated_cluster_scannot.h5ad -o ../data/out_data
 
 # jupyter nbconvert sc_00_pipeline.ipynb --to html_embed --template toc2 --output ../docs/crcdiet_pipelines/crcdiet_sc_pipeline.html 
+
+# python sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot_diet_annot.h5ad -o ../data/out_data -an 'sc_pseudobulk_functional_annot' -gc 'major_cell_types' -con HFD -ref LFD
+# python sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot_diet_annot.h5ad -o ../data/out_data -an 'sc_pseudobulk_functional_annot' -gc 'major_cell_types' -con HFD -ref CD
+# python sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot_diet_annot.h5ad -o ../data/out_data -an 'sc_pseudobulk_functional_annot' -gc 'major_cell_types' -con LFD -ref CD
+
+# python sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot_diet_annot.h5ad -o ../data/out_data -an 'sc_pseudobulk_functional_annot' -gc 'major_cell_types' -con HFD -ref LFD
+# python sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot_diet_annot.h5ad -o ../data/out_data -an 'sc_pseudobulk_functional_annot' -gc 'major_cell_types' -con HFD -ref CD
+# python sc_pseudo_func_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot_diet_annot.h5ad -o ../data/out_data -an 'sc_pseudobulk_functional_annot' -gc 'major_cell_types' -con LFD -ref CD

@@ -12,9 +12,10 @@ import warnings
 from pathlib import Path
 import matplotlib as mpl
 import math
+from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from utils import printmd
-
+import seaborn as sns
 ############################### BOOOORIING STUFF BELOW ############################### 
 # Warning settings
 warnings.simplefilter(action='ignore')
@@ -35,11 +36,11 @@ analysis_name = args['analysis_name']
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
 ############################### BOOOORIING STUFF ABOVE ###############################
 
-sample_type = "sc"
+sample_type = "visium"
 # Load meta data
 meta = utils.get_meta_data(sample_type)
-markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
-markers = list(set(markers_df["genesymbol"].str.capitalize()))
+# markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
+# markers = list(set(markers_df["genesymbol"].str.capitalize()))
 
 def run_NMF(adataX, n_components=2, random_state=0):
     """Run NMF on adata
@@ -97,6 +98,7 @@ def apply_nmf_on_merged_data(random_state):
         adata_cc_merged.var[f"H20_{factor_ind+1}"] = H20[factor_ind , :]
     
     utils.write_pickle(os.path.join(OUT_DATA_PATH,f'adata_merged_sct_normalized_nmf_{random_state}.pckl'), adata_cc_merged)
+    return adata_cc_merged
     
 
 def analyse_nmf_results(random_state):
@@ -158,9 +160,9 @@ def analyse_nmf_results(random_state):
             sample_id = row["sample_id"]
             condition = row["condition"]
             
-            mpl.rcParams["image.cmap"]= plt.cm.magma_r
+            # mpl.rcParams["image.cmap"]= mpl.colormaps['viridis']# plt.cm.magma_r
             mpl.rcParams['axes.titlesize'] = 30
-            sc.pl.spatial(processed_sample_dict[sample_id], img_key="hires", title=condition, color=f"W20_{factor_ind}", size=1.25, alpha_img=0.3, ax = axsLeft[fig_row][fig_col], show=False)
+            sc.pl.spatial(processed_sample_dict[sample_id], img_key="hires", title=condition, color=f"W20_{factor_ind}", cmap="magma_r", size=1.25, alpha_img=0.3, ax = axsLeft[fig_row][fig_col], show=False)
             cbar = axsLeft[fig_row][fig_col].collections[0].colorbar
             cbar.set_ticks([])
             cbar = None
@@ -188,7 +190,7 @@ def analyse_nmf_results(random_state):
         plt.yticks(fontsize=30)
         axsRight.barh(genes, loadings, color='grey')
         plt.savefig(f'{PLOT_PATH}/{sample_type}_factor_{factor_ind}.pdf');
-        plt.show();
+        # plt.show();
         print()
         
 
@@ -245,5 +247,71 @@ def get_merged_adata():
     return adata
 
 
-apply_nmf_on_merged_data(42)
-analyse_nmf_results(42)
+def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
+
+    from PyComplexHeatmap import ClusterMapPlotter
+    sns.set_style("whitegrid", {'axes.grid' : False})
+    
+
+    factor_columns = [f"W{n_of_factors}_{i}" for i in range(1, n_of_factors+1)]
+    cell_type_summarised_data = adata.obs.groupby(["leiden_0.10"]).mean()
+    cell_type_summarised_data = cell_type_summarised_data[factor_columns]
+    factor_columns = [f"Factor {i}" for i in range(1, n_of_factors+1)]
+    scaler = MinMaxScaler(feature_range=(-2,2))
+    scaler.fit(cell_type_summarised_data)
+    scaled_factors = scaler.transform(cell_type_summarised_data)
+    # sns.clustermap(scaled_factors.T, cmap="viridis", xticklabels=cell_type_summarised_data.index.values, yticklabels=factor_columns)
+    # plt.savefig(f'{PLOT_PATH}/{sample_type}_{n_of_factors}_factors_heatmap_celltype.pdf');
+
+    ct_df = pd.DataFrame(scaled_factors.T, index=factor_columns,   columns=cell_type_summarised_data.index.values)
+    
+    factor_columns = [f"W{n_of_factors}_{i}" for i in range(1, n_of_factors+1)]
+    cond_summarised_data = adata.obs.groupby(["condition"]).mean()
+    cond_summarised_data = cond_summarised_data[factor_columns]
+    factor_columns = [f"Factor {i}" for i in range(1, n_of_factors+1)]
+    scaler = MinMaxScaler(feature_range=(-2,2))
+    scaler.fit(cond_summarised_data)
+    scaled_factors = scaler.transform(cond_summarised_data)
+    # sns.clustermap(scaled_factors.T, cmap="viridis", xticklabels=cond_summarised_data.index.values, yticklabels=factor_columns)
+    # plt.savefig(f'{PLOT_PATH}/{sample_type}_{n_of_factors}_factors_heatmap_sample.pdf');
+    cond_df = pd.DataFrame(scaled_factors.T, index=factor_columns,   columns=cond_summarised_data.index.values)
+
+    merged_df = pd.concat([ct_df, cond_df], axis=1) # pd.merge(ct_df, cell_type_summarised_data, right_index=True) 
+    print()
+    sep_df = pd.DataFrame(['GroupA'] * len(ct_df.columns) + ['GroupB']*len(cond_df.columns), index= merged_df.columns, columns=['AB'])
+
+    plt.figure(figsize=(16, 4))
+    if n_of_factors==20:
+        plt.figure(figsize=(16, 16))
+
+    cm = ClusterMapPlotter(
+        data=merged_df,
+        col_cluster=True,row_cluster=True,
+        col_split=sep_df.AB,
+        col_split_gap=1.5,row_split_gap=0.8,
+        label='values',row_dendrogram=True,
+        show_rownames=True,show_colnames=True,
+        tree_kws={'row_cmap': 'Set1'},verbose=0,legend_gap=5,
+        cmap='viridis',xticklabels_kws={'labelrotation':-90,'labelcolor':'black'},
+        ylabel="Factors",)
+    if major_cell_type:
+        
+        plt.savefig(f'{PLOT_PATH}/{sample_type}_{major_cell_type}_{n_of_factors}_factors_complex_heatmap.pdf', bbox_inches='tight', dpi=300);
+    else:   
+        plt.savefig(f'{PLOT_PATH}/{sample_type}_{n_of_factors}_factors_complex_heatmap.pdf', bbox_inches='tight', dpi=300);
+
+
+
+
+"""adata_cc_merged = apply_nmf_on_merged_data(42)
+for col in adata_cc_merged.var.columns:
+    if col.startswith("mt-") or col.startswith("rp-"):
+        adata_cc_merged.var[col] = adata_cc_merged.var[col].astype(str)
+adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'adata_cc_merged_nnmf.h5ad'))
+analyse_nmf_results(42)"""
+adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'adata_cc_merged_nnmf.h5ad'))
+print(adata_cc_merged.obs)
+adata_integ_clust = sc.read_h5ad("../data/out_data/visium_integrated_clustered.h5ad")
+adata_cc_merged.obs["leiden_0.10"] = adata_integ_clust.obs["leiden_0.10"]
+adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'adata_cc_merged_nnmf.h5ad'))
+generate_heatmap(adata_cc_merged, n_of_factors=20)

@@ -39,7 +39,6 @@ def get_threshold_dict():
     """This functions keeps the threshold used to filter the data"""
 
     df_threshold = {"mt_thr": 10, # mitochondrial gene threshold
-                # "rp_thr": 3, # ribosomal gene threshold
                 "gene_thr": 300,
                 "cell_thr": 5}
 
@@ -157,3 +156,4 @@ def create_filtered_adata_files(raw=True):
 create_filtered_adata_files(raw=False)
 
 # python vis_qc_preprocess.py -an vis_microbiota_qc_preprocess -st visium_microbiota
+# python vis_qc_preprocess.py -an visium_qc_preprocess -st visium
