@@ -55,14 +55,17 @@ if l_param:
 
 prior_net = None
 # Retrieve PROGENy model weights
-if os.path.exists("../data/dorothea.csv"):
+"""if os.path.exists("../data/dorothea.csv"):
     prior_net = pd.read_csv("../data/dorothea.csv")
 else:
-    prior_net = dc.get_progeny(organism='mouse', top=500)
+    prior_net = dc.get_progeny(organism='mouse', top=500)"""
+
+prior_net = dc.get_progeny(organism='mouse', top=500)
 
 prior_net["target"] = prior_net["target"].str.upper()
-prior_net["source"] = prior_net["source"].str.upper()
+# prior_net["source"] = prior_net["source"].str.upper()
 
+print(prior_net)
 adata = utils.get_filtered_concat_data(sample_type)
 
 # filter out the remaining cells
@@ -121,11 +124,14 @@ deg = dc.format_contrast_results(logFCs, pvals)
 
 # How the activities changes in "condition" with respect to "reference"
 # Infer pathway activities with mlm
-"""pathway_acts, pathway_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=prior_net, source='source', target='target', weight='weight')
+pathway_acts, pathway_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=prior_net, source='source', target='target', weight='weight')
 
-sns.clustermap(pathway_acts, center=0, cmap='coolwarm')
-plt.savefig(f"{PLOT_PATH}/comparative_pathway_act_est_{condition}_wrt_{reference}_{group_col}.pdf")
-plt.show();"""
+# sns.clustermap(pathway_acts, center=0, cmap='coolwarm')
+# plt.savefig(f"{PLOT_PATH}/comparative_pathway_act_est_{condition}_wrt_{reference}_{group_col}.pdf")
+plt.figure(figsize=(10,10))
+sns.heatmap(pathway_acts, center=0, cmap='coolwarm')
+plt.savefig(f"{PLOT_PATH}/comparative_heatmap_pathway_act_est_{condition}_wrt_{reference}_{group_col}.pdf",  dpi=300)
+plt.close()
 
 # dorothea = dc.get_dorothea()
 """
@@ -150,8 +156,8 @@ sc.pl.umap(adata, size=1.5 )"""
 # Retrieve DoRothEA gene regulatory network
 # dorothea = dc.get_dorothea()
 
-
-# Infer pathway activities with mlm
+"""
+# Infer tf activities with mlm
 tf_acts, tf_pvals = dc.run_mlm(mat=deepcopy(logFCs).astype('float64'), net=prior_net, source='source', target='target', weight='weight')
 tf_acts
 
@@ -168,9 +174,10 @@ top = pd.DataFrame(tf_acts.values[:,top_idxs], columns=top_names, index=names)
 
 # Plot
 sns.clustermap(top, center=0, cmap='coolwarm', figsize=(15,15))
+# sns.heatmap(top, center=0, cmap='coolwarm')
 plt.savefig(f"{PLOT_PATH}/comparative_tf_act_est_{condition}_wrt_{reference}_{group_col}.pdf")
 plt.show()
-
+"""
 
 
 # Comparative Pseudobulk Pathway Analysis - Major Cell Types <a class="anchor" id="seventh-bullet"></a>

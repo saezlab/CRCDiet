@@ -46,7 +46,7 @@ meta = utils.get_meta_data(sample_type)
 samples = np.unique(meta['sample_id'])
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
-markers = list(set(markers_df["genesymbol"].str.capitalize()))
+markers = list(set(markers_df["genesymbol"].str.upper()))
 
 adata = None
 if concatenated_file:
