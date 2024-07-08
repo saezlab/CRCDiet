@@ -44,7 +44,7 @@ sce.pp.harmony_integrate(adata, 'batch', adjusted_basis='X_pca', theta=10, max_i
 
 print("Computing neighbours ...")
 # Run umap with updated connectivity
-sc.pp.neighbors(adata)
+sc.pp.neighbors(adata, n_neighbors=10)
 sc.tl.umap(adata)
 
 mpl.rcParams['figure.dpi']= 300
@@ -58,7 +58,7 @@ mpl.rcParams['axes.facecolor'] = "white"
 # the number of genes expressed in the count matrix
 sc.pl.umap(
     adata, color=["condition"], color_map =plt.cm.afmhot, 
-    title="UMAP plot after integration by Harmony", s=10, frameon=False, show=True, save=f"{sample_type}_all_condition_harmony.pdf"
+    title="UMAP plot after integration by Harmony", s=15, frameon=False, show=True, save=f"{sample_type}_all_condition_harmony.pdf"
 )
 
 """rows = 2
@@ -74,4 +74,4 @@ print("Saving the integrated object...")
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_integrated.h5ad'))
 
-#  python integrate.py -i ../data/out_data/sc_merged.h5ad -o ../data/out_data
+#  python vis_integrate.py -i ../data/out_data/visium_merged.h5ad -o ../data/out_data -an visium_integrate

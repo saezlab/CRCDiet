@@ -1,6 +1,5 @@
-from reprlib import aRepr
+
 from pathlib import Path
-from imageio import save
 import scanpy as sc
 import scanpy.external as sce
 import numpy as np
@@ -48,12 +47,12 @@ adata = adata[adata_integ_clust.obs_names,:]
 
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
 adata.obs["leiden_0.10"] = adata_integ_clust.obs["leiden_0.10"]
-sc.pp.normalize_total(adata, target_sum=1e6)
+sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
-markers = list(set(markers_df["genesymbol"].str.capitalize()))
-
+markers = list(set(markers_df["genesymbol"].str.upper()))
+print(markers)
 print("Plotting the activities of marker genes on the slides...\n")
 
 marker_intersect = list(set(adata.var.index) & set(markers))
@@ -61,8 +60,8 @@ print(f"Number of intersected marker genes: {len(marker_intersect)}")
 
 for ind, marker in enumerate(marker_intersect):
     if not os.path.exists(f'{PLOT_PATH}/{sample_type}_{marker}.pdf'):
-        rows, cols = (len(marker_intersect), 6)
-        fig, ax = plt.subplots(1, 6, figsize=(40,5))
+        rows, cols = (len(marker_intersect), 4)
+        fig, ax = plt.subplots(1, 4, figsize=(40,5))
         # fig.tight_layout()
         print(f"Plotting marker: {marker}")
         for ind2, row in meta.iterrows():
@@ -74,12 +73,13 @@ for ind, marker in enumerate(marker_intersect):
             adata_temp = adata[adata.obs["condition"]==condition,:]    
             adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
             # adata_raw = adata_raw[adata_temp.obs.index,:]
-            adata_raw = adata_raw[:, list(adata.var_names)]
+            adata_raw = adata_raw[:, adata_raw.var_names.isin(adata.var_names)]
 
-            mpl.rcParams["image.cmap"]= plt.cm.magma_r
+            #mpl.rcParams["image.cmap"]= plt.cm.magma_r
             mpl.rcParams['axes.titlesize'] = 12
             # colorbar_loc=None,
-            sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, ax = ax[ind2], show=False)
+            sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, color_map=plt.cm.magma_r, ax = ax[ind2], show=False)
+            
             cbar = ax[ind2].collections[0].colorbar
             cbar.set_ticks([])
             #plt.tight_layout(h_pad=1)

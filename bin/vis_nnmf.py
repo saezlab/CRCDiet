@@ -23,7 +23,7 @@ sc.settings.verbosity = 0
 # Set figure params
 sc.set_figure_params(scanpy=True, facecolor="white", dpi=80, dpi_save=300)
 # Read command line and set args
-parser = argparse.ArgumentParser(prog='qc', description='Run marker visualization')
+parser = argparse.ArgumentParser(prog='vis_nnmf', description='Visium NMF analysis')
 parser.add_argument('-i', '--input_path', help='Input path to merged object', required=True)
 parser.add_argument('-o', '--output_dir', help='Output directory where to store the object', required=True)
 parser.add_argument('-an', '--analysis_name', help='Analysis name', required=True)
@@ -67,7 +67,7 @@ def run_NMF(adataX, n_components=2, random_state=0):
 def apply_nmf_on_merged_data(random_state):
 
     adata_cc_merged = get_merged_adata()
-    sc.pp.normalize_total(adata_cc_merged, target_sum=1e6)
+    sc.pp.normalize_total(adata_cc_merged, target_sum=1e4)
     sc.pp.log1p(adata_cc_merged)
     
     # print(adata_cc_merged)
@@ -80,6 +80,7 @@ def apply_nmf_on_merged_data(random_state):
     # print("NMF 3 Factors!")
     # W = num of cells x factor
     # H = factor x num of genes
+    print("Performing NMF... Number of factors: 3")
     W3, H3 = run_NMF(adata_cc_merged.X, 3, random_state=random_state)
     
     for factor_ind in range(W3.shape[1]):
@@ -87,6 +88,15 @@ def apply_nmf_on_merged_data(random_state):
     
     for factor_ind in range(H3.shape[0]):
         adata_cc_merged.var[f"H3_{factor_ind+1}"] = H3[factor_ind , :]
+    
+    print("Performing NMF... Number of factors: 5")
+    W5, H5 = run_NMF(adata_cc_merged.X, 5, random_state=random_state)
+    
+    for factor_ind in range(W5.shape[1]):
+        adata_cc_merged.obs[f"W5_{factor_ind+1}"] = W5[: , factor_ind]
+    
+    for factor_ind in range(H5.shape[0]):
+        adata_cc_merged.var[f"H5_{factor_ind+1}"] = H5[factor_ind , :]
     
     print("Performing NMF... Number of factors: 20")
     W20, H20 = run_NMF(adata_cc_merged.X, 20, random_state=random_state)
@@ -97,14 +107,14 @@ def apply_nmf_on_merged_data(random_state):
     for factor_ind in range(H20.shape[0]):
         adata_cc_merged.var[f"H20_{factor_ind+1}"] = H20[factor_ind , :]
     
-    utils.write_pickle(os.path.join(OUT_DATA_PATH,f'adata_merged_sct_normalized_nmf_{random_state}.pckl'), adata_cc_merged)
+    utils.write_pickle(os.path.join(OUT_DATA_PATH,f'{sample_type}_merged_sct_normalized_nmf_{random_state}.pckl'), adata_cc_merged)
     return adata_cc_merged
     
 
 def analyse_nmf_results(random_state):
 
     processed_sample_dict = dict()
-    adata_cc_merged = utils.read_pickle(os.path.join(OUT_DATA_PATH,f'adata_merged_sct_normalized_nmf_{random_state}.pckl'))
+    adata_cc_merged = utils.read_pickle(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_sct_normalized_nmf_{random_state}.pckl'))
 
     sample_num = 0
     is_first = True
@@ -134,6 +144,10 @@ def analyse_nmf_results(random_state):
         for factor_ind in range(1,4):
             adata.obs[f"W3_{factor_ind}"] = adata_samp_cc.obs[f"W3_{factor_ind}"].values
             adata.var[f"H3_{factor_ind}"] = adata_samp_cc.var[f"H3_{factor_ind}"].values
+
+        for factor_ind in range(1,6):
+            adata.obs[f"W5_{factor_ind}"] = adata_samp_cc.obs[f"W5_{factor_ind}"].values
+            adata.var[f"H5_{factor_ind}"] = adata_samp_cc.var[f"H5_{factor_ind}"].values
         
         for factor_ind in range(1,21):
             adata.obs[f"W20_{factor_ind}"] = adata_samp_cc.obs[f"W20_{factor_ind}"].values
@@ -149,7 +163,7 @@ def analyse_nmf_results(random_state):
         subfigs = fig.subfigures(1, 2, hspace=0, wspace=0, width_ratios=[2, 1])
 
         # plt.rcParams["figure.figsize"] = (8, 8)
-        rows, cols = (3, 2)
+        rows, cols = (2, 2)
         # fig, ax = plt.subplots(rows, cols, figsize=(25,2))
 
         axsLeft = subfigs[0].subplots(rows, cols)
@@ -167,8 +181,8 @@ def analyse_nmf_results(random_state):
             cbar.set_ticks([])
             cbar = None
     
-            # fig.tight_layout(pad=1.0)
-        # fig.savefig(os.path.join(plot_path, "NMF", str(random_state), f"factor_{factor_ind}_20_all_samples_{mode}.png") , dpi=300)
+            # fig.tight_layout(pad=1.0)
+        # fig.savefig(os.path.join(PLOT_PATH, "NMF", str(random_state), f"factor_{factor_ind}_20_all_samples.pdf") , dpi=300)
         # plt.close(fig)
         # fig.tight_layout()
 
@@ -193,8 +207,8 @@ def analyse_nmf_results(random_state):
         # plt.show();
         print()
         
-
-    """for factor_ind in range(1,4):
+    """num_of_factors = 20
+    for factor_ind in range(1,num_of_factors):
         fig, axs = plt.subplots(1, 5, figsize=(20, 2))
         # plt.rcParams["figure.figsize"] = (8, 8)
         samp_num = 0
@@ -207,11 +221,11 @@ def analyse_nmf_results(random_state):
 
         plt.show()
 
-        fig.savefig(os.path.join(PLOT_PATH, "NMF", str(random_state),  f"factor_{factor_ind}_3_all_samples_{mode}.png") , dpi=300)
-        plt.close(fig)"""
+        fig.savefig(os.path.join(PLOT_PATH, "NMF", str(random_state),  f"factor_{factor_ind}_{num_of_factors}_all_samples_{mode}.png") , dpi=300)
+        plt.close(fig)
     
 
-    utils.write_pickle(os.path.join(OUT_DATA_PATH, f'adata_dict_sct_normalized_nmf_{random_state}.pckl'), processed_sample_dict)
+    utils.write_pickle(os.path.join(OUT_DATA_PATH, f'adata_dict_sct_normalized_nmf_{random_state}.pckl'), processed_sample_dict)"""
 
 
 def get_merged_adata():
@@ -240,10 +254,7 @@ def get_merged_adata():
 
     # keep raw counts in layers
     adata.layers['counts'] = adata.X.copy()
-    adata.layers["sqrt_norm"] = np.sqrt(
-        sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
     
-    # adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
     return adata
 
 
@@ -254,10 +265,11 @@ def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
     
 
     factor_columns = [f"W{n_of_factors}_{i}" for i in range(1, n_of_factors+1)]
-    cell_type_summarised_data = adata.obs.groupby(["leiden_0.10"]).mean()
+    obs_df = adata.obs[factor_columns+["leiden_0.10"]].copy()
+    cell_type_summarised_data = obs_df.groupby("leiden_0.10").mean()
     cell_type_summarised_data = cell_type_summarised_data[factor_columns]
     factor_columns = [f"Factor {i}" for i in range(1, n_of_factors+1)]
-    scaler = MinMaxScaler(feature_range=(-2,2))
+    scaler = MinMaxScaler(feature_range=(-1,1))
     scaler.fit(cell_type_summarised_data)
     scaled_factors = scaler.transform(cell_type_summarised_data)
     # sns.clustermap(scaled_factors.T, cmap="viridis", xticklabels=cell_type_summarised_data.index.values, yticklabels=factor_columns)
@@ -266,10 +278,12 @@ def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
     ct_df = pd.DataFrame(scaled_factors.T, index=factor_columns,   columns=cell_type_summarised_data.index.values)
     
     factor_columns = [f"W{n_of_factors}_{i}" for i in range(1, n_of_factors+1)]
-    cond_summarised_data = adata.obs.groupby(["condition"]).mean()
+    obs_df = adata.obs[factor_columns+["condition"]].copy()
+    cond_summarised_data = obs_df.groupby("condition").mean()
+    # cond_summarised_data = adata.obs.groupby(["condition"]).mean()
     cond_summarised_data = cond_summarised_data[factor_columns]
     factor_columns = [f"Factor {i}" for i in range(1, n_of_factors+1)]
-    scaler = MinMaxScaler(feature_range=(-2,2))
+    scaler = MinMaxScaler(feature_range=(-1,1))
     scaler.fit(cond_summarised_data)
     scaled_factors = scaler.transform(cond_summarised_data)
     # sns.clustermap(scaled_factors.T, cmap="viridis", xticklabels=cond_summarised_data.index.values, yticklabels=factor_columns)
@@ -302,16 +316,18 @@ def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
 
 
 
-
-"""adata_cc_merged = apply_nmf_on_merged_data(42)
+adata_cc_merged = apply_nmf_on_merged_data(42)
 for col in adata_cc_merged.var.columns:
-    if col.startswith("mt-") or col.startswith("rp-"):
+    if col.lower().startswith("mt-") or col.lower().startswith("rp-"):
         adata_cc_merged.var[col] = adata_cc_merged.var[col].astype(str)
-adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'adata_cc_merged_nnmf.h5ad'))
-analyse_nmf_results(42)"""
-adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'adata_cc_merged_nnmf.h5ad'))
-print(adata_cc_merged.obs)
-adata_integ_clust = sc.read_h5ad("../data/out_data/visium_integrated_clustered.h5ad")
+# adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
+
+# adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
+analyse_nmf_results(42)
+adata_integ_clust = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_integrated_clustered.h5ad'))
 adata_cc_merged.obs["leiden_0.10"] = adata_integ_clust.obs["leiden_0.10"]
-adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'adata_cc_merged_nnmf.h5ad'))
+adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 generate_heatmap(adata_cc_merged, n_of_factors=20)
+
+
+#  python vis_nnmf.py -i ../data/out_data/ -o  ../data/out_data -an visium_nnmf

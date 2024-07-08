@@ -194,9 +194,9 @@ def cell_type_proportion(cell_types="epi", sample_type="sc"):
     # plt.show()
     # print(cell_proportion_df)
 
-cell_type_proportion(cell_types="epi")
+"""cell_type_proportion(cell_types="epi")
 cell_type_proportion(cell_types="stroma")
-cell_type_proportion(cell_types="immune")
+cell_type_proportion(cell_types="immune")"""
 
 def plot_ngene_diff(adata, ax, fontsize=11):
     ax.set_title('Num genes filtered', fontsize=fontsize)

@@ -54,7 +54,7 @@ samples = np.unique(meta['sample_id'])
 # mpl.rcParams['figure.dpi']= 150
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
-markers = list(set(markers_df["genesymbol"].str.capitalize()))
+markers = list(set(markers_df["genesymbol"].str.upper()))
 
 adatas = []
 
@@ -80,88 +80,8 @@ adata = adata[0].concatenate(adata[1:], join='outer')
 sc.pp.calculate_qc_metrics(adata, inplace=True)
 
 
-"""
-fig, axes = plt.subplots(1, 6, figsize=(12, 6))
-for ax, sample in zip(axes, samples):
-
-    adata = sc.read_h5ad(os.path.join(input_path,f"{sample}_filtered.h5ad"))
-    # adata.var.index = pd.Index(gen.capitalize() for gen in tmp.var.index.values)
-    sc.experimental.pp.highly_variable_genes(
-        adata, flavor="pearson_residuals", n_top_genes=4000
-    )
-    
-    # Fetch sample metadata
-    m = meta[meta['sample_id'] == sample]    
-    # Add metadata to adata
-    for col in m.columns:
-        adata.obs[col] = m[col].values[0]
-    
-    hvgs = adata.var["highly_variable"]
-    # print(hvgs)
-    ax.scatter(
-        adata.var["mean_counts"], adata.var["residual_variances"], s=3, edgecolor="none"
-    )
-    ax.scatter(
-        adata.var["mean_counts"][hvgs],
-        adata.var["residual_variances"][hvgs],
-        c="tab:red",
-        label="selected genes",
-        s=3,
-        edgecolor="none",
-    )
-    ax.scatter(
-        adata.var["mean_counts"][np.isin(adata.var_names, markers)],
-        adata.var["residual_variances"][np.isin(adata.var_names, markers)],
-        c="k",
-        label="known marker genes",
-        s=10,
-        edgecolor="none",
-    )
-    ax.set_xscale("log")
-    ax.set_xlabel("mean expression")
-    ax.set_yscale("log")
-    ax.set_ylabel("residual variance")
-    # print(adata.obs["condition"][0])
-    # ax.set_title(adata.uns["name"])
-    ax.set_title(adata.obs["condition"][0])
-
-    ax.spines["right"].set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.yaxis.set_ticks_position("left")
-    ax.xaxis.set_ticks_position("bottom")
-
-    adatas.append(adata)
-    del adata
-
-plt.legend()
-
-
-for adata in adatas:
-    adata = adata[:, adata.var["highly_variable"]]
-    sc.experimental.pp.normalize_pearson_residuals(adata)
-
-
-for adata in adatas:
-    # Run PCA
-    sc.pp.scale(adata)
-    sc.tl.pca(adata, svd_solver='arpack', random_state=0)
-    n_cells = len(adata)
-    
-
-for adata in adatas:
-    sc.pp.neighbors(adata)
-    sc.tl.umap(adata)
-    sc.tl.leiden(adata)
-
-for adata in adatas:
-    print(adata.obs["condition"][0], ":")
-    sc.pl.umap(adata, color=["leiden"], cmap="tab20")
-    sc.pl.umap(adata, color=list(set(adata.var.index) & set(markers)), layer="sqrt_norm")
-"""
-
-
 sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
-            wspace=0.3, jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
+            jitter=0.4, size=0.5, groupby="condition", rotation=75, show=True, save=f"QC_on_merged_objects_after_filtering_{sample_type}_violin.pdf")
 
 # adata.obs['outlier_total'] = adata.obs.total_counts > 30000
 # print('%u cells with large total counts' % (sum(adata.obs['outlier_total'])))
@@ -169,8 +89,6 @@ sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts'],
 
 # keep raw counts in layers
 adata.layers['counts'] = adata.X.copy()
-adata.layers["sqrt_norm"] = np.sqrt(
-    sc.pp.normalize_total(adata, inplace=False)["X"]).copy()
 
 adata.layers["log1p_transformed"] = sc.pp.normalize_total(adata, inplace=False, target_sum=1e6)["X"]
 sc.pp.log1p(adata, layer="log1p_transformed")
@@ -296,4 +214,4 @@ print("Saving the merged object...")
 adata.write(os.path.join(output_path, f'{sample_type}_merged.h5ad'))
 
 
-# python vis_merge.py -i ../data/out_data -o ../data/out_data
+# python vis_merge.py -i ../data/out_data -o ../data/out_data -an visium_merge

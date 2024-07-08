@@ -49,6 +49,7 @@ adata_integ_clust = sc.read_h5ad(input_path)
 # Retrieve PROGENy model weights
 progeny = dc.get_progeny(organism='mouse', top=500)
 progeny["target"] = progeny["target"].str.upper()
+# progeny["source"] = progeny["source"].str.upper()
 adata_integ_clust.X = adata_integ_clust.layers['log1p_transformed']
 adata_integ_clust.var.index = pd.Index(gen.upper() for gen in adata_integ_clust.var.index.values)
 dc.run_mlm(mat=adata_integ_clust, net=progeny, source='source', target='target', weight='weight', verbose=True, use_raw=False)
@@ -56,13 +57,15 @@ adata_integ_clust.obsm['dorothea_mlm_estimate'] = adata_integ_clust.obsm['mlm_es
 adata_integ_clust.obsm['dorothea_mlm_pvals'] = adata_integ_clust.obsm['mlm_pvals'].copy()
 
 ### This block is for the comparative pathway activity estimation 
-"""adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["leiden_0.10"]=="6",:]
-adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"].isin(["CD-AOM-DSS", "HFD-AOM-DSS", "LFD-AOM-DSS"]),:]
+
+# adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["leiden_0.10"]=="6",:]
+# adata_integ_clust = adata_integ_clust[adata_integ_clust.obs["condition"].isin(["CD-AOM-DSS", "HFD-AOM-DSS", "LFD-AOM-DSS"]),:]
 acts_integrated = dc.get_acts(adata_integ_clust, obsm_key='dorothea_mlm_estimate')
+"""
 mean_acts = dc.summarize_acts(acts_integrated, groupby="condition", min_std=0)
 sns.clustermap(mean_acts, xticklabels=mean_acts.columns, vmin=-2, vmax=2, colors_ratio=0.50, cmap='coolwarm')
 plt.savefig(f"{PLOT_PATH}/{sample_type}_aom_dss_only_tumor_cluster_pathway_activity_est_cmap.pdf")
-plt.show();"""
+# plt.show();"""
 ### This block is for the comparative pathway activity estimation 
 
 adata_dict = dict()
@@ -83,22 +86,27 @@ for _, row in meta.iterrows():
     adata_temp = adata_integ_clust[adata_integ_clust.obs["condition"]==condition,:].copy()
     cols = adata_integ_clust[adata_integ_clust.obs["condition"]==condition,:].obsm['mlm_estimate'].columns
     mlm_estimate_df =  pd.DataFrame(adata_integ_clust[adata_integ_clust.obs["condition"]==condition,:].obsm['mlm_estimate'].values, index=adata_filtered.obs_names, columns=cols)
-    adata_filtered.obsm['progeny_mlm_estimate'] = mlm_estimate_df #adata_temp.obsm['mlm_estimate'].copy()
-    adata_dict[sample_id] = adata_filtered
+    adata_filtered.obsm['progeny_mlm_estimate'] = mlm_estimate_df
+    print("mlm_estimate_df", mlm_estimate_df)
+    print("adata_filtered", adata_filtered)
+    adata_filtered.obs = pd.concat([adata_filtered.obs, mlm_estimate_df], axis=1)  #adata_temp.obsm['mlm_estimate'].copy()
     
-    """mpl.rcParams["image.cmap"]= plt.cm.Spectral
-    fig, ax = plt.subplots(2, int(len(adata_filtered.obsm['progeny_mlm_estimate'].columns)/2), figsize=(60,15))
+    adata_dict[sample_id] = adata_filtered
+    print("adata_filtered.obs", adata_filtered.obs)  
+    fig, ax = plt.subplots(2, int(len(mlm_estimate_df.columns)/2), figsize=(60,15))
 
-    for ind, col in enumerate(adata_filtered.obsm['progeny_mlm_estimate'].columns):
+    for ind, col in enumerate(mlm_estimate_df.columns):
         fig_row, fig_col = int(ind/7), ind%7
-        mpl.rcParams["image.cmap"]= plt.cm.magma
+        # mpl.rcParams["image.cmap"]= plt.cm.magma
         mpl.rcParams['axes.titlesize'] = 15
-        sc.pl.spatial(acts, color=col, size=1.25, alpha_img=0.5, wspace = 2.5, hspace=1.5, ax = ax[fig_row][fig_col], show=False)
+        print(adata_filtered)
+        sc.pl.umap(acts_integrated, color=[col, 'leiden_0.10'], show=False, cmap='coolwarm', vcenter=0, save=f"{col}.pdf")
+        sc.pl.spatial(adata_filtered, color=col, size=1.25, alpha_img=0.5, wspace = 2.5, hspace=1.5, color_map=mpl.cm.magma_r, ax = ax[fig_row][fig_col], show=False)
         cbar = ax[fig_row][fig_col].collections[0].colorbar
         cbar.set_ticks([])
         cbar = None
     
-    plt.savefig(f'{PLOT_PATH}/{sample_id}_pathway.pdf');"""
+    plt.savefig(f'{PLOT_PATH}/{sample_id}_pathway.pdf');
     # plt.show();
     # plt.clf();
     
@@ -111,7 +119,7 @@ for _, row in meta.iterrows():
     # plt.savefig(f"{PLOT_PATH}/{sample_type}_cell_type_pathway_activity_est_cmap.pdf")
     # plt.show();
     # , save=f'{sample_type}_pathway_activity_est_clustermap'
-print(len(meta))
+"""print(len(meta))
 for ind, col in enumerate(adata_filtered.obsm['progeny_mlm_estimate'].columns):
 
     sc.pl.umap(acts_integrated, color=[col, 'leiden_0.10'], show=False, cmap='coolwarm', vcenter=0, save=f"{col}.pdf")
@@ -121,9 +129,10 @@ for ind, col in enumerate(adata_filtered.obsm['progeny_mlm_estimate'].columns):
     for ind, row in meta.iterrows():
         sample_id = row["sample_id"]
         condition = row["condition"]
-        mpl.rcParams["image.cmap"]= plt.cm.magma_r
+        # mpl.rcParams["image.cmap"]= plt.cm.magma_r
         acts = dc.get_acts(adata_dict[sample_id], obsm_key='progeny_mlm_estimate')
-        sc.pl.spatial(acts, color=col, size=1.25, title=condition, alpha_img=0.5, wspace = 2.5, hspace=1.5, ax=ax[ind], show=False)
+        print("***********", acts.obs.columns)
+        sc.pl.spatial(acts, color=col, size=1.25, title=condition, alpha_img=0.5, wspace = 2.5, palette=plt.cm.magma_r, hspace=1.5, ax=ax[ind], show=False)
         cbar = ax[ind].collections[0].colorbar
         cbar.set_ticks([])
         cbar = None
@@ -131,5 +140,5 @@ for ind, col in enumerate(adata_filtered.obsm['progeny_mlm_estimate'].columns):
     plt.savefig(f'{PLOT_PATH}/{col}_pathway_activity.pdf');
     # plt.show();
     # plt.clf();
-
+"""
 # python vis_downstream_analysis.py -i ../data/out_data/visium_integrated_clustered.h5ad  -o ../data/out_data/ -an visium_pathway_act_est

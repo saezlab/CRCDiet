@@ -65,7 +65,8 @@ def filter_cells_genes(adata, sample_id):
     df_threshold = get_threshold_dict()
 
     pre_filter_shape = np.shape(adata.X)
-
+    adata.var_names = [vn.upper() for vn in adata.var_names]
+    print(adata.var_names)
     print("Calculating QC metrics...")
     # calculate qc metrics
     adata.var["mt"] = adata.var_names.str.lower().str.contains("^mt-")
@@ -85,12 +86,6 @@ def filter_cells_genes(adata, sample_id):
     fig.savefig(os.path.join(PLOT_PATH, f"vis_basic_stats_before_filtering_{sample_id}.pdf"), dpi=300);
     plt.show();
 
-
-    # number og genes at each change it to 300
-    # each spot has at least 500 
-    """sc.pp.filter_cells(adata, min_genes=300)
-    sc.pp.filter_cells(adata, min_counts=500)
-    sc.pp.filter_genes(adata, min_cells=5)"""
 
     sc.pp.filter_cells(adata, min_genes=df_threshold["gene_thr"])
     sc.pp.filter_cells(adata, min_counts=500)
@@ -125,10 +120,7 @@ def filter_cells_genes(adata, sample_id):
     print("Plotting highest expressed genes after QC and filtering...")
     sc.pl.highest_expr_genes(adata, n_top=20, show=True, save=f"basic_stats_after_filtering_{sample_id}.pdf")
     
-    adata.layers["raw"] = adata.X.copy()
-    adata.layers["sqrt_norm"] = np.sqrt(
-    sc.pp.normalize_total(adata, inplace=False)["X"]
-)   
+    adata.layers["counts"] = adata.X.copy()
 
     adata.layers["log1p_transformed"] = sc.pp.log1p(
     sc.pp.normalize_total(adata, target_sum=1e6, inplace=False)["X"])
@@ -153,7 +145,7 @@ def create_filtered_adata_files(raw=True):
         printmd(f"<h4 style='color:black' align='center'>=============== Processing {condition} ===============")
         filter_cells_genes(adata, sample_id)
 
-create_filtered_adata_files(raw=False)
+create_filtered_adata_files(raw=True)
 
 # python vis_qc_preprocess.py -an vis_microbiota_qc_preprocess -st visium_microbiota
 # python vis_qc_preprocess.py -an visium_qc_preprocess -st visium

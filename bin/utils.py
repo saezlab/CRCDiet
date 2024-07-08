@@ -85,7 +85,7 @@ def read_raw_visium_sample(sample_name):
         adata.var.index = pd.Index(gen.split("refdata-gex-mm10__________")[-1] for gen in adata.var.index.values)
     else:
         adata = sc.read_visium(os.path.join(VIS_RAW_DATA_PATH,sample_name , "outs"), count_file="filtered_feature_bc_matrix.h5")
-
+        adata.var_names = [vn.upper() for vn in adata.var_names]
     adata.var_names_make_unique()
     return adata
 
