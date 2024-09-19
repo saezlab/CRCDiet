@@ -1,6 +1,7 @@
 import os
 import utils
 import numpy as np
+import pandas as pd
 import scanpy as sc
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -66,7 +67,9 @@ def filter_cells_genes(adata, sample_id):
 
     pre_filter_shape = np.shape(adata.X)
     adata.var_names = [vn.upper() for vn in adata.var_names]
-    print(adata.var_names)
+    df_empty_spots = pd.read_csv(f"../data/visium_outputs/{sample_id}/EmptySpots_{sample_id}.csv")
+    adata = adata[~adata.obs_names.isin(df_empty_spots["Barcode"]),:]
+    print(pre_filter_shape, adata.shape)
     print("Calculating QC metrics...")
     # calculate qc metrics
     adata.var["mt"] = adata.var_names.str.lower().str.contains("^mt-")

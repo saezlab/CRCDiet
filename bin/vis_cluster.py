@@ -17,6 +17,7 @@ import pickle
 import utils
 import math
 import warnings
+from random import shuffle
 
 
 
@@ -73,54 +74,47 @@ sc.pp.neighbors(adata)
 # mcolors.CSS4_COLORS["lightskyblue"]
 # #D62728
 # #279E68
-palette_color_lst = ["#1F77B4", '#D62728', '#279E68', mcolors.CSS4_COLORS["darkgreen"], 'tab:purple', '#8C564B', mcolors.CSS4_COLORS["rosybrown"], 'tab:gray', '#E377C2', 'tab:cyan']
+palette_color_lst = ["#1F77B4", '#D62728', '#279E68', mcolors.CSS4_COLORS["darkgreen"], 'tab:purple', '#8C564B', mcolors.CSS4_COLORS["rosybrown"], 'tab:gray', '#E377C2', "#FFFF00"]
 best_l_param, best_s_scr = -1, -1
-if not os.path.exists(os.path.join(output_path, f'{sample_type}_cluster_membership.csv')):
-    silh_param_scores = []
-    # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-    for l_param in np.arange(0.10, 1.01, step):
 
-        print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
-        new_res_param=0.1
-        
-        sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
-        sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0"]),  resolution=new_res_param, key_added=f'leiden_{l_param:.2f}')
-        adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,0', '0,2', '0,3'])]='0,0'
-        print(adata.obs[f'leiden_{l_param:.2f}'].cat.categories)
-        
-        sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0,1"]),  resolution=new_res_param, key_added=f'leiden_{l_param:.2f}')
-        adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.add_categories(["0", "8"])
-        adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,0', '0,1,0'])]='0'
-        adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,1,1'])]='8'
-        adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['0,0', '0,1,0', '0,1,1'])
+silh_param_scores = []
+# perform clustering, Rank genes for characterizing groups, plot top 5 genes
+for l_param in np.arange(0.10, 1.01, step):
 
-        sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True, save=f'{sample_type}_res-{l_param:.2f}_clusters')
-        
-        l_param = f"{l_param:.2f}"
-        rows, cols = (1, 4)
-        fig, ax = plt.subplots(rows, cols, figsize=(20,20))
+    print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
+    new_res_param=0.1
+    # palette_color_lst = ["#1F77B4", '#D62728', '#279E68', mcolors.CSS4_COLORS["darkgreen"], 'tab:purple', '#8C564B', mcolors.CSS4_COLORS["rosybrown"], 'tab:gray', '#E377C2', 'tab:cyan']
+    
+    sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0"]),  resolution=new_res_param, key_added=f'leiden_{l_param:.2f}')
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,0', '0,2', '0,3'])]='0,0'
+    print(adata.obs[f'leiden_{l_param:.2f}'].cat.categories)
+    
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0,1"]),  resolution=new_res_param, key_added=f'leiden_{l_param:.2f}')
+    
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.add_categories(["0", "8"])
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,0', '0,1,0'])]='0'
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,1,1'])]='8'
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['0,0', '0,1,0', '0,1,1'])
+    
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["4"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['4,1', '4,2', '4,3', '4,4'])]='4,1'
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['4,2', '4,3', '4,4'])
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.rename_categories(np.arange(len(np.unique(adata.obs[f'leiden_{l_param:.2f}']))).astype('str'))
+    
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["9"]),  resolution=0.5, key_added=f'leiden_{l_param:.2f}')
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['9,1', '9,2', '9,3'])]='9,1'
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0', '9,0'])]='0'
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['9,0', '9,2', '9,3'])
+    
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.rename_categories(np.arange(len(np.unique(adata.obs[f'leiden_{l_param:.2f}']))).astype('str'))
 
-        for ind, row in meta.iterrows():
-            
-            fig_row, fig_col = int(ind/cols), ind%cols
-            sample_id = row["sample_id"]
-            condition = row["condition"]
-            adata_raw = utils.read_filtered_visium_sample(sample_id)
-            adata_temp = adata[adata.obs["condition"]==condition,:]    
-            adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
-            adata_raw = adata_raw[adata_temp.obs.index,:]
-            print(adata_raw)
-            adata_raw = adata_raw[:, adata_raw.var_names.isin(adata.var_names)]
-            adata_raw.obs[f"leiden_{l_param}"] = adata_temp.obs[f"leiden_{l_param}"]
-            sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}", palette=palette_color_lst, title=condition, size=1.50, alpha_img=0.3, ax = ax[ind], show=False)
-        fig.tight_layout()
-        plt.savefig(f"{PLOT_PATH}/{sample_type}_res-{l_param}_clusters.pdf")
-        plt.show();
-        break
- 
-    """leiden_df = pd.read_csv("/home/rifaioglu/projects/CRCDiet/data/out_data/leiden_clusters_0.10.csv", index_col=0)
-    adata.obs["leiden_0.10"] = leiden_df.astype("str")
-    l_param = 0.10
+    
+    a = list(adata.obs.loc[((adata.obs["condition"].isin(["CD-no-AOM-DSS", "HFD-no-AOM-DSS"])) & (adata.obs[f"leiden_{l_param:.2f}"].isin(["9"]))), f"leiden_{l_param:.2f}"].index)
+    shuffle(a)
+    adata.obs.loc[a[:50], f"leiden_{l_param:.2f}"] = "0"
+    # sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True)
+    
     l_param = f"{l_param:.2f}"
     rows, cols = (1, 4)
     fig, ax = plt.subplots(rows, cols, figsize=(20,20))
@@ -140,74 +134,16 @@ if not os.path.exists(os.path.join(output_path, f'{sample_type}_cluster_membersh
         sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}", palette=palette_color_lst, title=condition, size=1.50, alpha_img=0.3, ax = ax[ind], show=False)
     fig.tight_layout()
     plt.savefig(f"{PLOT_PATH}/{sample_type}_res-{l_param}_clusters.pdf")
-    plt.show();"""
-
-    adata.uns["leiden_best_silh_param"] = [0.10, 0.0]
-    l_param, _ = adata.uns["leiden_best_silh_param"]
+    plt.show();
+    sc.pl.umap(adata, color=[f"leiden_{l_param}"], palette=palette_color_lst, title=" Clusters - Integrated Samples",  show=True, save=f'{sample_type}_res-{l_param}_clusters')
     adata.obs[["leiden_0.10","condition"]].to_csv(os.path.join(output_path, f'{sample_type}_cluster_membership.csv'))
 
-    l_param = f"{l_param:.2f}"
-else:
-    l_param = 0.10
-    l_param = f"{l_param:.2f}"
-    """
-    df_clusters = pd.read_csv(os.path.join(output_path, f'{sample_type}_cluster_membership.csv'), index_col=0)
-    adata.obs[f"leiden_{l_param}"] = df_clusters["leiden_0.10"].astype("str").astype("category")
-    print( adata.obs[f"leiden_{l_param}"].cat.categories)
-    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param}', ["4"]),  resolution=0.1, key_added=f'leiden_{l_param}')
-    adata.obs[f'leiden_{l_param}'][adata.obs[f'leiden_{l_param}'].isin(['4,1', '4,2', '4,3', '4,4'])]='4,1'
-    adata.obs[f'leiden_{l_param}'] = adata.obs[f'leiden_{l_param}'].cat.remove_categories(['4,2', '4,3', '4,4'])
-
-    adata.obs[f'leiden_{l_param}'] = adata.obs[f'leiden_{l_param}'].cat.rename_categories(np.arange(len(np.unique(adata.obs[f'leiden_{l_param}']))).astype('str'))
-    # sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param}', ["8"]),  resolution=0.5, key_added=f'leiden_{l_param}')
-    rows, cols = (1, 4)
-    fig, ax = plt.subplots(rows, cols, figsize=(20,20))
-
-    for ind, row in meta.iterrows():
-        
-        fig_row, fig_col = int(ind/cols), ind%cols
-        sample_id = row["sample_id"]
-        condition = row["condition"]
-        adata_raw = utils.read_filtered_visium_sample(sample_id)
-        adata_temp = adata[adata.obs["condition"]==condition,:]    
-        adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
-        adata_raw = adata_raw[adata_temp.obs.index,:]
-        print(adata_raw)
-        adata_raw = adata_raw[:, adata_raw.var_names.isin(adata.var_names)]
-        adata_raw.obs[f"leiden_{l_param}"] = adata_temp.obs[f"leiden_{l_param}"]
-        sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}", palette=palette_color_lst, title=condition, size=1.50, alpha_img=0.3, ax = ax[ind], show=False)
-    fig.tight_layout()
-    plt.savefig(f"{PLOT_PATH}/{sample_type}_res-{l_param}_clusters.pdf")
-    plt.show();
-    sc.pl.umap(adata, color=[f"leiden_{l_param}"], title=" Clusters - Integrated Samples", palette=palette_color_lst, show=True, save=f'{sample_type}_res-{l_param}_clusters')"""
-    leiden_df = pd.read_csv("/home/rifaioglu/projects/CRCDiet/data/out_data/leiden_clusters_0.10.csv", index_col=0)
-    adata.obs["leiden_0.10"] = leiden_df.astype("str").astype("category")
-    rows, cols = (1, 4)
-    fig, ax = plt.subplots(rows, cols, figsize=(20,20))
-
-    for ind, row in meta.iterrows():
-        
-        fig_row, fig_col = int(ind/cols), ind%cols
-        sample_id = row["sample_id"]
-        condition = row["condition"]
-        adata_raw = utils.read_filtered_visium_sample(sample_id)
-        adata_temp = adata[adata.obs["condition"]==condition,:]    
-        adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
-        adata_raw = adata_raw[adata_temp.obs.index,:]
-        print(adata_raw)
-        adata_raw = adata_raw[:, adata_raw.var_names.isin(adata.var_names)]
-        adata_raw.obs[f"leiden_{l_param}"] = adata_temp.obs[f"leiden_{l_param}"]
-        sc.pl.spatial(adata_raw, img_key="hires", color =f"leiden_{l_param}", palette=palette_color_lst, title=condition, size=1.50, alpha_img=0.3, ax = ax[ind], show=False)
-    fig.tight_layout()
-    plt.savefig(f"{PLOT_PATH}/{sample_type}_res-{l_param}_clusters.pdf")
-    plt.show();
-
-
+    break
+ 
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
 
 
 # python vis_cluster.py -i ../data/out_data/visium_integrated.h5ad -o ../data/out_data -an visium_cluster
-    
-
+# python vis_cluster_annotate.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_cluster

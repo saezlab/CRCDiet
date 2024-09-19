@@ -52,7 +52,10 @@ sc.pp.log1p(adata)
 
 markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 markers = list(set(markers_df["genesymbol"].str.upper()))
+adata.var_names = adata.var_names.str.upper()
+
 print(markers)
+print(adata.var_names)
 print("Plotting the activities of marker genes on the slides...\n")
 
 marker_intersect = list(set(adata.var.index) & set(markers))
