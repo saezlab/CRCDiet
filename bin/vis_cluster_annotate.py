@@ -40,7 +40,7 @@ meta = utils.get_meta_data(sample_type)
 adata = sc.read_h5ad(input_path)
 print(adata)
 
-sc.pl.umap(adata, color=["leiden_0.10"], cmap="tab20", save=f"_{sample_type}_cluster.pdf", show=False)
+sc.pl.umap(adata, color=["leiden_0.15"], cmap="tab20", save=f"_{sample_type}_cluster.pdf", show=False)
 sc.pl.umap(adata, color="condition", cmap="tab20", save=f"_{sample_type}_condition.pdf", show=False)
 
 # adata.raw = anndata.AnnData(adata.layers['counts'], obs=adata.obs, var=adata.var)
@@ -56,7 +56,7 @@ sc.pl.umap(adata, color="condition", cmap="tab20", save=f"_{sample_type}_conditi
 # This is not used, because I wanted to provide a few clustering results based on different res parameter
 # l_param, _ = adata.uns["leiden_best_silh_param"]
 
-l_param_list = [0.10]
+l_param_list = [0.15]
 for l_param in l_param_list:
     rows, cols = (1, 4)
 

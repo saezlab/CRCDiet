@@ -110,8 +110,8 @@ def filter_cells_genes(adata, sample_id):
     adata = adata[:,~adata.var["rp"]]
 
     post_filter_shape = np.shape(adata.X)
-
-    adata.obs["condition"] = condition    
+    adata.obs["condition"] = condition   
+    adata.obs["sample"] = sample_id      
     
     print(tabulate([[condition, "Before filtering", pre_filter_shape[0], pre_filter_shape[1]],\
                     [condition, "After filtering", post_filter_shape[0], post_filter_shape[1]]],\
@@ -126,7 +126,7 @@ def filter_cells_genes(adata, sample_id):
     adata.layers["counts"] = adata.X.copy()
 
     adata.layers["log1p_transformed"] = sc.pp.log1p(
-    sc.pp.normalize_total(adata, target_sum=1e6, inplace=False)["X"])
+    sc.pp.normalize_total(adata, target_sum=1e4, inplace=False)["X"])
 
     print("Saving filtered AnnData file...")
     adata.write(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))

@@ -46,7 +46,7 @@ print(adata)
 adata = adata[adata_integ_clust.obs_names,:]
 
 adata.obsm["X_umap"] = adata_integ_clust.obsm["X_umap"]
-adata.obs["leiden_0.10"] = adata_integ_clust.obs["leiden_0.10"]
+adata.obs["leiden_0.15"] = adata_integ_clust.obs["leiden_0.15"]
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 
@@ -92,7 +92,7 @@ for ind, marker in enumerate(marker_intersect):
         # plt.show();
         
         # mpl.rcParams["image.cmap"]= plt.cm.magma_r
-        sc.pl.umap(adata, color=[marker, f"leiden_0.10"], show=False, cmap='viridis', save=f"{sample_type}_{marker}.pdf");
+        sc.pl.umap(adata, color=[marker, f"leiden_0.15"], show=False, cmap='viridis', save=f"{sample_type}_{marker}.pdf");
 
 
 # python vis_visualize_markers.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_visualize_markers

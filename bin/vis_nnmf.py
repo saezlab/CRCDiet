@@ -41,7 +41,7 @@ sample_type = "visium"
 meta = utils.get_meta_data(sample_type)
 # markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 # markers = list(set(markers_df["genesymbol"].str.capitalize()))
-
+l_param = 0.15
 def run_NMF(adataX, n_components=2, random_state=0):
     """Run NMF on adata
 
@@ -80,6 +80,7 @@ def apply_nmf_on_merged_data(random_state):
     # print("NMF 3 Factors!")
     # W = num of cells x factor
     # H = factor x num of genes
+    """
     print("Performing NMF... Number of factors: 3")
     W3, H3 = run_NMF(adata_cc_merged.X, 3, random_state=random_state)
     
@@ -96,7 +97,7 @@ def apply_nmf_on_merged_data(random_state):
         adata_cc_merged.obs[f"W5_{factor_ind+1}"] = W5[: , factor_ind]
     
     for factor_ind in range(H5.shape[0]):
-        adata_cc_merged.var[f"H5_{factor_ind+1}"] = H5[factor_ind , :]
+        adata_cc_merged.var[f"H5_{factor_ind+1}"] = H5[factor_ind , :]"""
     
     print("Performing NMF... Number of factors: 20")
     W20, H20 = run_NMF(adata_cc_merged.X, 20, random_state=random_state)
@@ -141,13 +142,13 @@ def analyse_nmf_results(random_state):
         # print(adata_samp_cc)
         adata.X = adata_samp_cc.X
     
-        for factor_ind in range(1,4):
+        """for factor_ind in range(1,4):
             adata.obs[f"W3_{factor_ind}"] = adata_samp_cc.obs[f"W3_{factor_ind}"].values
             adata.var[f"H3_{factor_ind}"] = adata_samp_cc.var[f"H3_{factor_ind}"].values
 
         for factor_ind in range(1,6):
             adata.obs[f"W5_{factor_ind}"] = adata_samp_cc.obs[f"W5_{factor_ind}"].values
-            adata.var[f"H5_{factor_ind}"] = adata_samp_cc.var[f"H5_{factor_ind}"].values
+            adata.var[f"H5_{factor_ind}"] = adata_samp_cc.var[f"H5_{factor_ind}"].values"""
         
         for factor_ind in range(1,21):
             adata.obs[f"W20_{factor_ind}"] = adata_samp_cc.obs[f"W20_{factor_ind}"].values
@@ -163,7 +164,7 @@ def analyse_nmf_results(random_state):
         subfigs = fig.subfigures(1, 2, hspace=0, wspace=0, width_ratios=[2, 1])
 
         # plt.rcParams["figure.figsize"] = (8, 8)
-        rows, cols = (2, 2)
+        rows, cols = (4, 2)
         # fig, ax = plt.subplots(rows, cols, figsize=(25,2))
 
         axsLeft = subfigs[0].subplots(rows, cols)
@@ -265,8 +266,8 @@ def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
     
 
     factor_columns = [f"W{n_of_factors}_{i}" for i in range(1, n_of_factors+1)]
-    obs_df = adata.obs[factor_columns+["leiden_0.10"]].copy()
-    cell_type_summarised_data = obs_df.groupby("leiden_0.10").mean()
+    obs_df = adata.obs[factor_columns+[f"leiden_{l_param:.2f}"]].copy()
+    cell_type_summarised_data = obs_df.groupby(f"leiden_{l_param:.2f}").mean()
     cell_type_summarised_data = cell_type_summarised_data[factor_columns]
     factor_columns = [f"Factor {i}" for i in range(1, n_of_factors+1)]
     scaler = MinMaxScaler(feature_range=(-1,1))
@@ -320,13 +321,14 @@ adata_cc_merged = apply_nmf_on_merged_data(42)
 for col in adata_cc_merged.var.columns:
     if col.lower().startswith("mt-") or col.lower().startswith("rp-"):
         adata_cc_merged.var[col] = adata_cc_merged.var[col].astype(str)
-# adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
+adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 
 # adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 analyse_nmf_results(42)
 adata_integ_clust = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_integrated_clustered.h5ad'))
-adata_cc_merged.obs["leiden_0.10"] = adata_integ_clust.obs["leiden_0.10"]
-adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
+adata_cc_merged  = adata_cc_merged[adata_cc_merged.obs.condition.isin(['CD-AOM-DSS', 'CD-no-AOM-DSS', 'HFD-AOM-DSS', 'HFD-no-AOM-DSS'])]
+adata_cc_merged.obs[f"leiden_{l_param:.2f}"] = adata_integ_clust.obs[f"leiden_{l_param:.2f}"].values
+# adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 generate_heatmap(adata_cc_merged, n_of_factors=20)
 
 

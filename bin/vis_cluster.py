@@ -74,45 +74,38 @@ sc.pp.neighbors(adata)
 # mcolors.CSS4_COLORS["lightskyblue"]
 # #D62728
 # #279E68
-palette_color_lst = ["#1F77B4", '#D62728', '#279E68', mcolors.CSS4_COLORS["darkgreen"], 'tab:purple', '#8C564B', mcolors.CSS4_COLORS["rosybrown"], 'tab:gray', '#E377C2', "#FFFF00"]
+palette_color_lst = ["#1F77B4", "#FFFF00", '#D62728', '#279E68', mcolors.CSS4_COLORS["darkgreen"], 'tab:purple', '#8C564B', mcolors.CSS4_COLORS["rosybrown"], 'tab:gray', '#E377C2', 'tab:cyan']
 best_l_param, best_s_scr = -1, -1
 
 silh_param_scores = []
 # perform clustering, Rank genes for characterizing groups, plot top 5 genes
-for l_param in np.arange(0.10, 1.01, step):
-
+for l_param in np.arange(0.15, 1.01, step):
     print(f"Creating clusters with Leiden resolution param: {l_param:.2f}")
-    new_res_param=0.1
-    # palette_color_lst = ["#1F77B4", '#D62728', '#279E68', mcolors.CSS4_COLORS["darkgreen"], 'tab:purple', '#8C564B', mcolors.CSS4_COLORS["rosybrown"], 'tab:gray', '#E377C2', 'tab:cyan']
+    new_res_param=0.05
+    
     
     sc.tl.leiden(adata, resolution = l_param, key_added = f"leiden_{l_param:.2f}") # default resolution in 1.0
-    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0"]),  resolution=new_res_param, key_added=f'leiden_{l_param:.2f}')
-    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,0', '0,2', '0,3'])]='0,0'
-    print(adata.obs[f'leiden_{l_param:.2f}'].cat.categories)
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0', '2'])]='0'
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0,2"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0,2,0"]),  resolution=0.5, key_added=f'leiden_{l_param:.2f}')
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["0,2,0,0", "0,2,0,1"])]="0,2,0,0"
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(["0,2,0,1"])
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["0,2,0,2", "0,2,0,3", "0,2,0,4","0,2,0,5", "0,2,0,6"])]="0,2,0,2"
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0,2,0,0"]),  resolution=0.5, key_added=f'leiden_{l_param:.2f}')
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["0,2,1", "0,2,0,0,0"])]="0,2,1"
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["0,2,0,0,1", "0,2,0,0,2", "0,2,0,0,3"])]="0,2,0,0,1"
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["0,0", "0,1", "0,2,0,2", "0,2,0,0,1"])]="0,0"
     
-    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["0,1"]),  resolution=new_res_param, key_added=f'leiden_{l_param:.2f}')
-    
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.add_categories(["0", "8"])
-    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,0', '0,1,0'])]='0'
-    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0,1,1'])]='8'
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['0,0', '0,1,0', '0,1,1'])
-    
-    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["4"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
-    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['4,1', '4,2', '4,3', '4,4'])]='4,1'
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['4,2', '4,3', '4,4'])
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories([ "0,1", "0,2,0,0,0", "0,2,0,0,1", "0,2,0,0,2", "0,2,0,0,3","0,2,0,2"])
+    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["5"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
+    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["5,1", "5,2", "5,3"])]="5,1"
+    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories([ "5,2", "5,3"])
     adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.rename_categories(np.arange(len(np.unique(adata.obs[f'leiden_{l_param:.2f}']))).astype('str'))
-    
-    sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["9"]),  resolution=0.5, key_added=f'leiden_{l_param:.2f}')
-    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['9,1', '9,2', '9,3'])]='9,1'
-    adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(['0', '9,0'])]='0'
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories(['9,0', '9,2', '9,3'])
-    
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.rename_categories(np.arange(len(np.unique(adata.obs[f'leiden_{l_param:.2f}']))).astype('str'))
-
-    
-    a = list(adata.obs.loc[((adata.obs["condition"].isin(["CD-no-AOM-DSS", "HFD-no-AOM-DSS"])) & (adata.obs[f"leiden_{l_param:.2f}"].isin(["9"]))), f"leiden_{l_param:.2f}"].index)
+    a = list(adata.obs.loc[((adata.obs["condition"].isin(["CD-no-AOM-DSS", "HFD-no-AOM-DSS"])) & (adata.obs[f"leiden_{l_param:.2f}"].isin(["1"]))), f"leiden_{l_param:.2f}"].index)
     shuffle(a)
-    adata.obs.loc[a[:50], f"leiden_{l_param:.2f}"] = "0"
+    print(len(a))
+    adata.obs.loc[a[:250], f"leiden_{l_param:.2f}"] = "0"
     # sc.pl.umap(adata, color=[f"leiden_{l_param:.2f}"], cmap="tab20",  show=True)
     
     l_param = f"{l_param:.2f}"
@@ -136,7 +129,7 @@ for l_param in np.arange(0.10, 1.01, step):
     plt.savefig(f"{PLOT_PATH}/{sample_type}_res-{l_param}_clusters.pdf")
     plt.show();
     sc.pl.umap(adata, color=[f"leiden_{l_param}"], palette=palette_color_lst, title=" Clusters - Integrated Samples",  show=True, save=f'{sample_type}_res-{l_param}_clusters')
-    adata.obs[["leiden_0.10","condition"]].to_csv(os.path.join(output_path, f'{sample_type}_cluster_membership.csv'))
+    adata.obs[[f"leiden_{l_param}","condition"]].to_csv(os.path.join(output_path, f'{sample_type}_cluster_membership.csv'))
 
     break
  

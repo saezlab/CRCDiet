@@ -45,6 +45,10 @@ sample_type = "visium"
 meta = utils.get_meta_data(sample_type)
 adata_integ_clust = sc.read_h5ad(input_path)
 
+sc.pp.normalize_total(adata_integ_clust, target_sum=1e4)
+sc.pp.log1p(adata_integ_clust)
+
+leiden_param = 0.15
 # Retrieve PROGENy model weights
 net = dc.get_collectri(organism='mouse', split_complexes=False)
 net["target"] = net["target"].str.upper()
@@ -53,7 +57,9 @@ net["source"] = net["source"].str.upper()
 # print(adata_integ_clust.var_names)
 # print(net)
 
-adata_integ_clust.X = adata_integ_clust.layers['log1p_transformed']
+# adata_integ_clust.X = adata_integ_clust.layers['log1p_transformed']
+
+
 # adata_integ_clust.var.index = pd.Index(gen.upper() for gen in adata_integ_clust.var.index.values)
 dc.run_mlm(mat=adata_integ_clust, net=net, source='source', target='target', weight='weight', verbose=True, use_raw=False)
 adata_integ_clust.obsm['dorothea_mlm_estimate'] = adata_integ_clust.obsm['mlm_estimate'].copy()
@@ -72,7 +78,9 @@ for _, row in meta.iterrows():
     # printmd(f"<h4 style='color:black' align='center'>=============== {condition} ===============")
 
     adata_filtered = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f"{sample_id}_filtered.h5ad"))
-    adata_filtered.X = adata_filtered.layers['log1p_transformed']
+    sc.pp.normalize_total(adata_filtered, target_sum=1e4)
+    sc.pp.log1p(adata_filtered)
+    # adata_filtered.X = adata_filtered.layers['log1p_transformed']
     # adata_filtered.var.index = pd.Index(gen.upper() for gen in adata_filtered.var.index.values)
     adata_filtered = adata_filtered[:,adata_filtered.var_names.intersection(adata_integ_clust.var_names)]
     print(sample_id, adata_filtered)
@@ -89,7 +97,7 @@ if plot:
     print(len(meta))
     for ind, col in enumerate(adata_filtered.obsm['dorothea_mlm_estimate'].columns):
 
-        sc.pl.umap(acts_integrated, color=[col, 'leiden_0.10'], show=False, cmap=mpl.cm.magma_r, vcenter=0, save=f"_{col}.pdf")
+        sc.pl.umap(acts_integrated, color=[col, f'leiden_{leiden_param}'], show=False, cmap=mpl.cm.magma_r, vcenter=0, save=f"_{col}.pdf")
         
         fig, ax = plt.subplots(1, len(meta), figsize=(40,5))
         print(ind, col)
@@ -108,12 +116,12 @@ if plot:
         # plt.clf();
 
 
-df = dc.rank_sources_groups(acts_integrated, groupby='leiden_0.10', reference='rest', method='t-test_overestim_var')
+df = dc.rank_sources_groups(acts_integrated, groupby=f'leiden_{leiden_param}', reference='rest', method='t-test_overestim_var')
 acts_integrated
 n_markers = 5
 source_markers = df.groupby('group').head(n_markers).groupby('group')['names'].apply(lambda x: list(x)).to_dict()
 
-dc.plot_network(
+"""dc.plot_network(
     net=net,
     n_sources=["TCF7L2", "SOX11", "ID3", "ZBTB17", "XBP1"],
     n_targets=15,
@@ -125,8 +133,8 @@ dc.plot_network(
     figsize=(15, 15),
     save=f'{PLOT_PATH}/cluster_8_network.pdf'
 )
+"""
 
-
-sc.pl.matrixplot(acts_integrated, source_markers, 'leiden_0.10', dendrogram=True, standard_scale='var',
+sc.pl.matrixplot(acts_integrated, source_markers, f'leiden_{leiden_param}', dendrogram=True, standard_scale='var',
                  colorbar_title='Z-scaled scores', cmap='RdBu_r', save=f"{sample_type}_tf.pdf")
 # python vis_tf_act_est.py -i ../data/out_data/visium_integrated_clustered.h5ad  -o ../data/out_data/ -an visium_tf_act_est
