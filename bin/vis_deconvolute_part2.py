@@ -70,7 +70,7 @@ print(inf_aver)
 
 
 adata_vis = sc.read_h5ad(vis_path)
-out_fl_name = "all_sample_deconv_"+adata_vis.obs["sample"].cat.categories[0]+"_"+str(n_cells_per_location)+"_"+str(detection_alpha)
+out_fl_name = "all_sample_deconv_"+adata_vis.obs["condition"].cat.categories[0]+"_"+str(n_cells_per_location)+"_"+str(detection_alpha)
 
 # adata_vis = utils.get_filtered_concat_data("visium_aom")
 # adata_vis = utils.get_filtered_concat_data("visium_noaom")
@@ -153,7 +153,9 @@ samples = list(adata_vis.obs["condition"].cat.categories)
 
 lst_cell_types = list(adata_vis.uns['mod']['factor_names'])
 
-meta = utils.get_meta_data(sample_type)
+sc.pl.spatial(adata_vis, cmap='magma', color=lst_cell_types, ncols=4, size=1.3, img_key='hires', vmin=0, vmax='p99.2', save=f"{out_fl_name}_cell2loc.pdf")
+
+"""meta = utils.get_meta_data(sample_type)
 
 for ind, row in meta.iterrows():
         
@@ -164,7 +166,7 @@ for ind, row in meta.iterrows():
         
         slide = utils.read_filtered_visium_sample(sample_id)
         tmp_adata_vis = adata_vis[adata_vis.obs["condition"]==condition,:]
-        sample_id_t = slide.obs["sample"].cat.categories[0]
+        sample_id_t = slide.obs["condition"].cat.categories[0]
         out_fl_name = f"{condition}_{n_cells_per_location}_{detection_alpha}_{sample_id_t}"
         
         for c_type in lst_cell_types:
@@ -180,7 +182,7 @@ for ind, row in meta.iterrows():
         
 
 
-
+"""
 
 
 # to adata.obs with nice names for plotting
@@ -229,4 +231,7 @@ cv2.waitKey(1000)
 """
 
 # sbatch --job-name=deconv_12-01-2023_1 -p gpu --gres=gpu:1 --mem=30g  -n 1 --time=7-00:00:00 --output=deconv.out "deconv.sh"
-# 
+# sbatch --job-name=deconv_08-07-2024_2 -p gpu --gres=gpu:1 --mem=20 -n 1 --time=7-00:00:00 --output=vis_deconvolution_helminth_stdiet_15_1.out "vis_deconvolution_helminth_stdiet_15_1.sh"
+# sbatch --job-name=deconv_08-07-2024_1 -p gpu --gres=gpu:1 --mem=20 -n 1 --time=7-00:00:00 --output=vis_deconvolution_helminth_stdiet_15_2.out "vis_deconvolution_helminth_stdiet_15_2.sh"
+# sbatch --job-name=deconv_08-07-2024_3 -p gpusaez --gres=gpu:1 --mem=20 -n 1 --time=7-00:00:00 --output=vis_deconvolution_helminth_stdiet_10_1.out "vis_deconvolution_helminth_stdiet_10_1.sh"
+# sbatch --job-name=deconv_08-07-2024_5 -p gpusaez --gres=gpu:1 --mem=20 -n 1 --time=7-00:00:00 --output=vis_deconvolution_helminth_stdiet_10_2.out "vis_deconvolution_helminth_stdiet_10_2.sh"

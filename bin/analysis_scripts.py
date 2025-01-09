@@ -223,30 +223,35 @@ def colocalization_analysis_adata(adata_path, sample_type, exp_name, n_of_cells)
     print(lst_cell_types)    
 # colocalization_analysis()
 
-def colocalization_analysis():
+def colocalization_analysis(sample_id_list):
 
     # colocalization analysis performed based on https://www.nature.com/articles/s41467-021-21892-z#Sec8
     sample_type = "visium"
     meta = utils.get_meta_data(sample_type)
     
     dict_colocalization = dict()
-    for ind, row in meta.iterrows():
+    #for ind, row in meta.iterrows():
+    for condition in sample_id_list:
+
         lst_cell_types = []
-        sample_id = row["sample_id"]
-        condition = row["condition"]
-        df_abundance = pd.read_csv(f"../data/out_data/cell2location_map/cell_type_abundances_{sample_id}_filtered_deconv_15_20.csv", index_col=0)
+        # sample_id = row["sample_id"]
+        # condition = row["condition"]
+        df_abundance = pd.read_csv(f"/net/data.isilon/ag-saez/bq_arifaioglu/home/Projects/CRCDiet/data/out_data/cell2location_vis_deconvolution/cell_type_abundances_{condition}_15_20.csv", index_col=0)
         for ct in df_abundance.columns:
                 ct = ct.split("_")[-1]
                 lst_cell_types.append(ct)
         df_abundance.columns = lst_cell_types
         
         corr = df_abundance.corr(method='pearson', min_periods=1, numeric_only=False)
-        
-        cmap = sns.diverging_palette(230, 20, as_cmap=True)
-        sns.clustermap(corr, annot=False, cmap=cmap, xticklabels=True, yticklabels=True)
         plt.rcParams['figure.dpi']= 300
-        plt.rcParams['figure.figsize']= (120, 120)
-        plt.savefig(f"../plots/vis_deconvolution/corr_{sample_id}.pdf")
+        plt.rcParams['figure.figsize']= (300, 300)
+        cmap = sns.diverging_palette(230, 20, as_cmap=True)
+        ax = sns.clustermap(corr, annot=False, cmap=cmap, xticklabels=True, yticklabels=True)
+        ax.ax_heatmap.set_xticklabels(ax.ax_heatmap.get_xmajorticklabels(), fontsize = 8)
+        ax.ax_heatmap.set_yticklabels(ax.ax_heatmap.get_ymajorticklabels(), fontsize = 8)
+        # sns.set_theme(font_scale=0.8)
+        # ax.ax_cbar.set_ylabel("log2-fold change",size=25);        
+        plt.savefig(f"../plots/visium_correlation/corr_{condition}.pdf")
 
         
         # print(cc) 
@@ -283,7 +288,7 @@ def colocalization_analysis():
             break
         """
     print(lst_cell_types)    
-# colocalization_analysis()
+colocalization_analysis(sample_id_list = ["CD-AOM-DSS", "HFD-AOM-DSS"])
 
 def extract_nnmf_weights(adata_path, n_of_factors):
     adata = sc.read_h5ad(adata_path)

@@ -78,8 +78,8 @@ broad_markers =["Ptprc", "EpCam", "Pdgfra", "Myh11", "Ms4a1", "Cd3e", "Itgax", "
 broad_markers = [mrk.upper() for mrk in broad_markers]
 
 l_param_list = [0.30] # for major cell types
-l_param_list = [0.20] # for sc and epicells
 l_param_list = [0.30] # for major cell types
+l_param_list = [0.20] # for sc and epicells
 """if sample_type=="atlas":
     l_param_list = [0.40] # for Atlas data
 elif sample_type=="sc":
@@ -117,7 +117,8 @@ for l_param in l_param_list:
     sc.tl.rank_genes_groups(adata_concat, method="wilcoxon", groupby=group_by, show=False, key_added = f"wilcoxon_{obs_column}")
     mpl.rcParams['axes.titlesize'] = 20
     sc.pl.rank_genes_groups(adata_concat, n_genes=25, sharey=False, standard_scale='var', key=f"wilcoxon_{obs_column}", show=False, groupby=group_by, save=f'{sample_type}_one_vs_rest_{obs_column}_25.pdf')
-
+    wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{obs_column}", pval_cutoff=0.05)# [["group", "names", "scores","logfoldchanges"]]
+    wc.to_csv(os.path.join(PLOT_PATH, f"{analysis_name}_rank_genes_groups_df.csv"))
     
     # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", standard_scale='var', show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_default')
     """sc.pl.rank_genes_groups_dotplot(adata_concat, n_genes=5, key=f"wilcoxon_{obs_column}", standard_scale='var',  show=False, groupby=group_by, save=f'{sample_type}_deg_clusters_dotplot_{obs_column}_default')
@@ -192,4 +193,5 @@ for l_param in l_param_list:
 
 # python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_integrated_clustered.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster_3 -oc leiden_0.20
 
- # python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster -oc cluster 
+# python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster -oc cluster 
+# python sc_cluster_annotate.py -i ../data/out_data/sc_epicells_aom_noaom_concatenated_celltype_annot.h5ad -o ../data/out_data -st sc_epicells_aom_noaom -an sc_epicells_aom_noaom_cluster -oc cell_type
