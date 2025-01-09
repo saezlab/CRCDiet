@@ -118,7 +118,7 @@ for l_param in l_param_list:
 
     # wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param}", pval_cutoff=0.05, log2fc_min=2)[["group", "names", "scores","logfoldchanges"]]
     wc = sc.get.rank_genes_groups_df(adata_concat, group=None, key=f"wilcoxon_{l_param:.2f}", pval_cutoff=0.05)# [["group", "names", "scores","logfoldchanges"]]
-    print(wc)
+    wc.to_csv(os.path.join(PLOT_PATH, f"{analysis_name}_rank_genes_groups_df.csv"))
 
     # sc.pl.rank_genes_groups_dotplot(adata_concat, swap_axes=True, key=f"wilcoxon_{l_param}", show=False, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}_swapped_axes')
     # sc.pl.rank_genes_groups_dotplot(adata_concat, key=f"wilcoxon_{l_param}", show=True, groupby=f"leiden_{l_param}", save=f'{sample_type}_deg_clusters_dotplot_{l_param}')
@@ -212,4 +212,5 @@ dict_mean_enr = dict()
 
 mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
 """
-# python vis_cluster_annotate.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_cluster
+# python vis_cluster_annotate.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_cluster_NO_LFD
+

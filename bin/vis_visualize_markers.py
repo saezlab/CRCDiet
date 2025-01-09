@@ -72,16 +72,16 @@ for ind, marker in enumerate(marker_intersect):
             # fig_row, fig_col = int(ind/cols), ind%cols
             sample_id = row["sample_id"]
             condition = row["condition"]
-            adata_raw = utils.read_raw_visium_sample(sample_id)
+            adata_raw = utils.read_filtered_visium_sample(sample_id)
             adata_temp = adata[adata.obs["condition"]==condition,:]    
             adata_temp.obs.index = pd.Index("-".join(cl.split("-")[:-1]) for cl in adata_temp.obs.index.values)
-            # adata_raw = adata_raw[adata_temp.obs.index,:]
-            adata_raw = adata_raw[:, adata_raw.var_names.isin(adata.var_names)]
+
+            adata_temp.uns['spatial'] = adata_raw.uns['spatial']
 
             #mpl.rcParams["image.cmap"]= plt.cm.magma_r
             mpl.rcParams['axes.titlesize'] = 12
             # colorbar_loc=None,
-            sc.pl.spatial(adata_raw, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, color_map=plt.cm.magma_r, ax = ax[ind2], show=False)
+            sc.pl.spatial(adata_temp, img_key="hires", color =marker, title=f"{marker} : {condition}", size=1.25, alpha_img=0.5, color_map=plt.cm.magma_r, ax = ax[ind2], show=False)
             
             cbar = ax[ind2].collections[0].colorbar
             cbar.set_ticks([])

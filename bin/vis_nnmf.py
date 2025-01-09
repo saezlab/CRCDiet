@@ -38,7 +38,7 @@ S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_
 
 sample_type = "visium"
 # Load meta data
-meta = utils.get_meta_data(sample_type)
+meta = utils.get_meta_data("visium_with_std")
 # markers_df = pd.read_csv(os.path.join(DATA_PATH, "marker_genes.txt"), sep="\t")
 # markers = list(set(markers_df["genesymbol"].str.capitalize()))
 l_param = 0.15
@@ -317,13 +317,13 @@ def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
 
 
 
-adata_cc_merged = apply_nmf_on_merged_data(42)
+"""adata_cc_merged = apply_nmf_on_merged_data(42)
 for col in adata_cc_merged.var.columns:
     if col.lower().startswith("mt-") or col.lower().startswith("rp-"):
         adata_cc_merged.var[col] = adata_cc_merged.var[col].astype(str)
-adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
+adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))"""
 
-# adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
+adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 analyse_nmf_results(42)
 adata_integ_clust = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_integrated_clustered.h5ad'))
 adata_cc_merged  = adata_cc_merged[adata_cc_merged.obs.condition.isin(['CD-AOM-DSS', 'CD-no-AOM-DSS', 'HFD-AOM-DSS', 'HFD-no-AOM-DSS'])]

@@ -100,8 +100,7 @@ for l_param in np.arange(0.15, 1.01, step):
     adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories([ "0,1", "0,2,0,0,0", "0,2,0,0,1", "0,2,0,0,2", "0,2,0,0,3","0,2,0,2"])
     sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["5"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
     adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["5,1", "5,2", "5,3"])]="5,1"
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories([ "5,2", "5,3"])
-    adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.rename_categories(np.arange(len(np.unique(adata.obs[f'leiden_{l_param:.2f}']))).astype('str'))
+    s
     a = list(adata.obs.loc[((adata.obs["condition"].isin(["CD-no-AOM-DSS", "HFD-no-AOM-DSS"])) & (adata.obs[f"leiden_{l_param:.2f}"].isin(["1"]))), f"leiden_{l_param:.2f}"].index)
     shuffle(a)
     print(len(a))
@@ -136,6 +135,8 @@ for l_param in np.arange(0.15, 1.01, step):
 print(f"Saving the object... {sample_type}_integrated_clustered.h5ad...")
 # Write to file
 adata.write(os.path.join(output_path, f'{sample_type}_integrated_clustered.h5ad'))
+
+# top_genes_tumor = adata.var[f"H20_7"].sort_values(ascending=False)[:1000].to_csv("/home/rifaioglu/projects/CRCDiet/data/out_data/visium_merged_nnmf_factor_7_top_genes.csv")
 
 
 # python vis_cluster.py -i ../data/out_data/visium_integrated.h5ad -o ../data/out_data -an visium_cluster

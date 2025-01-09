@@ -91,7 +91,7 @@ def read_raw_visium_sample(sample_name):
 
 
 def read_filtered_visium_sample(sample_id):
-    sample = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered.h5ad"))
+    sample = sc.read_h5ad(os.path.join(OUT_DATA_PATH,f"{sample_id}_filtered_clustered.h5ad"))
     return sample
 
 def printmd(string):
