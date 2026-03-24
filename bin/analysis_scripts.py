@@ -157,10 +157,11 @@ def extract_cell_type_abundances_adata(adata_path, sample_type, n_of_cells):
     # sample_type = "visium"
     meta = utils.get_meta_data(sample_type)
     for ind, row in meta.iterrows():
-        sample_id = row["sample_id"]
+        sample_id = row["condition"]
         adata = sc.read_h5ad(os.path.join(adata_path, f"all_sample_deconv_{sample_id}_{n_of_cells}_20.h5ad"))
         adata.obsm['q05_cell_abundance_w_sf'].to_csv(f"{adata_path}/cell_type_abundances_{sample_id}_{n_of_cells}_20.csv")
 
+# extract_cell_type_abundances_adata(adata_path = "/home/rifaioglu/sds-hd/sd24d004/CRCDiet/data/out_data/cell2location_vis_deconvolution_atlas_kinetics", sample_type = "visium_diet_kinetics_AOM_DSS", n_of_cells = 15)
 
 def colocalization_analysis_adata(adata_path, sample_type, exp_name, n_of_cells):
 
@@ -236,7 +237,7 @@ def colocalization_analysis(sample_id_list):
         lst_cell_types = []
         # sample_id = row["sample_id"]
         # condition = row["condition"]
-        df_abundance = pd.read_csv(f"/net/data.isilon/ag-saez/bq_arifaioglu/home/Projects/CRCDiet/data/out_data/cell2location_vis_deconvolution/cell_type_abundances_{condition}_15_20.csv", index_col=0)
+        df_abundance = pd.read_csv(f"../data/out_data/cell2location_vis_deconvolution/cell_type_abundances_{condition}_15_20.csv", index_col=0)
         for ct in df_abundance.columns:
                 ct = ct.split("_")[-1]
                 lst_cell_types.append(ct)
@@ -288,7 +289,7 @@ def colocalization_analysis(sample_id_list):
             break
         """
     print(lst_cell_types)    
-colocalization_analysis(sample_id_list = ["CD-AOM-DSS", "HFD-AOM-DSS"])
+#colocalization_analysis(sample_id_list = ["CD-AOM-DSS", "HFD-AOM-DSS"])
 
 def extract_nnmf_weights(adata_path, n_of_factors):
     adata = sc.read_h5ad(adata_path)
@@ -441,3 +442,50 @@ def create_concat_epi_cells_with_annotations():
 
 # create_concat_epi_cells_with_annotations()
 
+
+
+
+
+import os
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def colocalization_analysis_merged(fill_missing_with_zero=True, min_periods=10):
+    sample_type = "visium_diet_kinetics_AOM_DSS"
+    meta = utils.get_meta_data(sample_type)  # kept if you use it elsewhere
+
+    # 1) Load + standardize, then merge all dfs
+    dfs = []
+    for ind, row in meta.iterrows():
+
+        lst_cell_types = []
+        sample_id = row["sample_id"]
+        condition = row["condition"]
+        fp = f"../data/out_data/cell2location_vis_deconvolution/cell_type_abundances_{condition}_15_20.csv"
+        df = pd.read_csv(fp, index_col=0)
+        
+        df.columns = [c.split("_")[-1] for c in df.columns]
+        print(df.columns)
+        df.index = [f"{condition}__{idx}" for idx in df.index]
+        dfs.append(df)
+
+    df_merged = pd.concat(dfs, axis=0, join="outer", sort=False)
+
+    print(df_merged)
+        
+    corr = df_merged.corr(method='pearson', min_periods=10, numeric_only=False)
+    plt.rcParams['figure.dpi']= 300
+    plt.rcParams['figure.figsize']= (300, 300)
+    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+    ax = sns.clustermap(corr, annot=False, cmap=cmap, xticklabels=True, yticklabels=True)
+    ax.ax_heatmap.set_xticklabels(ax.ax_heatmap.get_xmajorticklabels(), fontsize = 8)
+    ax.ax_heatmap.set_yticklabels(ax.ax_heatmap.get_ymajorticklabels(), fontsize = 8)
+    # sns.set_theme(font_scale=0.8)
+    # ax.ax_cbar.set_ylabel("log2-fold change",size=25);        
+    plt.savefig(f"../plots/visium_correlation/corr_merged.pdf")
+
+        
+        
+colocalization_analysis_merged()

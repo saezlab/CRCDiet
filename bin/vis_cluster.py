@@ -100,7 +100,7 @@ for l_param in np.arange(0.15, 1.01, step):
     adata.obs[f'leiden_{l_param:.2f}'] = adata.obs[f'leiden_{l_param:.2f}'].cat.remove_categories([ "0,1", "0,2,0,0,0", "0,2,0,0,1", "0,2,0,0,2", "0,2,0,0,3","0,2,0,2"])
     sc.tl.leiden(adata, restrict_to=(f'leiden_{l_param:.2f}', ["5"]),  resolution=0.1, key_added=f'leiden_{l_param:.2f}')
     adata.obs[f'leiden_{l_param:.2f}'][adata.obs[f'leiden_{l_param:.2f}'].isin(["5,1", "5,2", "5,3"])]="5,1"
-    s
+    
     a = list(adata.obs.loc[((adata.obs["condition"].isin(["CD-no-AOM-DSS", "HFD-no-AOM-DSS"])) & (adata.obs[f"leiden_{l_param:.2f}"].isin(["1"]))), f"leiden_{l_param:.2f}"].index)
     shuffle(a)
     print(len(a))

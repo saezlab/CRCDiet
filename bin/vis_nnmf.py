@@ -112,7 +112,7 @@ def apply_nmf_on_merged_data(random_state):
     return adata_cc_merged
     
 
-def analyse_nmf_results(random_state):
+def analyse_nmf_results(random_state, plot=False):
 
     processed_sample_dict = dict()
     adata_cc_merged = utils.read_pickle(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_sct_normalized_nmf_{random_state}.pckl'))
@@ -156,57 +156,57 @@ def analyse_nmf_results(random_state):
         
         processed_sample_dict[sample_id] = adata
             
-    
-    for factor_ind in range(1,21):
-       
-        printmd(f"## Factor {factor_ind} <a class='anchor' id='seventh-bullet-1'></a>")
-        fig = plt.figure(constrained_layout=True, figsize=(40, 20))
-        subfigs = fig.subfigures(1, 2, hspace=0, wspace=0, width_ratios=[2, 1])
-
-        # plt.rcParams["figure.figsize"] = (8, 8)
-        rows, cols = (4, 2)
-        # fig, ax = plt.subplots(rows, cols, figsize=(25,2))
-
-        axsLeft = subfigs[0].subplots(rows, cols)
-
+    if plot:
+        for factor_ind in range(1,21):
         
-        for ind, row in meta.iterrows():
-            fig_row, fig_col = int(ind/cols), ind%cols
-            sample_id = row["sample_id"]
-            condition = row["condition"]
-            
-            # mpl.rcParams["image.cmap"]= mpl.colormaps['viridis']# plt.cm.magma_r
-            mpl.rcParams['axes.titlesize'] = 30
-            sc.pl.spatial(processed_sample_dict[sample_id], img_key="hires", title=condition, color=f"W20_{factor_ind}", cmap="magma_r", size=1.25, alpha_img=0.3, ax = axsLeft[fig_row][fig_col], show=False)
-            cbar = axsLeft[fig_row][fig_col].collections[0].colorbar
-            cbar.set_ticks([])
-            cbar = None
-    
-            # fig.tight_layout(pad=1.0)
-        # fig.savefig(os.path.join(PLOT_PATH, "NMF", str(random_state), f"factor_{factor_ind}_20_all_samples.pdf") , dpi=300)
-        # plt.close(fig)
-        # fig.tight_layout()
+            printmd(f"## Factor {factor_ind} <a class='anchor' id='seventh-bullet-1'></a>")
+            fig = plt.figure(constrained_layout=True, figsize=(40, 20))
+            subfigs = fig.subfigures(1, 2, hspace=0, wspace=0, width_ratios=[2, 1])
 
-        axsRight = subfigs[1].subplots(1, 1)
-        top40_genes = adata_samp_cc.var[f"H20_{factor_ind}"].sort_values(ascending=False)[:40]
-        # print(top40_genes)
-        genes = list(top40_genes.keys())
-        loadings = list(top40_genes.tolist())
-        genes.reverse()
-        loadings.reverse()
-        # print(genes)
-        # print(loadings)
-        high = math.floor(max(loadings))+1
-        low = max(0, min(loadings)-1.01)
-        # print(high, low)
-        # print([math.ceil(low-0.5*(high-low)), math.ceil(high+0.5*(high-low))])
-        plt.xlim([low, high])
-        plt.xticks(fontsize=30)
-        plt.yticks(fontsize=30)
-        axsRight.barh(genes, loadings, color='grey')
-        plt.savefig(f'{PLOT_PATH}/{sample_type}_factor_{factor_ind}.pdf');
-        # plt.show();
-        print()
+            # plt.rcParams["figure.figsize"] = (8, 8)
+            rows, cols = (4, 2)
+            # fig, ax = plt.subplots(rows, cols, figsize=(25,2))
+
+            axsLeft = subfigs[0].subplots(rows, cols)
+
+            
+            for ind, row in meta.iterrows():
+                fig_row, fig_col = int(ind/cols), ind%cols
+                sample_id = row["sample_id"]
+                condition = row["condition"]
+                
+                # mpl.rcParams["image.cmap"]= mpl.colormaps['viridis']# plt.cm.magma_r
+                mpl.rcParams['axes.titlesize'] = 30
+                sc.pl.spatial(processed_sample_dict[sample_id], img_key="hires", title=condition, color=f"W20_{factor_ind}", cmap="magma_r", size=1.25, alpha_img=0.3, ax = axsLeft[fig_row][fig_col], show=False)
+                cbar = axsLeft[fig_row][fig_col].collections[0].colorbar
+                cbar.set_ticks([])
+                cbar = None
+        
+                # fig.tight_layout(pad=1.0)
+            # fig.savefig(os.path.join(PLOT_PATH, "NMF", str(random_state), f"factor_{factor_ind}_20_all_samples.pdf") , dpi=300)
+            # plt.close(fig)
+            # fig.tight_layout()
+
+            axsRight = subfigs[1].subplots(1, 1)
+            top40_genes = adata_samp_cc.var[f"H20_{factor_ind}"].sort_values(ascending=False)[:40]
+            # print(top40_genes)
+            genes = list(top40_genes.keys())
+            loadings = list(top40_genes.tolist())
+            genes.reverse()
+            loadings.reverse()
+            # print(genes)
+            # print(loadings)
+            high = math.floor(max(loadings))+1
+            low = max(0, min(loadings)-1.01)
+            # print(high, low)
+            # print([math.ceil(low-0.5*(high-low)), math.ceil(high+0.5*(high-low))])
+            plt.xlim([low, high])
+            plt.xticks(fontsize=30)
+            plt.yticks(fontsize=30)
+            axsRight.barh(genes, loadings, color='grey')
+            plt.savefig(f'{PLOT_PATH}/{sample_type}_factor_{factor_ind}.pdf');
+            # plt.show();
+            print()
         
     """num_of_factors = 20
     for factor_ind in range(1,num_of_factors):
@@ -266,9 +266,20 @@ def generate_heatmap(adata, n_of_factors=3, major_cell_type=None):
     
 
     factor_columns = [f"W{n_of_factors}_{i}" for i in range(1, n_of_factors+1)]
-    obs_df = adata.obs[factor_columns+[f"leiden_{l_param:.2f}"]].copy()
-    cell_type_summarised_data = obs_df.groupby(f"leiden_{l_param:.2f}").mean()
+    
+    
+    
+    # obs_df = adata.obs[factor_columns+[f"leiden_{l_param:.2f}"]].copy()
+    #cell_type_summarised_data = obs_df.groupby(f"leiden_{l_param:.2f}").mean()
+    # cell_type_summarised_data = cell_type_summarised_data[factor_columns]
+    
+    # In the original script the above part was used to aggreagate factor loading across clusters
+    # Below part was used just top plot aggreatgegion acrross all donor inclusing cohort 1
+    obs_df = adata.obs[factor_columns+["condition"]].copy()
+    cell_type_summarised_data = obs_df.groupby(f"condition").mean()
     cell_type_summarised_data = cell_type_summarised_data[factor_columns]
+    
+    
     factor_columns = [f"Factor {i}" for i in range(1, n_of_factors+1)]
     scaler = MinMaxScaler(feature_range=(-1,1))
     scaler.fit(cell_type_summarised_data)
@@ -326,8 +337,10 @@ adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5
 adata_cc_merged = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 analyse_nmf_results(42)
 adata_integ_clust = sc.read_h5ad(os.path.join(OUT_DATA_PATH, f'{sample_type}_integrated_clustered.h5ad'))
-adata_cc_merged  = adata_cc_merged[adata_cc_merged.obs.condition.isin(['CD-AOM-DSS', 'CD-no-AOM-DSS', 'HFD-AOM-DSS', 'HFD-no-AOM-DSS'])]
-adata_cc_merged.obs[f"leiden_{l_param:.2f}"] = adata_integ_clust.obs[f"leiden_{l_param:.2f}"].values
+
+# WARNING: If you want to generate the aggregation across clusters use the script below. also check generateheatmap function.
+# adata_cc_merged  = adata_cc_merged[adata_cc_merged.obs.condition.isin(['CD-AOM-DSS', 'CD-no-AOM-DSS', 'HFD-AOM-DSS', 'HFD-no-AOM-DSS'])]
+# adata_cc_merged.obs[f"leiden_{l_param:.2f}"] = adata_integ_clust.obs[f"leiden_{l_param:.2f}"].values
 # adata_cc_merged.write(os.path.join(OUT_DATA_PATH, f'{sample_type}_merged_nnmf.h5ad'))
 generate_heatmap(adata_cc_merged, n_of_factors=20)
 
