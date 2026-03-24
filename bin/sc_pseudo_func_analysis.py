@@ -15,7 +15,7 @@ import utils
 import matplotlib as mpl
 from copy import deepcopy
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 sc.settings.verbosity = 0
 warnings.simplefilter(action='ignore')
@@ -43,7 +43,7 @@ l_param = args['leiden_param']
 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
-############################### BOOOORIING STUFF ABOVE ############################### 
+############################### ARGS ABOVE ###############################
 
 sample_type = "sc"
 meta = utils.get_meta_data(sample_type)

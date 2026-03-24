@@ -12,7 +12,7 @@ import pandas as pd
 from pydeseq2.dds import DeseqDataSet
 from pydeseq2.ds import DeseqStats
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -40,7 +40,7 @@ contrast = args['contrast']
 major_cell_type = args['major_cell_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name, plot=True)
-############################### BOOOORIING STUFF ABOVE ###############################
+############################### ARGS ABOVE ###############################
 
 np.seterr(all="ignore")
 sample_type = "sc"   
@@ -199,4 +199,3 @@ python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scann
 python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_bcells_pseudobulk_deg_analysis -ss "B cells" -con condition -cont "HFD-AOM-DSS-Immune,CD-AOM-DSS-Immune" -mct "immune"
 python sc_pseudobulk_analysis.py -i ../data/out_data/sc_integrated_cluster_scannot.h5ad -o ../data/out_data -an sc_bcells_pseudobulk_deg_analysis -ss "B cells" -con condition -cont "LFD-AOM-DSS-Immune,HFD-AOM-DSS-Immune" -mct "immune"
 """
-

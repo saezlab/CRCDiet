@@ -16,7 +16,7 @@ import os
 import warnings
 import utils
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -35,7 +35,7 @@ analysis_name = args['analysis_name'] # subset
 # m_ct = args['cell_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name, plot=True)
-############################### BOOOORIING STUFF ABOVE ###############################
+############################### ARGS ABOVE ###############################
                      
 sample_type = "sc"
 # Load meta data

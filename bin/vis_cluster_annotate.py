@@ -13,7 +13,7 @@ import anndata
 import utils
 import matplotlib as mpl
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -213,4 +213,3 @@ dict_mean_enr = dict()
 mean_enr = dc.summarize_acts(acts, groupby=f'leiden_{l_param}')
 """
 # python vis_cluster_annotate.py -i ../data/out_data/visium_integrated_clustered.h5ad -o ../data/out_data -an visium_cluster_NO_LFD
-

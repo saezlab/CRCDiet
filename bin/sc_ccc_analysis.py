@@ -23,7 +23,7 @@ from liana.method import singlecellsignalr, connectome, cellphonedb, natmi, logf
 from plotnine.scales import scale_x_continuous, scale_x_discrete
 from plotnine import ggplot, geom_point, aes, theme, element_text, facet_grid
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 sc.settings.verbosity = 0
 warnings.simplefilter(action='ignore')
@@ -46,7 +46,7 @@ sample_type = args['sample_type']
 
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
-############################### BOOOORIING STUFF ABOVE ############################### 
+############################### ARGS ABOVE ###############################
 
 meta = utils.get_meta_data(sample_type)
 

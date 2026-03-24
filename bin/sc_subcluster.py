@@ -16,7 +16,7 @@ import warnings
 import utils
 import matplotlib as mpl
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -38,7 +38,7 @@ output_file = args['output_file']
 sample_type = args['sample_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
-############################### BOOOORIING STUFF ABOVE ############################### 
+############################### ARGS ABOVE ###############################
 
 # plt.rcParams['figure.dpi']= 300
 # plt.rcParams['figure.figsize']= (45, 30)

@@ -10,7 +10,7 @@ import pandas as pd
 from utils import printmd
 import matplotlib as mpl
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0

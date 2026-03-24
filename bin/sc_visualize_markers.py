@@ -12,7 +12,7 @@ import os
 import warnings
 import utils
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -36,7 +36,7 @@ sample_type = args['sample_type']
 file_name = args['file_name']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
-############################### BOOOORIING STUFF ABOVE ###############################
+############################### ARGS ABOVE ###############################
 
 adata_integ_clust = sc.read_h5ad(input_path)
 

@@ -19,7 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from utils import printmd
 import seaborn as sns
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -35,7 +35,7 @@ args = vars(parser.parse_args())
 input_path = args['input_path']
 output_path = args['output_dir']
 analysis_name = args['analysis_name']
-############################### BOOOORIING STUFF ABOVE ###############################
+############################### ARGS ABOVE ###############################
 
 
 random_state = 42

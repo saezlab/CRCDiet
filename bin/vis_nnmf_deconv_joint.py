@@ -17,7 +17,7 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from utils import printmd
 import seaborn as sns
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -35,7 +35,7 @@ output_path = args['output_dir']
 analysis_name = args['analysis_name']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
-############################### BOOOORIING STUFF ABOVE ###############################
+############################### ARGS ABOVE ###############################
 
 sample_type = "visium"
 # Load meta data

@@ -10,7 +10,7 @@ from utils import printmd
 import decoupler as dc
 import matplotlib as mpl
 
-############################### BOOOORIING STUFF BELOW ############################### 
+############################### ARGS BELOW ###############################
 # Warning settings
 warnings.simplefilter(action='ignore')
 sc.settings.verbosity = 0
@@ -29,7 +29,7 @@ analysis_name = args['analysis_name'] # sc_integrate
 sample_type = args['sample_type']
 # Get necesary paths and create folders if necessary
 S_PATH, DATA_PATH, OUT_DATA_PATH, PLOT_PATH = utils.set_n_return_paths(analysis_name)
-############################### BOOOORIING STUFF ABOVE ############################### 
+############################### ARGS ABOVE ###############################
 
 
 
